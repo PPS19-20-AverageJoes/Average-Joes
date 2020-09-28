@@ -24,6 +24,9 @@ dependencies {
     // Use Scala 2.12 in our library project
     implementation 'org.scala-lang:scala-library:2.12.9'
 
+    implementation "com.typesafe.akka:akka-actor_2.13:2.6.5"
+    implementation "com.typesafe.akka:akka-actor-typed_2.13:2.6.5"
+
     // Use Scalatest for testing our library
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.scalatest:scalatest_2.12:3.0.8'
