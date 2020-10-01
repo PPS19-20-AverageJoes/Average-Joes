@@ -33,4 +33,9 @@ dependencies {
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.2.0'
+
+    //Use Akka actors
+    compile group: 'com.typesafe.akka', name: 'akka-actor_2.13', version: '2.6.9'
+
+    testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.13', version: '2.6.9'
 }
