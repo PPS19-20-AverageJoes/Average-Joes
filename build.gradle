@@ -24,8 +24,8 @@ dependencies {
     // Use Scala 2.12 in our library project
     implementation 'org.scala-lang:scala-library:2.12.9'
 
-    implementation "com.typesafe.akka:akka-actor_2.13:2.6.5"
-    implementation "com.typesafe.akka:akka-actor-typed_2.13:2.6.5"
+    implementation "com.typesafe.akka:akka-actor_2.13:2.6.9"
+    implementation "com.typesafe.akka:akka-actor-typed_2.13:2.6.9"
 
     // Use Scalatest for testing our library
     testImplementation 'junit:junit:4.12'
@@ -36,6 +36,5 @@ dependencies {
 
     //Use Akka actors
     compile group: 'com.typesafe.akka', name: 'akka-actor_2.13', version: '2.6.9'
-
     testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.13', version: '2.6.9'
 }

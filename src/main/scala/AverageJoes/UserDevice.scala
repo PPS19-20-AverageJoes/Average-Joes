@@ -1,14 +1,16 @@
 package AverageJoes
 
-import akka.actor.{AbstractActor, ActorRef}
+import akka.actor.{Actor, ActorRef}
 
-trait UserDevice extends AbstractActor{
+/**
+ * AC
+ */
+trait UserDevice extends Actor{
   val userID: String
   val userActor: ActorRef
 
   def display (s: String): Unit
 
-  def rfid : Unit
+  def rfid(ref: ActorRef) : Unit
 
-  override def createReceive(): AbstractActor.Receive = ???
 }
