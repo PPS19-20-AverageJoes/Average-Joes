@@ -5,12 +5,12 @@ package AverageJoes
 
 import org.scalatest.FunSuite
 import org.junit.runner.RunWith
-import org.scalatestplus.junit
 
 //@RunWith(classOf[junit])
-class LibrarySuite extends FunSuite {
+/*class LibrarySuite extends FunSuite {
   test("someLibraryMethod is always true") {
     def library = new Library()
     assert(library.someLibraryMethod)
   }
 }
+*/
