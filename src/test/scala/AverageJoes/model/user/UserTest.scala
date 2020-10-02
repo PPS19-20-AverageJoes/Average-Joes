@@ -1,4 +1,4 @@
-package AverageJoes.user
+package AverageJoes.model.user
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

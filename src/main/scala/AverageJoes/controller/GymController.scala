@@ -1,5 +1,6 @@
-package AverageJoes
+package AverageJoes.controller
 
+import AverageJoes.common.MsgUserInGym
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 class GymController extends Actor{

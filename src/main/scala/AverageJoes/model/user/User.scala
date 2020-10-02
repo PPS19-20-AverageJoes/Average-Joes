@@ -1,4 +1,4 @@
-package AverageJoes.user
+package AverageJoes.model.user
 
   trait User {
     def name: String

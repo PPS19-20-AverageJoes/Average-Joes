@@ -1,4 +1,4 @@
-package AverageJoes
+package AverageJoes.model.wristband
 
 import akka.actor.{Actor, ActorRef}
 
