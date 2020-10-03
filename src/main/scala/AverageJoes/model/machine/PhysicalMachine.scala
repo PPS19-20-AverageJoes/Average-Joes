@@ -1,5 +1,7 @@
-package AverageJoes
+package AverageJoes.model.machine
 
+import AverageJoes.MsgDisplay
+import AverageJoes.common.{MsgDisplay, MsgRfid, MsgUserLogin}
 import akka.actor.Actor
 
 sealed trait PhysicalMachine extends Actor{

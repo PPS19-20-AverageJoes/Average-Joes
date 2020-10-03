@@ -1,5 +1,6 @@
-package AverageJoes
+package AverageJoes.model.wristband
 
+import AverageJoes.common.{MsgRfid, MsgUserLogged}
 import akka.actor.ActorRef
 
 /**

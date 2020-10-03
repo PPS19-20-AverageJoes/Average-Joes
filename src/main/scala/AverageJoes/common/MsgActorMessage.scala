@@ -1,6 +1,4 @@
-package AverageJoes
-
-import akka.actor.ActorRef
+package AverageJoes.common
 
 sealed trait MsgActorMessage
 
