@@ -1,4 +1,4 @@
-package AverageJoes
+package AverageJoes.model.machine
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
