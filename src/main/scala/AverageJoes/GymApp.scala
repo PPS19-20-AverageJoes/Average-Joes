@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import AverageJoes.controller.GymController
 
 object GymApp extends App{
-  val actSystem = ActorSystem("Gym")
-  val controller = GymController.controller(actSystem)
+  private val actSystem = ActorSystem("Gym")
+  private val controller = GymController.controller(actSystem)
 
 }

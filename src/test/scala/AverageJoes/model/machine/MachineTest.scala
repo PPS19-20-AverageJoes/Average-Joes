@@ -2,7 +2,7 @@ package AverageJoes.model.machine
 
 import AverageJoes.common.{MsgNearDevice, MsgRfid}
 import AverageJoes.model.user.{SmartGymUser, SmartGymUserImpl}
-import AverageJoes.model.wristband.Wristband
+import AverageJoes.model.device.Wristband
 import akka.actor.{ActorSystem, Props}
 import org.junit.Test
 

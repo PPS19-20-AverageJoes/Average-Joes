@@ -5,7 +5,7 @@ import AverageJoes.common.{MsgDisplay, MsgRfid, MsgUserLogin}
 import akka.actor.{Actor, ActorRef}
 
 sealed trait PhysicalMachine extends Actor{
-  val machineID: String //TODO: recuperare da configurazione su DB
+  val machineID: String //TODO: recuperare da configurazione su DB?
   val ma: ActorRef
 
   def display (s: String): Unit

@@ -1,21 +1,20 @@
-package AverageJoes.model.wristband
+package AverageJoes.model.device
 
 import AverageJoes.common.{MsgRfid, MsgUserLogged}
 import akka.actor.ActorRef
 
 /**
  * AC
- * @param userID: User ID
- * @param userActor: Actor of the user
+ * @param deviceID: ID of the device. In physical devices, is stored on config files
  */
-class Wristband(val userID: String, val userActor: ActorRef) extends UserDevice {
+class Wristband(val deviceID: String) extends UserDevice {
 
   def display (s: String): Unit ={
     println(s)
   }
-/* */
+
   def rfid(ref: ActorRef) : Unit ={
-    ref ! MsgRfid(userID)
+    ref ! MsgRfid(deviceID)
   }
 
   override def receive: Receive = {
