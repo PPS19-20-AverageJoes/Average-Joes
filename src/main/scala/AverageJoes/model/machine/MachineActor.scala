@@ -17,8 +17,27 @@ class MachineActor(userActorRef: ActorRef) extends Actor{
     case MsgConstructor(actorRef,"USER_LOG_IN") => userActorRef ! MsgConstructor(self,"USER_LOGGED")
     case _ => print("ERROR_MACHINE")
   }
+
+  def availabilityCheck(): Unit = ???
+
+  def connecting(): Unit = ???
+
+  def ready(): Unit = ???
+
+  def running(): Unit = ???
+
+  def updatingData(): Unit = ???
+
+  def resetting(): Unit = ???
+
+  def idle(): Unit = ???
 }
 
+trait Machine {
+  def isBooked: Boolean
+  def getHeartbeat(): Int
+  def getID(): Int
+}
 /**
  * Class to verify if the system  works
  */
