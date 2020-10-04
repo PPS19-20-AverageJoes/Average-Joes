@@ -8,9 +8,3 @@ trait User {
     def CF: String
   }
 
-  trait SmartGymUser extends User {
-    def userID: String
-    def isLogged: Boolean
-    def logIn(to: ActorRef): Unit
-    def logOut(): Unit
-  }

@@ -1,19 +1,18 @@
 package AverageJoes.model.machine
 
-//import AverageJoes.MsgDisplay
-import AverageJoes.common.{MsgDisplay, MsgRfid, MsgUserLogin}
-import akka.actor.{Actor, ActorRef}
+import AverageJoes.common.MsgActorMessage._
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 sealed trait PhysicalMachine extends Actor{
   val machineID: String //TODO: recuperare da configurazione su DB?
-  val ma: ActorRef
+  val ma: ActorRef //MachineActor
 
   def display (s: String): Unit
 
   //MsgPhysicalMachineWakeUp to Controller
 
   override def receive: Receive = {
-    case m: MsgRfid => self ! MsgUserLogin(m.userID)
+    case m: MsgRfid => ma ! MsgUserLogin(m.userID)
     case m: MsgDisplay => display(m.message)
   }
 }
@@ -30,5 +29,13 @@ case class LegPress(ma: ActorRef, machineID: String) extends PhysicalMachine{
 }
 
 object PhysicalMachine {
+  def startPhysicalMachine(actSystem: ActorSystem, machineID: String, ma: ActorRef, machineType: Class[_ <: PhysicalMachine]): ActorRef = {
+    val machine = actSystem.actorOf(Props(machineType, ma, machineID), machineID)
+
+    //system.actorOf(Props(classOf[MyActor], arg1, arg2), "name")
+    //childPM = childPM + (machineID -> machine)
+
+    machine
+  }
 
 }

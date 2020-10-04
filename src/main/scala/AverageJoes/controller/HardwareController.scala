@@ -8,7 +8,7 @@ case class HardwareController(private val actSystem: ActorSystem) {
 
   private var childPM = Map.empty[String, ActorRef] //Child Physical Machines
   private var childD = Map.empty[String, ActorRef] //Child Devices
-
+/*
   def startPhysicalMachine(machineID: String, machineType: Class[_ <: PhysicalMachine]): ActorRef = {
     val machine = actSystem.actorOf(Props(machineType))
     childPM = childPM + (machineID -> machine)
@@ -22,12 +22,20 @@ case class HardwareController(private val actSystem: ActorSystem) {
 
     device
   }
+  */
+/*
+  private def startActor(child: Map[String, ActorRef], id: String, classType:Class[_ <: AnyRef]): ActorRef ={
+    val actor = actSystem.actorOf(Props(classType))
+    child = child + (id -> actor)
 
+    actor
+  }*/
 }
 
 object HardwareController {
   //noinspection SpellCheckingInspection
-  //TODO: implementare meglio e fare DRY con il GymController
+  //TODO: implementare meglio e fare DRY con il GymController?
+  /*
   private var _controller: Option[ActorRef] = None
   def controller(actSystem: ActorSystem): ActorRef = {
     if (_controller.isEmpty)
@@ -35,7 +43,7 @@ object HardwareController {
 
     _controller.get
   }
-
+*/
 
 
   //noinspection SpellCheckingInspection

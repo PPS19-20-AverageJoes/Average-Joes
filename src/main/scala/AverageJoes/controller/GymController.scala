@@ -1,12 +1,19 @@
 package AverageJoes.controller
 
-import AverageJoes.common.MsgUserInGym
+import AverageJoes.common.MsgActorMessage._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 object GymController {
   class GymController extends Actor{
+    private var childUserActor = Map.empty[String, ActorRef] //Child User
+    private var childMachineActor = Map.empty[String, ActorRef] //Child Machines
+
     override def receive: Receive = {
-      case MsgUserInGym => val userDeviceActor = sender()
+      case m: MsgUserInGym => val userDeviceActor = sender()
+      case m: MsgUserLogin => {
+        val user = childUserActor(m.userID) //ToDo: optional, gestire
+        sender() ! MsgUserRef(user)
+      }
     }
   }
 

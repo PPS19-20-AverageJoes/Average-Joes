@@ -1,6 +1,6 @@
 package AverageJoes.model.device
 
-import AverageJoes.common.{MsgRfid, MsgUserLogged}
+import AverageJoes.common.MsgActorMessage._
 import akka.actor.ActorRef
 
 /**
@@ -17,7 +17,10 @@ class Wristband(val deviceID: String) extends UserDevice {
     ref ! MsgRfid(deviceID)
   }
 
+  //noinspection SpellCheckingInspection
+  //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
   override def receive: Receive = {
-    case m: MsgUserLogged => display(m.machineID)
+    case m: MsgUserLoggedInMachine => display(m.refMachineActor.toString()) //ToDo: va passato un id o similari
+    case m: MsgNearDevice => rfid(m.device)
   }
 }
