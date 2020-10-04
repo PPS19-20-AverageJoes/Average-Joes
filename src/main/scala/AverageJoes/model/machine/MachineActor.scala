@@ -1,5 +1,6 @@
 package AverageJoes.model.machine
 
+import AverageJoes.common.MsgActorMessage._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 /**
@@ -12,9 +13,12 @@ case class MsgConstructor(actorRef: ActorRef, msg: String)
  * Machine actor class
  * userActorRef:ActorRef user actor ref (till server is down)
  */
+//serve il riferimento del controller, non dell'attore
 class MachineActor(userActorRef: ActorRef) extends Actor{
   def receive: Receive = {
     case MsgConstructor(actorRef,"USER_LOG_IN") => userActorRef ! MsgConstructor(self,"USER_LOGGED")
+    case m: MsgUserLogin => m.userID //gira m al controller
+    case m: MsgUserRef => m.user ! MsgUserLoggedInMachine(self)
     case _ => print("ERROR_MACHINE")
   }
 
