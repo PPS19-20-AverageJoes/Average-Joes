@@ -27,7 +27,7 @@ dependencies {
     implementation "com.typesafe.akka:akka-actor_2.13:2.6.9"
     implementation "com.typesafe.akka:akka-actor-typed_2.13:2.6.9"
 
-    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
 
     // Use Scalatest for testing our library
     testImplementation 'junit:junit:4.12'
