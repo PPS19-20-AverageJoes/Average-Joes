@@ -1,7 +1,8 @@
 package AverageJoes.model.machine
 
 import AverageJoes.common.MsgActorMessage._
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import AverageJoes.controller.HardwareController
+import akka.actor.{Actor, ActorContext, ActorRef, ActorRefFactory, ActorSystem, Props}
 
 sealed trait PhysicalMachine extends Actor{
   val machineID: String //TODO: recuperare da configurazione su DB?
@@ -29,13 +30,28 @@ case class LegPress(ma: ActorRef, machineID: String) extends PhysicalMachine{
 }
 
 object PhysicalMachine {
-  def startPhysicalMachine(actSystem: ActorSystem, machineID: String, ma: ActorRef, machineType: Class[_ <: PhysicalMachine]): ActorRef = {
-    val machine = actSystem.actorOf(Props(machineType, ma, machineID), machineID)
+  def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
+    actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
+  }
 
-    //system.actorOf(Props(classOf[MyActor], arg1, arg2), "name")
-    //childPM = childPM + (machineID -> machine)
+  //noinspection SpellCheckingInspection
+  //ogni macchina fisica deve avere un demone che pinga il server e si fa restituire l'actor ref del server e della macchina virtuale
+  def startDemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
+    actorRefFactory.actorOf(Props(classOf[PMDemon], machineID, machineType), machineID)
+  }
 
-    machine
+  case class PMDemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends Actor{
+
+    HardwareController.gymController ! MsgPhysicalMachineWakeUp(machineID)
+
+    override def receive: Receive = {
+      case m: MsgMachineActorStarted => {
+        val pm = startPhysicalMachine(context, machineID,machineType ,m.machine)
+        sender() ! MsgPMActorStarted(machineID, pm)
+        context.parent ! MsgPMActorStarted(machineID, pm)
+      }
+
+    }
   }
 
 }

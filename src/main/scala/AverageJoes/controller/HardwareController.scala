@@ -1,51 +1,34 @@
 package AverageJoes.controller
 
-import AverageJoes.model.device.UserDevice
-import AverageJoes.model.machine.PhysicalMachine
-import akka.actor.{ActorRef, ActorSystem, Props}
+import AverageJoes.common.MsgActorMessage._
+import AverageJoes.controller.GymController.GymController
+import AverageJoes.model.device.Wristband
+import AverageJoes.model.machine._
+import akka.actor.{Actor, ActorRef, ActorRefFactory, Props}
 
-case class HardwareController(private val actSystem: ActorSystem) {
+import scala.collection.mutable
 
-  private var childPM = Map.empty[String, ActorRef] //Child Physical Machines
-  private var childD = Map.empty[String, ActorRef] //Child Devices
-/*
-  def startPhysicalMachine(machineID: String, machineType: Class[_ <: PhysicalMachine]): ActorRef = {
-    val machine = actSystem.actorOf(Props(machineType))
-    childPM = childPM + (machineID -> machine)
 
-    machine
-  }
-
-  def startDevice(deviceID: String, deviceType: Class[_ <: UserDevice]): ActorRef = {
-    val device = actSystem.actorOf(Props(deviceType))
-    childD = childD + (deviceID -> device)
-
-    device
-  }
-  */
-/*
-  private def startActor(child: Map[String, ActorRef], id: String, classType:Class[_ <: AnyRef]): ActorRef ={
-    val actor = actSystem.actorOf(Props(classType))
-    child = child + (id -> actor)
-
-    actor
-  }*/
-}
 
 object HardwareController {
-  //noinspection SpellCheckingInspection
-  //TODO: implementare meglio e fare DRY con il GymController?
-  /*
-  private var _controller: Option[ActorRef] = None
-  def controller(actSystem: ActorSystem): ActorRef = {
-    if (_controller.isEmpty)
-      _controller = Some(actSystem.actorOf(Props[HardwareController]))
+  private var childD = mutable.Map.empty[String, ActorRef] //Child Devices
+  private var childPM = mutable.Map.empty[String, ActorRef] //Child Physical Machines
+  var gymController: ActorRef = null //ToDo: sostituire con ricerca controller in rete nell'init del controller
 
-    _controller.get
+  private case class HardwareController() extends Actor{
+
+    //private val userActor = context.actorOf(Props(SmartGymUserImpl("","","","")), "actorUser")
+
+    private val wrist1 = Wristband.startWristband(context, "Wristband1")
+    private val dLegPress1 = PhysicalMachine.startDemon(context, "LegPress1", classOf[LegPress])
+
+    override def receive: Receive = {
+      case m: MsgPMActorStarted => childPM.addOne(m.machineID, m.phMachine)
+    }
   }
-*/
 
+  def startHardwareController(actorRefFactory: ActorRefFactory): ActorRef ={
+    actorRefFactory.actorOf(Props(classOf[HardwareController]), "HardwareController")
+  }
 
-  //noinspection SpellCheckingInspection
-//ogni macchina fisica deve avere un demone che pinga il server e si fa restituire l'actor ref del server e della macchina virtuale
 }
