@@ -20,8 +20,13 @@ lazy val root = (project in file("."))
       "org.scalatestplus"    %% "scalatestplus-mockito"       % "1.0.0-M2"   % "it,test",
       "org.scalatestplus"    %% "mockito-3-4"                 % "3.2.2.0"    % "test",
 
-      "org.mockito"          %% "mockito-scala"               % "1.10.2"     % "it,test"
-    ),
+      "org.mockito"          %% "mockito-scala"               % "1.10.2"     % "it,test",
+
+      "com.typesafe.akka"    %% "akka-cluster-tools"          % "2.6.9",
+      "com.typesafe.akka"    %% "akka-cluster-typed"          % "2.6.9",
+
+      "org.slf4j"            % "slf4j-simple"                 % "1.6.2" % Test
+),
     crossPaths := false,
     Test / parallelExecution := false
   )
