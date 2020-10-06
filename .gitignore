@@ -8,3 +8,10 @@ build
 gradle/*
 
 .idea/*
+
+.idea/
+
+project/*
+
+target/*
+
