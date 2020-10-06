@@ -32,5 +32,9 @@ dependencies {
     testCompile group: 'org.scalactic', name: 'scalactic_2.12', version: '3.2.0'
     compile group: 'org.scalactic', name: 'scalactic_2.12', version: '3.2.0'
 
+    compile group: 'com.typesafe.akka', name: "akka-cluster-tools_2.12", version: "2.6.9"
+    compile group: 'com.typesafe.akka', name: "akka-cluster-typed_2.12", version: "2.6.9"
+
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.2'
 }
 
