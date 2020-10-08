@@ -14,4 +14,7 @@ object MsgActorMessage {
   case class MsgPhysicalMachineWakeUp() extends MsgActorMessage //Login to the controller
   case class MsgDisplay(message: String) extends MsgActorMessage
   case class MsgNearDevice(device:ActorRef) extends MsgActorMessage
+  case class MsgMachineBooking(userID: String, physicalMachineRef: ActorRef) extends  MsgActorMessage
+  case class MsgBookingStatus(status: Boolean) extends  MsgActorMessage
+  case class MsgUnableToLogIn(userID: String) extends  MsgActorMessage
 }
