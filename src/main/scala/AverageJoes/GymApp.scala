@@ -5,6 +5,6 @@ import AverageJoes.controller.GymController
 
 object GymApp extends App{
   private val actSystem = ActorSystem("Gym")
-  private val controller = GymController.controller(actSystem)
+  private val controller = GymController.startGymController(actSystem)
 
 }
