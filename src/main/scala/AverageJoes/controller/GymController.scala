@@ -1,29 +1,37 @@
 package AverageJoes.controller
 
 import AverageJoes.common.MsgActorMessage._
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.user.SmartGymUserImpl
+import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
+
+import scala.collection.mutable
 
 object GymController {
+  private var childUserActor = mutable.Map.empty[String, ActorRef] //Child User
+  private var childMachineActor = mutable.Map.empty[String, ActorRef] //Child Machines
+
   class GymController extends Actor{
-    private var childUserActor = Map.empty[String, ActorRef] //Child User
-    private var childMachineActor = Map.empty[String, ActorRef] //Child Machines
 
     override def receive: Receive = {
-      case m: MsgUserInGym => val userDeviceActor = sender()
+      case m: MsgDeviceInGym => {
+        val userID = m.deviceID //ToDo: recuperare utente relativo a device
+        val user = context.actorOf(Props(new SmartGymUserImpl("","","","")), "actorUser") //ToDo: call constructor form user object
+        childUserActor.addOne(userID,user)
+        sender() ! MsgUserRef(user)
+      }
       case m: MsgUserLogin => {
         val user = childUserActor(m.userID) //ToDo: optional, gestire
         sender() ! MsgUserRef(user)
       }
+      case m: MsgPhysicalMachineWakeUp => {
+        val machine = context.actorOf(Props(classOf[MachineActor], self), m.machineID) //ToDo: togliere serf una volta fatto il refactor del MachineActor
+        childMachineActor.addOne(m.machineID, machine)
+        sender() ! MsgMachineActorStarted(machine)
+      }
     }
   }
 
-  private var _controller: Option[ActorRef] = None //TODO: implementare meglio
-
-  def controller(actSystem: ActorSystem): ActorRef = {
-    if (_controller.isEmpty)
-      _controller = Some(actSystem.actorOf(Props[GymController]))
-
-    _controller.get
-  }
+  def startGymController(actorRefFactory: ActorRefFactory): ActorRef = actorRefFactory.actorOf(Props(classOf[GymController]), "GymController")
 
 }
