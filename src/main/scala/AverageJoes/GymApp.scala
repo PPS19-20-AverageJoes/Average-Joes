@@ -1,10 +1,13 @@
 package AverageJoes
 
-import akka.actor.ActorSystem
 import AverageJoes.controller.GymController
+import AverageJoes.model.user.UserObjectTester
+import akka.actor.typed.ActorSystem
 
 object GymApp extends App{
-  private val actSystem = ActorSystem("Gym")
-  private val controller = GymController.startGymController(actSystem)
+ // private val actSystem = ActorSystem("Gym")
+ // private val controller = GymController.startGymController(actSystem)
+
+  ActorSystem(UserObjectTester(), "user-actor-system")
 
 }
