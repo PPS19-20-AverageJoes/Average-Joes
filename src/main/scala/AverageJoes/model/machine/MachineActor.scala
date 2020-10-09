@@ -1,61 +1,45 @@
 package AverageJoes.model.machine
 
 import AverageJoes.common.MsgActorMessage._
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-
-/**
- * Message structure class
- * actorRef:ActorRef message sender
- * msg:String message
- */
-case class MsgConstructor(actorRef: ActorRef, msg: String)
+import akka.actor.{Actor, ActorRef}
 /**
  * Machine actor class
- * userActorRef:ActorRef user actor ref (till server is down)
+ * controller: controller ActorRef
  */
-//serve il riferimento del controller, non dell'attore
-class MachineActor(userActorRef: ActorRef) extends Actor{
+class MachineActor(controller: ActorRef /*, machineType: Class[_ <: PhysicalMachine]*/) extends Actor{
+  var booked: (Boolean, String) = (false, "")
+  var phMachineAct: ActorRef = _
+
   def receive: Receive = {
-    case MsgConstructor(actorRef,"USER_LOG_IN") => userActorRef ! MsgConstructor(self,"USER_LOGGED")
-    case m: MsgUserLogin => m.userID //gira m al controller
-    case m: MsgUserRef => m.user ! MsgUserLoggedInMachine(self)
+    case m: MsgPMActorStarted => phMachineAct = sender()
+    case m: MsgUserLogin =>   availabilityCheck(m.userID)
+    case m: MsgMachineBooking => if(!booked._1){
+                              booked = (true, m.userID) }
+                              sender() ! MsgBookingStatus(booked._1)
+                              phMachineAct ! MsgBookingStatus(booked._1)
     case _ => print("ERROR_MACHINE")
   }
 
-  def availabilityCheck(): Unit = ???
+  def availabilityCheck(userId: String): Unit = {
+    if (!booked._1 || (booked._1 && booked._2.equals(userId))) {
+      booked = (false,"")
+      controller ! MsgUserLogin(userId)
+      context.become(connecting())
+    } else {
+      controller ! MsgUnableToLogIn(userId)
+      context.become(receive)
+    }
+  }
 
-  def connecting(): Unit = ???
+  def connecting(): Receive = {
+    case m: MsgUserRef => m.user ! MsgUserLoggedInMachine(self)
+      context.become(updateAndLogOut()) // workout data received
+                            // send setting data to machine
+  }
 
-  def ready(): Unit = ???
-
-  def running(): Unit = ???
-
-  def updatingData(): Unit = ???
-
-  def resetting(): Unit = ???
-
-  def idle(): Unit = ???
-}
-
-trait Machine {
-  def isBooked: Boolean
-  def getHeartbeat(): Int
-  def getID(): Int
-}
-/**
- * Class to verify if the system  works
- */
-class ActorVerifier() extends Actor {
-  override def receive: Receive = {
-    case MsgConstructor(actorRef,"USER_LOGGED") => print("SUCCESS")
-    case _ => print("ERROR_ACTOR")
+  def updateAndLogOut(): Receive = {
+    case m: MsgDisplay => { } //get user workout data and send it to server  //send log out msg to user
   }
 }
 
-object ActorTest extends App {
-  val system = ActorSystem("mySystem")
-  val actor = system.actorOf(Props[ActorVerifier](), "actorVerify")
-  val machine = system.actorOf(Props(classOf[MachineActor], actor), "machineActor")
-  machine ! MsgConstructor(actor, "USER_LOG_IN")
-}
 

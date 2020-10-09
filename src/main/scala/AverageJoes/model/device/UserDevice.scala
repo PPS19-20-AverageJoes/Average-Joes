@@ -11,7 +11,7 @@ trait UserDevice extends Actor{
   val deviceID: String
 
   //Search for the Gym Controller and send a message
-  GymController.controller ! MsgDeviceInGym(deviceID) //ToDo: dinamic search
+  //GymController.controller ! MsgDeviceInGym(deviceID) //ToDo: dinamic search
 
   def display (s: String): Unit
 
