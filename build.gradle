@@ -11,11 +11,6 @@ dependencies {
 
     implementation 'org.scala-lang:scala-library:2.12.9'
 
-    implementation "com.typesafe.akka:akka-actor_2.12:2.6.9"
-    implementation "com.typesafe.akka:akka-actor-typed_2.12:2.6.9"
-
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
-
     testImplementation 'junit:junit:4.12'
     testCompile ('org.junit.jupiter:junit-jupiter:5.6.0')
 

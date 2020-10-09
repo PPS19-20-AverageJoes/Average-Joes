@@ -5,8 +5,9 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 
 /**
- * UserGroup supervises the user actors for one group. For example GymUsers or StaffUsers.
- * Group actor will hande the requests that will be passed by User Manager Actor *
+ * Group actor will handle the requests that will be passed by User Manager Actor *
+ * Groups provides other services too.
+ * TODO: implement UserGroup services
  */
 
 object UserGroup {
