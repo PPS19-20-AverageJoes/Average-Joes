@@ -38,7 +38,7 @@ class MachineActor(controller: ActorRef /*, machineType: Class[_ <: PhysicalMach
   }
 
   def updateAndLogOut(): Receive = {
-    case m: _ =>{ } //get user workout data and send it to server  //send log out msg to user
+    case m: MsgDisplay => { } //get user workout data and send it to server  //send log out msg to user
   }
 }
 
