@@ -6,17 +6,17 @@ import akka.actor.{Actor, ActorRef}
  * Machine actor class
  * controller: controller ActorRef
  */
-class MachineActor(controller: ActorRef) extends Actor{
+class MachineActor(controller: ActorRef /*, machineType: Class[_ <: PhysicalMachine]*/) extends Actor{
   var booked: (Boolean, String) = (false, "")
   var phMachineAct: ActorRef = _
 
   def receive: Receive = {
-    case m: MsgUserLogin => phMachineAct = sender()
-                            availabilityCheck(m.userID)
+    case m: MsgPMActorStarted => phMachineAct = sender()
+    case m: MsgUserLogin =>   availabilityCheck(m.userID)
     case m: MsgMachineBooking => if(!booked._1){
                               booked = (true, m.userID) }
                               sender() ! MsgBookingStatus(booked._1)
-                              m.physicalMachineRef! MsgBookingStatus(booked._1) //?? non ho il riferimento
+                              phMachineAct ! MsgBookingStatus(booked._1)
     case _ => print("ERROR_MACHINE")
   }
 
