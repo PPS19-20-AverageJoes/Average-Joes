@@ -3,6 +3,10 @@ package AverageJoes.model.user
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
+/**
+ * User Manager will handle the request for user creation and will pass this request
+ * to User Group. Other requests will be handled by UserManager.
+ */
 
 object UserManager {
   def apply(): Behavior[Command] = Behaviors.setup(ctx => new UserManager(ctx))
