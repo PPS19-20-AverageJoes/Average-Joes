@@ -1,24 +1,33 @@
 
 lazy val root = (project in file("."))
   .settings(
-    scalaVersion := "2.12.11",
-    // javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+    scalaVersion := "2.12.9",
+
+
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % Test,
-      //"com.novocode" % "junit-interface" % "0.11" % Test,
-      "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-      //"org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % Test,
-      //"io.cucumber" %% "cucumber-scala" % "2.0.1" % Test,
-      //"io.cucumber" % "cucumber-junit" % "2.4.0" % Test,
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
-      "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % Test
-    ),
-    crossPaths := false, // https://github.com/sbt/junit-interface/issues/35
+
+      "com.typesafe.akka"    %% "akka-actor-typed"            % "2.6.9",
+      "com.typesafe.akka"    %% "akka-actor"                  % "2.6.9",
+      "com.typesafe.akka"    %% "akka-testkit"                % "2.6.9"      % "test",
+      "com.typesafe.akka"    %% "akka-actor-testkit-typed"    % "2.6.9"      % "it,test",
+
+      "org.scalactic"        %% "scalactic"                   % "3.2.0",
+      "org.scalacheck"       %% "scalacheck"                  % "1.14.0"     % "it,test",
+      "org.scalatest"        %% "scalatest"                   % "3.2.0"      % "test",
+      "org.scalatest"        %% "scalatest-wordspec"          % "3.2.0"      % Test,
+      "org.scalatestplus"    %% "scalacheck-1-14"             % "3.1.0.1"    % "it,test",
+      "org.scalatestplus"    %% "scalatestplus-mockito"       % "1.0.0-M2"   % "it,test",
+      "org.scalatestplus"    %% "mockito-3-4"                 % "3.2.2.0"    % "test",
+
+      "org.mockito"          %% "mockito-scala"               % "1.10.2"     % "it,test",
+
+      "com.typesafe.akka"    %% "akka-cluster-tools"          % "2.6.9",
+      "com.typesafe.akka"    %% "akka-cluster-typed"          % "2.6.9",
+
+      "org.slf4j"            % "slf4j-simple"                 % "1.6.2" % Test
+),
+    crossPaths := false,
     Test / parallelExecution := false
   )
 
-// Cucumber configuration
-// Run by:  sbt> cucumber
-//enablePlugins(CucumberPlugin)
-
-//CucumberPlugin.glue := "testLecture/code/steps"

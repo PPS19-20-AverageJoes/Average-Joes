@@ -1,30 +1,21 @@
 package AverageJoes.model.user
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{FeatureSpec, GivenWhenThen}
+import AverageJoes.model.user.User.NotifyWristband
+import org.scalatest.wordspec.AnyWordSpecLike
+import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 
-@RunWith(classOf[JUnitRunner])
-class UserTest extends FeatureSpec with GivenWhenThen {
 
-    info("As a authorization mechanism")
-    info("I want to be able to allow a user to log to machine")
-    info("So he can workout")
+class UserTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
-    feature("Authentication button"){
-      scenario("User presses authentication button") {
-        Given("a machine that is available")
-        val user = SmartGymUser("sokol", "guri", "GRUSL", "0001")
-        assert(!user.isLogged)
+  "User actor" must {
 
-        When("authentication button is pressed")
-        user.logIn()
+    "should notify wristband" in {
+      val probe = createTestProbe[NotifyWristband]
+      val deviceActor = spawn(User("group", "device"))
 
-        Then("the user should be authorized to log in")
-        assert(user.isLogged)
-      }
+      deviceActor ! User.NotifiedByMachine(requestId = 42, probe.ref)
+      val response = probe.receiveMessage()
+      response.requestId should ===(42)
     }
-
-    scenario("user press authentication button with no available machine"){pending}
-
+  }
 }
