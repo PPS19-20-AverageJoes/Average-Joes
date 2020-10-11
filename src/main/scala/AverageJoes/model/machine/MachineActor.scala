@@ -33,12 +33,14 @@ class MachineActor(controller: ActorRef /*, machineType: Class[_ <: PhysicalMach
 
   def connecting(): Receive = {
     case m: MsgUserRef => m.user ! MsgUserLoggedInMachine(self)
-      context.become(updateAndLogOut()) // workout data received
-                            // send setting data to machine
+    case m: MsgUserMachineWorkoutPlan => phMachineAct ! MsgUserMachineWorkoutPlan(m.user, m.exercise) // workout data received and send it to the physical machine
+    context.become(updateAndLogOut())
   }
 
   def updateAndLogOut(): Receive = {
-    case m: MsgDisplay => { } //get user workout data and send it to server  //send log out msg to user
+    case m: MsgUserMachineWorkoutPlan => controller ! MsgUserMachineWorkoutPlan(m.user, m.exercise) //get user workout data and send it to server
+                                         m.user ! MsgLogOut()// send log out msg to user
+                                         context.become(receive)
   }
 }
 
