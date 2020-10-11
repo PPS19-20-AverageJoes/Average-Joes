@@ -17,5 +17,4 @@ jobs:
         with:
           java-version: ${{ matrix.java_version }}
       - name: Sbt build and test system
-        script:
-        - sbt clean coverage test coverageReport
+        run: sbt test
