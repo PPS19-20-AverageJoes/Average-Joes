@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorRefFactory, Props}
 
 /**
  * AC
- * @param deviceID: ID of the device. In physical devices, is stored on config files
+ * @param deviceID: ID of the device. In real devices, is stored on config files
  */
 class Wristband(val deviceID: String) extends UserDevice {
 
@@ -17,8 +17,6 @@ class Wristband(val deviceID: String) extends UserDevice {
   def rfid(ref: ActorRef) : Unit ={
     ref ! MsgRfid(deviceID)
   }
-
-  HardwareController.gymController ! MsgDeviceInGym(deviceID)
 
   //noinspection SpellCheckingInspection
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?

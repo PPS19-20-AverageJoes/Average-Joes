@@ -9,7 +9,7 @@ import akka.actor.{Actor, ActorRef, ActorRefFactory, Props}
 import scala.collection.mutable
 
 
-
+//Obsoleto
 object HardwareController {
   private var childD = mutable.Map.empty[String, ActorRef] //Child Devices
   private var childPM = mutable.Map.empty[String, ActorRef] //Child Physical Machines
@@ -20,10 +20,10 @@ object HardwareController {
     //private val userActor = context.actorOf(Props(SmartGymUserImpl("","","","")), "actorUser")
 
     private val wrist1 = Wristband.startWristband(context, "Wristband1")
-    private val dLegPress1 = PhysicalMachine.startDemon(context, "LegPress1", classOf[LegPress])
+    private val dLegPress1 = PhysicalMachine.startDaemon(context, "LegPress1", classOf[LegPress])
 
     override def receive: Receive = {
-      case m: MsgPMActorStarted => childPM.addOne(m.machineID, m.phMachine)
+      case m: MsgPMActorStarted => childPM += ((m.machineID, m.phMachine))
     }
   }
 

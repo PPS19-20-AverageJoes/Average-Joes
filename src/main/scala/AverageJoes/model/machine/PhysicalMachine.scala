@@ -1,6 +1,7 @@
 package AverageJoes.model.machine
 
 import AverageJoes.common.MsgActorMessage._
+import AverageJoes.common.ServerSearch
 import AverageJoes.controller.HardwareController
 import akka.actor.{Actor, ActorContext, ActorRef, ActorRefFactory, ActorSystem, Props}
 
@@ -30,27 +31,27 @@ case class LegPress(ma: ActorRef, machineID: String) extends PhysicalMachine{
 }
 
 object PhysicalMachine {
-  def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
-    actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
+
+  //Every PhysicalMachine need a daemon that tell the server of the starting up and retreive the actorref of the virtual Machine
+  def startDaemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
+    actorRefFactory.actorOf(Props(classOf[PMDaemon], machineID, machineType), machineID)
   }
 
-  //noinspection SpellCheckingInspection
-  //ogni macchina fisica deve avere un demone che pinga il server e si fa restituire l'actor ref del server e della macchina virtuale
-  def startDemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
-    actorRefFactory.actorOf(Props(classOf[PMDemon], machineID, machineType), machineID)
-  }
-
-  case class PMDemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends Actor{
-
-    HardwareController.gymController ! MsgPhysicalMachineWakeUp(machineID)
+  case class PMDaemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends Actor with ServerSearch{
+    server ! MsgPhysicalMachineWakeUp(machineID)
 
     override def receive: Receive = {
       case m: MsgMachineActorStarted => {
         val pm = startPhysicalMachine(context, machineID,machineType ,m.machine)
-        sender() ! MsgPMActorStarted(machineID, pm)
+        m.machine ! MsgPMActorStarted(machineID, pm)
         context.parent ! MsgPMActorStarted(machineID, pm)
+        //ToDo: kill daemon
       }
 
+    }
+
+    def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
+      actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
     }
   }
 

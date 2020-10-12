@@ -1,17 +1,18 @@
 package AverageJoes.model.device
 
 import AverageJoes.common.MsgActorMessage.MsgDeviceInGym
+import AverageJoes.common.ServerSearch
 import AverageJoes.controller.GymController
 import akka.actor.{Actor, ActorRef}
 
 /**
  * AC
  */
-trait UserDevice extends Actor{
+trait UserDevice extends Actor with ServerSearch {
   val deviceID: String
 
-  //Search for the Gym Controller and send a message
-  //GymController.controller ! MsgDeviceInGym(deviceID) //ToDo: dinamic search
+  //Search for the Gym Controller (the server) and send a message
+  server ! MsgDeviceInGym(deviceID)
 
   def display (s: String): Unit
 
