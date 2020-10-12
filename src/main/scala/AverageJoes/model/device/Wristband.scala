@@ -1,14 +1,20 @@
 package AverageJoes.model.device
 
-import AverageJoes.common.MsgActorMessage._
-import AverageJoes.controller.HardwareController
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 
 /**
  * AC
  * @param deviceID: ID of the device. In real devices, is stored on config files
  */
-class Wristband(val deviceID: String) extends UserDevice {
+class Wristband(val deviceID: String) extends Device {
+
+  def apply(): Behavior[Device.MsgDevice] = Behaviors.receive { (context, message) =>
+    context.log.info("Hello {}!", message.whom)
+    message.replyTo ! Greeted(message.whom, context.self)
+    Behaviors.same
+  }
 
   def display (s: String): Unit ={
     println(s)
