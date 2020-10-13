@@ -1,47 +1,62 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.MsgActorMessage._
-import akka.actor.{Actor, ActorRef}
+import java.util.Optional
+
+import AverageJoes.common.Command
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.{ActorRef, Behavior}
 /**
  * Machine actor class
  * controller: controller ActorRef
  */
-class MachineActor(controller: ActorRef /*, machineType: Class[_ <: PhysicalMachine]*/) extends Actor{
-  var booked: (Boolean, String) = (false, "")
-  var phMachineAct: ActorRef = _
+object MachineActor{
+  def apply(controller: ActorRef[Command], machineType: Class[_ <: PhysicalMachine]): Behavior[Command] =
+    Behaviors.setup(context => new MachineActor(context, controller, machineType))
+}
 
-  def receive: Receive = {
-    case m: MsgPMActorStarted => phMachineAct = sender()
-    case m: MsgUserLogin =>   availabilityCheck(m.userID)
-    case m: MsgMachineBooking => if(!booked._1){
-                              booked = (true, m.userID) }
-                              sender() ! MsgBookingStatus(booked._1)
-                              phMachineAct ! MsgBookingStatus(booked._1)
-    case _ => print("ERROR_MACHINE")
+class MachineActor(context: ActorContext[Command], controller: ActorRef[Command], //da rendere actor ref
+                   machineType:Class[_ <: PhysicalMachine]) extends AbstractBehavior[Command](context) {
+  import Command._
+
+  var booked: (Boolean, String) = (false, "")
+  var physicalMachine: Optional[ActorRef[Command]] = Optional.empty()
+
+  override def onMessage(msg: Command): Behavior[Command] = msg match {
+    case PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
+      this
+
+    case UserLogIn(userID) =>
+      availabilityCheck(userID)
+      this
+
+    case MachineBooking(userID, replyTo) =>
+      if (booked._1) {
+        booked = (true, userID)
+      }
+      replyTo ! BookingStatus(booked._1)
+      this
+
+    case UserRef(replyTo) =>
+      replyTo ! UserLoggedInMachine()
+      this
+
+    case UserMachineWorkoutPlan(userID, exercise) =>
+      controller ! UserMachineWorkoutPlan(userID, exercise)
+      this
+
+    case UserMachineWorkoutCompleted (user, exercise) =>
+      controller !  UserMachineWorkoutCompleted(user, exercise)
+      user ! UserLogOut()
+      this
+
   }
 
   def availabilityCheck(userId: String): Unit = {
     if (!booked._1 || (booked._1 && booked._2.equals(userId))) {
       booked = (false,"")
-      controller ! MsgUserLogin(userId)
-      context.become(connecting())
+      controller ! UserLogInStatus(booked._1)
     } else {
-      controller ! MsgUnableToLogIn(userId)
-      context.become(receive)
+      controller ! UserLogInStatus(booked._1)
     }
   }
-
-  def connecting(): Receive = {
-    case m: MsgUserRef => m.user ! MsgUserLoggedInMachine(self)
-    case m: MsgUserMachineWorkoutPlan => phMachineAct ! MsgUserMachineWorkoutPlan(m.user, m.exercise) // workout data received and send it to the physical machine
-    context.become(updateAndLogOut())
-  }
-
-  def updateAndLogOut(): Receive = {
-    case m: MsgUserMachineWorkoutPlan => controller ! MsgUserMachineWorkoutPlan(m.user, m.exercise) //get user workout data and send it to server
-                                         m.user ! MsgLogOut()// send log out msg to user
-                                         context.become(receive)
-  }
 }
-
-
