@@ -1,8 +1,9 @@
 package AverageJoes.model.device
 
-import akka.actor.typed.Behavior
+import AverageJoes.model.machine.PhysicalMachine
+import AverageJoes.model.machine.PhysicalMachine.MsgPhyMachine
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.{ActorRef, ActorRefFactory, Props}
 
 /**
  * AC
@@ -10,26 +11,23 @@ import akka.actor.{ActorRef, ActorRefFactory, Props}
  */
 class Wristband(val deviceID: String) extends Device {
 
-  def apply(): Behavior[Device.MsgDevice] = Behaviors.receive { (context, message) =>
-    context.log.info("Hello {}!", message.whom)
-    message.replyTo ! Greeted(message.whom, context.self)
-    Behaviors.same
+  //noinspection SpellCheckingInspection
+  //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
+  override def onMessage(msg: Device.MsgDevice): Behavior[Device.MsgDevice] = {
+    msg match{
+      case Device.MsgUserLoggedInMachine(refMachineActor) => display(refMachineActor.toString()); Behaviors.same //ToDo: va passato un id o similari
+      case Device.MsgNearDevice(refPM) => rfid(refPM); Behaviors.same
+    }
   }
 
   def display (s: String): Unit ={
     println(s)
   }
 
-  def rfid(ref: ActorRef) : Unit ={
-    ref ! MsgRfid(deviceID)
+  def rfid(ref: ActorRef[MsgPhyMachine]) : Unit ={
+    ref ! PhysicalMachine.MsgRfid(deviceID)
   }
 
-  //noinspection SpellCheckingInspection
-  //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
-  override def receive: Receive = {
-    case m: MsgUserLoggedInMachine => display(m.refMachineActor.toString()) //ToDo: va passato un id o similari
-    case m: MsgNearDevice => rfid(m.device)
-  }
 }
 
 object Wristband{
