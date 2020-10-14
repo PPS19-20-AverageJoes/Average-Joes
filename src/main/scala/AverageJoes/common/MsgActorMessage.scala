@@ -1,5 +1,6 @@
 package AverageJoes.common
 
+import AverageJoes.model.workout.Exercise
 import akka.actor.ActorRef
 
 sealed trait MsgActorMessage
@@ -15,10 +16,12 @@ object MsgActorMessage {
   case class MsgUserLogin(userID: String) extends MsgActorMessage //User logged
   case class MsgUserLoggedInMachine(refMachineActor: ActorRef) extends MsgActorMessage //User logged
   case class MsgUserRef(user: ActorRef) extends MsgActorMessage
+  case class MsgUserMachineWorkoutPlan(user: ActorRef, exercise: Class[_ <:Exercise]) extends MsgActorMessage
   case class MsgDisplay(message: String) extends MsgActorMessage
   case class MsgNearDevice(device:ActorRef) extends MsgActorMessage
   case class MsgMachineBooking(userID: String) extends  MsgActorMessage
   case class MsgBookingStatus(status: Boolean) extends  MsgActorMessage
   case class MsgUnableToLogIn(userID: String) extends  MsgActorMessage
+  case class MsgLogOut() extends  MsgActorMessage
 
 }

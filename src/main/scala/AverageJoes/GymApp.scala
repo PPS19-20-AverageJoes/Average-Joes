@@ -9,6 +9,7 @@ object GymApp extends App{
  // private val actSystem = ActorSystem("Gym")
  // private val controller = GymController.startGymController(actSystem)
 
+
   /*
   * import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -16,6 +17,8 @@ val config: Config = ConfigFactory.parseFile(new Nothing("src/main/scala/Average
 		  val system: Nothing = ActorSystem.create("MySystem", config)
   *
   * */
+
+
 
   ActorSystem(UserObjectTester(), "user-actor-system")
   private val view = new View
