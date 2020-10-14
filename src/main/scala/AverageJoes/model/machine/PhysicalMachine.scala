@@ -1,56 +1,80 @@
 package AverageJoes.model.machine
 
 import AverageJoes.common.MsgActorMessage._
+import AverageJoes.common.{MsgActorMessage, ServerSearch}
 import AverageJoes.controller.HardwareController
-import akka.actor.{Actor, ActorContext, ActorRef, ActorRefFactory, ActorSystem, Props}
+import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.scaladsl.{AbstractBehavior, Behaviors}
 
-sealed trait PhysicalMachine extends Actor{
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.MsgPhyMachine]{
   val machineID: String //TODO: recuperare da configurazione su DB?
-  val ma: ActorRef //MachineActor
+  val ma: ActorRef[MsgActorMessage] //MachineActor
+
+
+  override def onMessage(msg: PhysicalMachine.MsgPhyMachine): Behavior[PhysicalMachine.MsgPhyMachine] = {
+    msg match{
+      case PhysicalMachine.MsgRfid(userID) => ma ! MsgUserLogin(userID); Behaviors.same
+      case PhysicalMachine.MsgDisplay(message) => display(message); Behaviors.same
+    }
+  }
 
   def display (s: String): Unit
 
-  //MsgPhysicalMachineWakeUp to Controller
-
-  override def receive: Receive = {
-    case m: MsgRfid => ma ! MsgUserLogin(m.userID)
-    case m: MsgDisplay => display(m.message)
-  }
 }
 
-case class ChestFly(ma: ActorRef, machineID: String) extends PhysicalMachine{
+case class ChestFly(ma: ActorRef[MsgActorMessage], machineID: String) extends PhysicalMachine{
   override def display(s: String): Unit = {
     val _display: String = machineID + " " + s
   }
 }
-case class LegPress(ma: ActorRef, machineID: String) extends PhysicalMachine{
+case class LegPress(ma: ActorRef[MsgActorMessage], machineID: String) extends PhysicalMachine{
   override def display(s: String): Unit = {
     val _display: String = machineID + " " + s
   }
 }
 
 object PhysicalMachine {
-  def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
-    actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
+  sealed trait MsgPhyMachine
+  case class MsgRfid(userID: String) extends MsgPhyMachine //Rfid fired
+  case class MsgDisplay(message: String) extends MsgPhyMachine
+
+  sealed trait MsgDaemon
+  case class MsgMachineActorStarted(refMA: ActorRef[MsgActorMessage]) extends MsgDaemon
+
+  //Every PhysicalMachine need a daemon that tell the server of the starting up and retreive the actorref of the virtual Machine
+  def startDaemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
+    actorRefFactory.actorOf(Props(classOf[PMDaemon], machineID, machineType), machineID)
   }
 
-  //noinspection SpellCheckingInspection
-  //ogni macchina fisica deve avere un demone che pinga il server e si fa restituire l'actor ref del server e della macchina virtuale
-  def startDemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
-    actorRefFactory.actorOf(Props(classOf[PMDemon], machineID, machineType), machineID)
-  }
+  case class PMDaemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends AbstractBehavior[MsgDaemon] with ServerSearch{
+    server ! MsgPhysicalMachineWakeUp(machineID)
 
-  case class PMDemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends Actor{
+    override def onMessage(msg: MsgDaemon): Behavior[MsgDaemon] = {
+      msg match{
+        case MsgMachineActorStarted(refMA) => {
+          val pm = startPhysicalMachine(context, machineID,machineType ,refMA)
+          context.spawn[](PhysicalMachine)
+          refMA ! MsgPMActorStarted(machineID, pm)
 
-    HardwareController.gymController ! MsgPhysicalMachineWakeUp(machineID)
+          //ToDo: kill daemon
+          Behaviors.same
+        }
+      }
+    }
+
 
     override def receive: Receive = {
       case m: MsgMachineActorStarted => {
         val pm = startPhysicalMachine(context, machineID,machineType ,m.machine)
-        sender() ! MsgPMActorStarted(machineID, pm)
+        m.machine ! MsgPMActorStarted(machineID, pm)
         context.parent ! MsgPMActorStarted(machineID, pm)
+        //ToDo: kill daemon
       }
 
+    }
+
+    def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
+      actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
     }
   }
 
