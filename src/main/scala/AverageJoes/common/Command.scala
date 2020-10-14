@@ -19,12 +19,12 @@ object Command {
   final case class UserMachineWorkoutCompleted (user: ActorRef[Command], exercise: Class[_ <: Exercise]) extends Command
   final case class UserLogOut() extends Command
 
-  final case class NotifiedByMachine(requestId: Long, replyTo: ActorRef[NotifyWristband]) extends Command
+ /* final case class NotifiedByMachine(requestId: Long, replyTo: ActorRef[NotifyWristband]) extends Command
   final case class NotifyWristband(requestId: Long) extends Command
 
   final case class UserAlive(requestId: Long, replyTo: ActorRef[UserAliveSignal]) extends Command
   final case class UserAliveSignal(requestId: Long) extends Command
 
-  case object Passivate extends Command
+  case object Passivate extends Command*/
 }
 

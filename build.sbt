@@ -25,7 +25,16 @@ lazy val root = (project in file("."))
       "com.typesafe.akka"    %% "akka-cluster-tools"          % "2.6.9",
       "com.typesafe.akka"    %% "akka-cluster-typed"          % "2.6.9",
 
-      "org.slf4j"            % "slf4j-simple"                 % "1.6.2" % Test
+      "org.slf4j"            % "slf4j-simple"                 % "1.6.2" % Test,
+
+      "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+      "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
+      "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+      "org.scala-lang.modules" %% "scala-swing" % "1.0.2"
+
+
 ),
     crossPaths := false,
     Test / parallelExecution := false
