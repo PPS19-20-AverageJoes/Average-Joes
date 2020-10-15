@@ -1,7 +1,7 @@
 package AverageJoes.model.device
 
 import AverageJoes.model.machine.PhysicalMachine
-import AverageJoes.model.machine.PhysicalMachine.MsgPhyMachine
+import AverageJoes.model.machine.PhysicalMachine.Msg
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 
@@ -13,7 +13,7 @@ class Wristband(val deviceID: String) extends Device {
 
   //noinspection SpellCheckingInspection
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
-  override def onMessage(msg: Device.MsgDevice): Behavior[Device.MsgDevice] = {
+  override def onMessage(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
       case Device.MsgUserLoggedInMachine(refMachineActor) => display(refMachineActor.toString()); Behaviors.same //ToDo: va passato un id o similari
       case Device.MsgNearDevice(refPM) => rfid(refPM); Behaviors.same
@@ -24,7 +24,7 @@ class Wristband(val deviceID: String) extends Device {
     println(s)
   }
 
-  def rfid(ref: ActorRef[MsgPhyMachine]) : Unit ={
+  def rfid(ref: ActorRef[Msg]) : Unit ={
     ref ! PhysicalMachine.MsgRfid(deviceID)
   }
 
