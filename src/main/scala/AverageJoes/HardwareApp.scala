@@ -3,11 +3,11 @@ package AverageJoes
 import AverageJoes.controller.{GymController, HardwareController}
 import AverageJoes.model.device.Wristband
 import AverageJoes.model.machine._
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 
 object HardwareApp extends App{
   private val actSystem = ActorSystem("Gym")
-  //private val controller = HardwareController.startHardwareController(actSystem)
+  private val controller = actSystem. HardwareController.startHardwareController(actSystem)
   //HardwareController.gymController = GymController.startGymController(actSystem)
 
   val legPress1 = PhysicalMachine.startDaemon(actSystem,"LegPress1",classOf[LegPress])

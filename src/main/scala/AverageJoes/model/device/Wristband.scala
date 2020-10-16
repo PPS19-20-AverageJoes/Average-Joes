@@ -13,7 +13,7 @@ class Wristband(val deviceID: String) extends Device {
 
   //noinspection SpellCheckingInspection
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
-  override def onMessage(msg: Device.MsgDevice): Behavior[Device.MsgDevice] = {
+  override def onMessage(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
       case Device.MsgUserLoggedInMachine(refMachineActor) => display(refMachineActor.toString()); Behaviors.same //ToDo: va passato un id o similari
       case Device.MsgNearDevice(refPM) => rfid(refPM); Behaviors.same
