@@ -1,28 +1,28 @@
-package AverageJoes.model.user
+package AverageJoes.model.customer
 
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
-object User {
+object Customer {
   def apply(groupId: String, deviceId: String): Behavior[Command] =
-    Behaviors.setup(context => new User(context, groupId, deviceId))
+    Behaviors.setup(context => new Customer(context, groupId, deviceId))
 
   sealed trait Command
   final case class NotifiedByMachine(requestId: Long, replyTo: ActorRef[NotifyWristband]) extends Command
   final case class NotifyWristband(requestId: Long) extends Command
 
-  final case class UserAlive(requestId: Long, replyTo: ActorRef[UserAliveSignal]) extends Command
-  final case class UserAliveSignal(requestId: Long) extends Command
+  final case class CustomerAlive(requestId: Long, replyTo: ActorRef[CustomerAliveSignal]) extends Command
+  final case class CustomerAliveSignal(requestId: Long) extends Command
 
   case object Passivate extends Command
 
 }
 
-class User(context: ActorContext[User.Command], groupId: String, userId: String)
-  extends AbstractBehavior[User.Command](context) {
-  import User._
+class Customer(context: ActorContext[Customer.Command], groupId: String, customerId: String)
+  extends AbstractBehavior[Customer.Command](context) {
+  import Customer._
 
-  println("User actor {"+groupId+"}-{"+userId+"} started")
+  println("Customer actor {"+groupId+"}-{"+customerId+"} started")
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
@@ -30,8 +30,8 @@ class User(context: ActorContext[User.Command], groupId: String, userId: String)
         replyTo ! NotifyWristband(id)
         this
 
-      case UserAlive(id, replyTo) =>
-        replyTo ! UserAliveSignal(id)
+      case CustomerAlive(id, replyTo) =>
+        replyTo ! CustomerAliveSignal(id)
         this
 
       case Passivate =>
@@ -41,7 +41,7 @@ class User(context: ActorContext[User.Command], groupId: String, userId: String)
 
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case PostStop =>
-      println("Device actor {"+groupId+"}-{"+userId+"} stopped")
+      println("Customer actor {"+groupId+"}-{"+customerId+"} stopped")
       this
   }
 
