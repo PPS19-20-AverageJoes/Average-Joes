@@ -6,7 +6,12 @@ import akka.actor.typed.scaladsl.Behaviors
 
 object CustomerObjectTester {
 
+
+
+
   def apply(): Behavior[Command] = Behaviors.setup[Command](context => {
+
+
 
     val customerManager: ActorRef[Command] = context.spawn(CustomerManager(), "customer-manager")
 
