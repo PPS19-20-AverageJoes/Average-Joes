@@ -14,7 +14,7 @@ object CustomerGroup {
   def apply(groupID: String): Behavior[Command] = Behaviors.setup(ctx => new CustomerGroup(ctx, groupID))
 
   trait Command
-  private final case class CustomerTerminated(device: ActorRef[Customer.Command], groupId: String, customerId: String) extends Command
+  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Command], groupId: String, customerId: String) extends Command
 }
 
 class CustomerGroup(ctx: ActorContext[CustomerGroup.Command], groupId: String)
@@ -23,7 +23,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Command], groupId: String)
   import CustomerGroup.{Command, CustomerTerminated}
   import CustomerManager._
 
-  private var customerIdToActor = Map.empty[String, ActorRef[Customer.Command]]
+  private var customerIdToActor = Map.empty[String, ActorRef[CustomerActor.Command]]
 
   println("UserGroup {"+groupId+"} started")
 
@@ -34,7 +34,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Command], groupId: String)
           case Some(userActor) => replyTo ! CustomerRegistered(userActor)
           case None =>
               println("Creating customer actor for {"+createUserMsg.customerId+"}")
-              val customerActor = context.spawn(Customer(groupId, customerId), s"user-$customerId")
+              val customerActor = context.spawn(CustomerActor(groupId, customerId), s"user-$customerId")
               context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
               customerIdToActor += customerId -> customerActor
               replyTo ! CustomerRegistered(customerActor)
