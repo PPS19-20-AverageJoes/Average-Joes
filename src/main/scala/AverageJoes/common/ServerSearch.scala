@@ -20,6 +20,5 @@ trait ServerSearch {
 }
 
 object ServerSearch{
-  private val actSystem = ActorSystem(Nothing,"Gym")
-  val serverDummy: ActorRef[GymController.Msg] = GymController.startGymController(actSystem)
+  private val serverDummy: ActorSystem[GymController.Msg] = ActorSystem(GymController(), "GymController")
 }

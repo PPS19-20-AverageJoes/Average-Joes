@@ -1,7 +1,10 @@
 package AverageJoes.model.machine
 
 import java.util.Optional
-import AverageJoes.model.machine.MachineActor.{BookingStatus, Command, MachineBooking, PMActorStarted, UserLogIn, UserLogInStatus, UserLogOut, UserLoggedInMachine, UserMachineWorkoutCompleted, UserMachineWorkoutPlan, UserRef}
+
+import AverageJoes.controller.GymController
+import AverageJoes.model.customer.CustomerManager
+import AverageJoes.model.machine.MachineActor._
 import AverageJoes.model.workout.Exercise
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -10,55 +13,56 @@ import akka.actor.typed.{ActorRef, Behavior}
  * controller: controller ActorRef
  */
 object MachineActor{
-  def apply(controller: ActorRef[Command], machineType: Class[_ <: PhysicalMachine]): Behavior[Command] =
+  def apply(controller: ActorRef[GymController.Msg], machineType: PhysicalMachine.MachineType.Type): Behavior[Msg] =
     Behaviors.setup(context => new MachineActor(context, controller, machineType))
 
-  sealed trait Command
-
-  final case class PMActorStarted(replyTo: ActorRef[Command]) extends Command
-  final case class UserLogIn(userID: String) extends Command
-  final case class UserLogInStatus(status: Boolean) extends Command
-  final case class MachineBooking(userID: String, replyTo: ActorRef[BookingStatus]) extends Command
-  final case class BookingStatus(status: Boolean) extends Command
-  final case class UserRef(replyTo: ActorRef[UserLoggedInMachine]) extends Command
-  final case class UserLoggedInMachine() extends Command
-  final case class UserMachineWorkoutPlan (userID: String, exercise: Class[_ <: Exercise]) extends Command
-  final case class UserMachineWorkoutCompleted (user: ActorRef[Command], exercise: Class[_ <: Exercise]) extends Command
-  final case class UserLogOut() extends Command
+  sealed trait Msg
+  object Msg {
+    final case class PMActorStarted(replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg
+    final case class UserLogIn(userID: String) extends Msg
+    final case class UserLogInStatus(status: Boolean) extends Msg
+    final case class MachineBooking(userID: String, replyTo: ActorRef[BookingStatus]) extends Msg
+    final case class BookingStatus(status: Boolean) extends Msg
+    final case class UserRef(replyTo: ActorRef[UserLoggedInMachine]) extends Msg
+    final case class UserLoggedInMachine() extends Msg
+    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: Exercise]) extends Msg
+    final case class UserMachineWorkoutCompleted(user: ActorRef[Msg], exercise: Class[_ <: Exercise]) extends Msg
+    final case class UserLogOut() extends Msg
+  }
 }
 
-class MachineActor(context: ActorContext[Command], controller: ActorRef[Command], //da rendere actor ref
-                   machineType:Class[_ <: PhysicalMachine]) extends AbstractBehavior[Command](context) {
+class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], //da rendere actor ref
+                   machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) {
 
   var booked: (Boolean, String) = (false, "")
-  var physicalMachine: Optional[ActorRef[Command]] = Optional.empty()
+  var physicalMachine: Optional[ActorRef[Msg]] = Optional.empty()
 
-  override def onMessage(msg: Command): Behavior[Command] = msg match {
-    case PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
+  override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+    case Msg.PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
       this
 
-    case UserLogIn(userID) =>
+    case Msg.UserLogIn(userID) =>
       availabilityCheck(userID)
       this
 
-    case MachineBooking(userID, replyTo) =>
+    case Msg.MachineBooking(userID, replyTo) =>
       if (booked._1) {
         booked = (true, userID)
       }
-      replyTo ! BookingStatus(booked._1)
+      replyTo ! Msg.BookingStatus(booked._1)
       this
 
-    case UserRef(replyTo) =>
-      replyTo ! UserLoggedInMachine()
+    case Msg.UserRef(replyTo) =>
+      replyTo ! Msg.UserLoggedInMachine()
       this
 
-    case UserMachineWorkoutPlan(userID, exercise) =>
-      controller ! UserMachineWorkoutPlan(userID, exercise)
+    case Msg.UserMachineWorkoutPlan(userID, exercise) =>
+      controller ! GymController.Msg.UserMachineWorkoutPlan(userID, exercise)
       this
 
-    case UserMachineWorkoutCompleted (user, exercise) =>
-      controller !  UserMachineWorkoutCompleted(user, exercise)
-      user ! UserLogOut()
+    case Msg.UserMachineWorkoutCompleted (user, exercise) =>
+      controller !  GymController.Msg.UserMachineWorkoutCompleted(user, exercise)
+      user ! Msg.UserLogOut()
       this
 
   }
@@ -66,9 +70,9 @@ class MachineActor(context: ActorContext[Command], controller: ActorRef[Command]
   def availabilityCheck(userId: String): Unit = {
     if (!booked._1 || (booked._1 && booked._2.equals(userId))) {
       booked = (false,"")
-      controller ! UserLogInStatus(booked._1)
+      controller ! GymController.Msg.UserLogInStatus(booked._1)
     } else {
-      controller ! UserLogInStatus(booked._1)
+      controller ! GymController.Msg.UserLogInStatus(booked._1)
     }
   }
 }

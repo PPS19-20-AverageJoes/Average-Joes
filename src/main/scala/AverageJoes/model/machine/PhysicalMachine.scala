@@ -1,9 +1,8 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{MsgActorMessage, ServerSearch}
-import AverageJoes.controller.HardwareController
+import AverageJoes.common.ServerSearch
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.{AbstractBehavior, Behaviors}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   val machineID: String //TODO: recuperare da configurazione su DB?
@@ -11,8 +10,8 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
   override def onMessage(msg: PhysicalMachine.Msg): Behavior[PhysicalMachine.Msg] = {
     msg match{
-      case PhysicalMachine.Msg.Rfid(userID) => ma ! MachineActor.UserLogIn(userID); Behaviors.same
-      case PhysicalMachine.Msg.Display(message) => display(message); Behaviors.same
+      case m: PhysicalMachine.Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.userID); Behaviors.same
+      case m: PhysicalMachine.Msg.Display => display(m.message); Behaviors.same
     }
   }
 
@@ -22,14 +21,9 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 object PhysicalMachine {
   sealed trait Msg
   object Msg{
-    case class Rfid(userID: String) extends Msg //Rfid fired
-    case class Display(message: String) extends Msg
+    final case class Rfid(userID: String) extends Msg //Rfid fired
+    final case class Display(message: String) extends Msg
   }
-
-
-  sealed trait MsgDaemon
-  case class MsgMachineActorStarted(refMA: ActorRef[MsgActorMessage]) extends MsgDaemon
-
 
   object MachineType extends Enumeration {
     type Type = Value
@@ -37,7 +31,7 @@ object PhysicalMachine {
   }
 
   import MachineType._
-  def apply(phMachineType: Type, ma: ActorRef[MachineActor.Msg], machineID: String): PhysicalMachine = {
+  def apply(phMachineType: Type, ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = {
     phMachineType match{
         case MachineType.legPress => LegPress(ma, machineID)
         case MachineType.chestFly => ChestFly(ma, machineID)
@@ -45,14 +39,26 @@ object PhysicalMachine {
     }
   }
 
-  private case class ChestFly(ma: ActorRef[MachineActor.Msg], machineID: String) extends PhysicalMachine{
+  private class ChestFly(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+    extends AbstractBehavior[Msg](context) with PhysicalMachine{
+
     override def display(s: String): Unit = {
       val _display: String = machineID + " " + s
     }
   }
-  private  case class LegPress(ma: ActorRef[MachineActor.Msg], machineID: String) extends PhysicalMachine{
+  object ChestFly{
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
+  }
+
+  private class LegPress(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+    extends AbstractBehavior[Msg](context) with PhysicalMachine{
+
     override def display(s: String): Unit = {
       val _display: String = machineID + " " + s
     }
   }
+  object LegPress{
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
+  }
+
 }
