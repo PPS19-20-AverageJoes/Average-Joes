@@ -17,7 +17,7 @@ object CustomerManager {
   final case class RequestCustomerList(requestId: Long, groupId: String, replyTo: ActorRef[ReplyCustomerList]) extends CustomerManager.Command with CustomerGroup.Command
   final case class ReplyCustomerList(requestId: Long, ids: Set[String])
 
-  final case class CustomerRegistered(customer: ActorRef[Customer.Command]) extends CustomerManager.Command with CustomerGroup.Command
+  final case class CustomerRegistered(customer: ActorRef[CustomerActor.Command]) extends CustomerManager.Command with CustomerGroup.Command
   private final case class CustomerGroupTerminated(groupId: String) extends CustomerManager.Command
 }
 
