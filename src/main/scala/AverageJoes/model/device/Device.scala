@@ -3,9 +3,8 @@ package AverageJoes.model.device
 import AverageJoes.common.MsgActorMessage.MsgDeviceInGym
 import AverageJoes.common.ServerSearch
 import AverageJoes.model.machine.{MachineActor, PhysicalMachine}
-import AverageJoes.model.user.User
 import akka.actor.typed.scaladsl.AbstractBehavior
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.ActorRef
 
 /**
  * AC
@@ -24,7 +23,14 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
 
 object Device {
   sealed trait Msg
-  case class MsgUserLoggedInMachine(refMachineActor: ActorRef[MachineActor]) extends Msg
-  case class MsgNearDevice(refPM:ActorRef[Msg]) extends Msg
-  //case class MsgDisplay(message: String) extends MsgDevice
+
+  object Msg {
+
+    case class MsgUserLoggedInMachine(refMachineActor: ActorRef[MachineActor]) extends Msg
+
+    case class MsgNearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
+
+    //case class MsgDisplay(message: String) extends MsgDevice
+  }
+
 }
