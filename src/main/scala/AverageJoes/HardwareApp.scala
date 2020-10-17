@@ -1,18 +1,17 @@
 package AverageJoes
 
-import AverageJoes.controller.{GymController, HardwareController}
-import AverageJoes.model.device.Wristband
-import AverageJoes.model.machine._
-import akka.actor.ActorSystem
+import AverageJoes.controller.HardwareController
+import AverageJoes.model.device.Device
+import AverageJoes.model.machine.PhysicalMachine
+import akka.actor.typed.ActorSystem
 
 object HardwareApp extends App{
-  private val actSystem = ActorSystem("Gym")
-  //private val controller = HardwareController.startHardwareController(actSystem)
-  //HardwareController.gymController = GymController.startGymController(actSystem)
+  private val controller: ActorSystem[HardwareController.Msg] = ActorSystem(HardwareController(), "GymHardware")
 
-  val legPress1 = PhysicalMachine.startDaemon(actSystem,"LegPress1",classOf[LegPress])
-  val chestFly1 = PhysicalMachine.startDaemon(actSystem,"ChestFly1",classOf[ChestFly])
-  val wristband1= Wristband.startWristband(actSystem,"Wristband1")
-  val wristband2= Wristband.startWristband(actSystem,"Wristband2")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",PhysicalMachine.MachineType.legPress)
+  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",PhysicalMachine.MachineType.chestFly)
+
+  controller ! HardwareController.Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
+  controller ! HardwareController.Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
 
 }

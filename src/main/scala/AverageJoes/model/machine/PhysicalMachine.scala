@@ -1,81 +1,64 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.MsgActorMessage._
-import AverageJoes.common.{MsgActorMessage, ServerSearch}
-import AverageJoes.controller.HardwareController
+import AverageJoes.common.ServerSearch
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.{AbstractBehavior, Behaviors}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
-sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.MsgPhyMachine]{
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   val machineID: String //TODO: recuperare da configurazione su DB?
-  val ma: ActorRef[MsgActorMessage] //MachineActor
+  val ma: ActorRef[MachineActor.Msg] //MachineActor
 
-
-  override def onMessage(msg: PhysicalMachine.MsgPhyMachine): Behavior[PhysicalMachine.MsgPhyMachine] = {
+  override def onMessage(msg: PhysicalMachine.Msg): Behavior[PhysicalMachine.Msg] = {
     msg match{
-      case PhysicalMachine.MsgRfid(userID) => ma ! MsgUserLogin(userID); Behaviors.same
-      case PhysicalMachine.MsgDisplay(message) => display(message); Behaviors.same
+      case m: PhysicalMachine.Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.userID); Behaviors.same
+      case m: PhysicalMachine.Msg.Display => display(m.message); Behaviors.same
     }
   }
 
   def display (s: String): Unit
-
-}
-
-case class ChestFly(ma: ActorRef[MsgActorMessage], machineID: String) extends PhysicalMachine{
-  override def display(s: String): Unit = {
-    val _display: String = machineID + " " + s
-  }
-}
-case class LegPress(ma: ActorRef[MsgActorMessage], machineID: String) extends PhysicalMachine{
-  override def display(s: String): Unit = {
-    val _display: String = machineID + " " + s
-  }
 }
 
 object PhysicalMachine {
-  sealed trait MsgPhyMachine
-  case class MsgRfid(userID: String) extends MsgPhyMachine //Rfid fired
-  case class MsgDisplay(message: String) extends MsgPhyMachine
-
-  sealed trait MsgDaemon
-  case class MsgMachineActorStarted(refMA: ActorRef[MsgActorMessage]) extends MsgDaemon
-
-  //Every PhysicalMachine need a daemon that tell the server of the starting up and retreive the actorref of the virtual Machine
-  def startDaemon(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine]): Unit ={
-    actorRefFactory.actorOf(Props(classOf[PMDaemon], machineID, machineType), machineID)
+  sealed trait Msg
+  object Msg{
+    final case class Rfid(userID: String) extends Msg //Rfid fired
+    final case class Display(message: String) extends Msg
   }
 
-  case class PMDaemon(machineID: String, machineType: Class[_ <: PhysicalMachine]) extends AbstractBehavior[MsgDaemon] with ServerSearch{
-    server ! MsgPhysicalMachineWakeUp(machineID)
+  object MachineType extends Enumeration {
+    type Type = Value
+    val legPress, chestFly = Value
+  }
 
-    override def onMessage(msg: MsgDaemon): Behavior[MsgDaemon] = {
-      msg match{
-        case MsgMachineActorStarted(refMA) => {
-          val pm = startPhysicalMachine(context, machineID,machineType ,refMA)
-          context.spawn[](PhysicalMachine)
-          refMA ! MsgPMActorStarted(machineID, pm)
-
-          //ToDo: kill daemon
-          Behaviors.same
-        }
-      }
-    }
-
-
-    override def receive: Receive = {
-      case m: MsgMachineActorStarted => {
-        val pm = startPhysicalMachine(context, machineID,machineType ,m.machine)
-        m.machine ! MsgPMActorStarted(machineID, pm)
-        context.parent ! MsgPMActorStarted(machineID, pm)
-        //ToDo: kill daemon
-      }
+  import MachineType._
+  def apply(phMachineType: Type, ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = {
+    phMachineType match{
+        case MachineType.legPress => LegPress(ma, machineID)
+        case MachineType.chestFly => ChestFly(ma, machineID)
 
     }
+  }
 
-    def startPhysicalMachine(actorRefFactory: ActorRefFactory, machineID: String, machineType: Class[_ <: PhysicalMachine], ma: ActorRef): ActorRef = {
-      actorRefFactory.actorOf(Props(machineType, ma, machineID), machineID)
+  private class ChestFly(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+    extends AbstractBehavior[Msg](context) with PhysicalMachine{
+
+    override def display(s: String): Unit = {
+      val _display: String = machineID + " " + s
     }
+  }
+  object ChestFly{
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
+  }
+
+  private class LegPress(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+    extends AbstractBehavior[Msg](context) with PhysicalMachine{
+
+    override def display(s: String): Unit = {
+      val _display: String = machineID + " " + s
+    }
+  }
+  object LegPress{
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
   }
 
 }

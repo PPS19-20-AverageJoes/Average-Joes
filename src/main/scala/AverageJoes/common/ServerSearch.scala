@@ -1,7 +1,8 @@
 package AverageJoes.common
 
 import AverageJoes.controller.GymController
-import akka.actor.{ActorContext, ActorRef, ActorSelection, ActorSystem}
+import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.scaladsl.ActorContext
 
 trait ServerSearch {
   //import com.typesafe.config.Config
@@ -9,8 +10,8 @@ trait ServerSearch {
   //val config = ConfigFactory.parseFile(new Nothing("src/main/scala/AverageJoes/client.conf"))
   //val system: Nothing = ActorSystem.create("MySystem", config)
   //
-  def context : ActorContext
-  def server: ActorRef =
+  //def context : ActorContext
+  def server: ActorRef[GymController.Msg] =
     {//ToDo: temporaneamente istanziato un gym controller
       ServerSearch.serverDummy
       //ActorSelection = context.actorSelection("akka://MySystem@127.0.0.1:25520/user/myActor")
@@ -19,6 +20,5 @@ trait ServerSearch {
 }
 
 object ServerSearch{
-  private val actSystem = ActorSystem("Gym")
-  val serverDummy: ActorRef = GymController.startGymController(actSystem)
+  private val serverDummy: ActorSystem[GymController.Msg] = ActorSystem(GymController(), "GymController")
 }
