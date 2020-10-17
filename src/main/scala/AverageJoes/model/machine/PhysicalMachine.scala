@@ -26,8 +26,10 @@ object PhysicalMachine {
     case class Display(message: String) extends Msg
   }
 
+
   sealed trait MsgDaemon
   case class MsgMachineActorStarted(refMA: ActorRef[MsgActorMessage]) extends MsgDaemon
+
 
   object MachineType extends Enumeration {
     type Type = Value
@@ -39,6 +41,7 @@ object PhysicalMachine {
     phMachineType match{
         case MachineType.legPress => LegPress(ma, machineID)
         case MachineType.chestFly => ChestFly(ma, machineID)
+
     }
   }
 

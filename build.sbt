@@ -3,7 +3,6 @@ lazy val root = (project in file("."))
   .settings(
     scalaVersion := "2.12.9",
 
-
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % Test,
 

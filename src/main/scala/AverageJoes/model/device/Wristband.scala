@@ -1,7 +1,7 @@
 package AverageJoes.model.device
 
 import AverageJoes.model.machine.PhysicalMachine
-import AverageJoes.model.machine.PhysicalMachine.MsgPhyMachine
+import AverageJoes.model.machine.PhysicalMachine.Msg
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 
@@ -24,7 +24,7 @@ class Wristband(val deviceID: String) extends Device {
     println(s)
   }
 
-  def rfid(ref: ActorRef[MsgPhyMachine]) : Unit ={
+  def rfid(ref: ActorRef[Msg]) : Unit ={
     ref ! PhysicalMachine.MsgRfid(deviceID)
   }
 

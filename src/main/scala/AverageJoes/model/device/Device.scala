@@ -23,6 +23,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
 
 object Device {
   sealed trait Msg
+
   object Msg {
 
     case class MsgUserLoggedInMachine(refMachineActor: ActorRef[MachineActor]) extends Msg
@@ -31,4 +32,5 @@ object Device {
 
     //case class MsgDisplay(message: String) extends MsgDevice
   }
+
 }
