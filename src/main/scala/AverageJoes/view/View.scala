@@ -1,44 +1,38 @@
-package AverageJoes.view
+import AverageJoes.model.customer.Customer
 
-import java.awt.BorderLayout
+import scala.swing.{BorderPanel, Button, Component, Dimension, Frame, GridPanel, MainFrame, SimpleSwingApplication, TextArea, TextField}
 
-import javax.swing.{JComponent, JFrame, JPanel, JTextArea, JTextField}
+object View extends SimpleSwingApplication {
+    def top: Frame = new MainFrame {
+        title = "AverageJoes"
 
-import scala.swing.Dimension
+        preferredSize = new Dimension(1200, 600)
 
-class View extends JFrame {
-    setSize(new Dimension(600,400))
+        val machinePanel: MachineView = MachineView()
 
-    val mainPanel:JPanel = new JPanel()
-    mainPanel.setLayout(new BorderLayout())
-    getContentPane.add(mainPanel)
+        val userPanel: UserView = UserView()
 
-    val machinePanel:JPanel = new JPanel()
-    mainPanel.add(machinePanel)
-
-    val userPanel:JPanel = new JPanel()
-    userPanel.setLayout(new BorderLayout())
-    mainPanel.add(userPanel, BorderLayout.WEST)
-}
-
-class MachineView(machinePanel: JPanel) extends JComponent{
-    val machineData: JTextField = new JTextField("name")
-    machinePanel.add(machineData)
-    val display:JTextArea = new JTextArea()
-    machinePanel.add(display)
-
-    def write (msg:String): Unit ={
-        display.setText(msg)
+        contents = new BorderPanel {
+            add(machinePanel, BorderPanel.Position.Center)
+            add(userPanel, BorderPanel.Position.West)
+        }
     }
 }
 
-class UserView(userPanel: JPanel) extends JComponent {
-    val userData: JTextField = new JTextField("name"+"/n"+"surname")
-    userPanel.add(userData)
-    val wristband:JTextArea = new JTextArea()
-    userPanel.add(wristband)
+case class MachineView() extends GridPanel(4,3) {
 
-    def write (msg:String): Unit ={
-        wristband.setText(msg)
+    def addUser () {
+        contents += new TextField("Machine Info")
+        contents += new TextArea()
     }
+}
+
+case class UserView() extends GridPanel(10,1) {
+
+    def addUser () {
+        contents += new TextField("Customer Info")
+        contents += new TextArea()
+    }
+
+    contents += new Button("user")
 }
