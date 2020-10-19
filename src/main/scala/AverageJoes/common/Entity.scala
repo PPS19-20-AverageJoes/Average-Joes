@@ -6,12 +6,7 @@ trait Entity {
   def getId: String
 }
 
-abstract class BaseEntity(id: String) extends Entity {
-
-  /** Secondary constructor **/
-  def this(){
-    this(generateUiid)
-  }
+abstract class BaseEntity(id: String = generateUiid) extends Entity {
 
   override def getId: String = id
 }
