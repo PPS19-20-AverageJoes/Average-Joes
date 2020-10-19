@@ -19,4 +19,3 @@ object Customer {
                               override val surname: String,
                               override val birthday: Date) extends Customer
 }
-

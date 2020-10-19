@@ -10,7 +10,7 @@ trait Storage[E] {
 
 }
 
-case class GymStorage[E<:Entity]() extends Storage[E] {
+class GymStorage[E<:Entity]() extends Storage[E] {
 
   protected var items: List[E] = List.empty
 
@@ -24,10 +24,10 @@ case class GymStorage[E<:Entity]() extends Storage[E] {
 
   def getAll: List[E] = items
 
-  override def getCount: Int = items size
-
+  def getCount: Int = items size
 }
 
 case class DuplicateEntityException(existingE: String) extends RuntimeException
+
 
 
