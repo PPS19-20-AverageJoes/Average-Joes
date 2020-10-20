@@ -1,21 +1,53 @@
 package AverageJoes.model.customer
 
-import AverageJoes.model.customer.Customer.NotifyWristband
-import org.scalatest.wordspec.AnyWordSpecLike
-import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import java.util.Date
 
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class CustomerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+import AverageJoes.common.{GymStorage, Storage}
+import AverageJoes.utils.DateUtils._
 
-  "Customer actor" must {
+class CustomerTest extends AnyFlatSpec with Matchers {
 
-    "notify wristband" in {
-      val probe = createTestProbe[NotifyWristband]
-      val customerActor = spawn(Customer("group", "customer"))
+  val c1 =  Customer("aabb00", "sokol", "guri", stringToDate("20/05/2020"))
+  val c2 =  Customer("aabb01", "andrea", "rossi", stringToDate("10/04/2010"))
+  val c3 =  Customer("aabb02", "elena", "bianchi", stringToDate("20/01/2010"))
 
-      customerActor ! Customer.NotifiedByMachine(requestId = 42, probe.ref)
-      val response = probe.receiveMessage()
-      response.requestId should ===(42)
-    }
+  private var storage: Storage[Customer] = emptyStorage()
+
+  "Customers storage" should "add customer" in {
+    assert(storage.getCount == 0)
+    storage add c1
+    assert(storage.getCount == 1)
+    storage add c2
+    assert(storage.getCount == 2)
+
+    storage = emptyStorage()
   }
+
+  "Customers storage" should "find added customer" in {
+    assert(storage.getCount == 0)
+    storage add c1
+    assert(c1 == storage.get(c1.getId).get)
+    assert(c1.getId == storage.get(c1.getId).get.getId)
+    assert(c2 !== storage.get(c1.getId).get)
+
+    storage = emptyStorage()
+  }
+
+
+  "Customers storage" should "remove customer" in {
+    assert(storage.getCount == 0)
+    storage add c1
+    storage add c2
+    assert(storage.getCount == 2)
+    storage remove  c2
+    assert(storage.getCount == 1)
+
+    storage = emptyStorage()
+  }
+
+  def emptyStorage() = new GymStorage[Customer]()
+
 }

@@ -1,12 +1,12 @@
 package AverageJoes.model.customer
 
 import scala.concurrent.duration._
-import AverageJoes.model.customer.Customer.{CustomerAlive, CustomerAliveSignal, Passivate}
+import AverageJoes.model.customer.CustomerActor.{CustomerAlive, CustomerAliveSignal, Passivate}
 import AverageJoes.model.customer.CustomerManager.{CustomerRegistered, ReplyCustomerList, RequestCustomerCreation, RequestCustomerList}
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class CustomerGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
+class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
 
   "Customer group" must {
 
