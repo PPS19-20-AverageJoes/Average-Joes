@@ -1,7 +1,5 @@
 package AverageJoes.model.customer
 
-import java.util.Date
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -26,7 +24,7 @@ class CustomerTest extends AnyFlatSpec with Matchers {
     storage = emptyStorage()
   }
 
-  "Customers storage" should "find added customer" in {
+  it should "find added customer" in {
     assert(storage.getCount == 0)
     storage add c1
     assert(c1 == storage.get(c1.getId).get)
@@ -37,7 +35,7 @@ class CustomerTest extends AnyFlatSpec with Matchers {
   }
 
 
-  "Customers storage" should "remove customer" in {
+  it should "remove customer" in {
     assert(storage.getCount == 0)
     storage add c1
     storage add c2
