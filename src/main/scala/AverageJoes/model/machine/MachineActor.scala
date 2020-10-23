@@ -35,7 +35,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
                    machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) {
 
   var booked: (Boolean, String) = (false, "")
-  var physicalMachine: Optional[ActorRef[Msg]] = Optional.empty()
+  var physicalMachine: Optional[ActorRef[PhysicalMachine.Msg]] = Optional.empty()
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
     case Msg.PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)

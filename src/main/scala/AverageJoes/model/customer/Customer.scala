@@ -1,49 +1,21 @@
 package AverageJoes.model.customer
 
-import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import java.util.Date
+
+import AverageJoes.common.BaseEntity
+
+trait Customer extends BaseEntity{
+  def CF: String
+  def name: String
+  def surname: String
+  def birthday: Date
+}
 
 object Customer {
-  def apply(groupId: String, deviceId: String): Behavior[Command] =
-    Behaviors.setup(context => new Customer(context, groupId, deviceId))
+  def apply(CF: String, name: String, surname: String, birthday: Date): Customer = new CustomerImpl(CF, name, surname, birthday)
 
-  sealed trait Command
-  final case class NotifiedByMachine(requestId: Long, replyTo: ActorRef[NotifyWristband]) extends Command
-  final case class NotifyWristband(requestId: Long) extends Command
-
-  final case class CustomerAlive(requestId: Long, replyTo: ActorRef[CustomerAliveSignal]) extends Command
-  final case class CustomerAliveSignal(requestId: Long) extends Command
-
-  case object Passivate extends Command
-
+  private class CustomerImpl( override val CF: String,
+                              override val name: String,
+                              override val surname: String,
+                              override val birthday: Date) extends Customer
 }
-
-class Customer(context: ActorContext[Customer.Command], groupId: String, customerId: String)
-  extends AbstractBehavior[Customer.Command](context) {
-  import Customer._
-
-  println("Customer actor {"+groupId+"}-{"+customerId+"} started")
-
-  override def onMessage(msg: Command): Behavior[Command] = {
-    msg match {
-      case NotifiedByMachine(id, replyTo) =>
-        replyTo ! NotifyWristband(id)
-        this
-
-      case CustomerAlive(id, replyTo) =>
-        replyTo ! CustomerAliveSignal(id)
-        this
-
-      case Passivate =>
-        Behaviors.stopped
-    }
-  }
-
-  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
-    case PostStop =>
-      println("Customer actor {"+groupId+"}-{"+customerId+"} stopped")
-      this
-  }
-
-}
-

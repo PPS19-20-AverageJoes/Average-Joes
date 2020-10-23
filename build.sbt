@@ -13,11 +13,12 @@ lazy val root = (project in file("."))
 
       "org.scalactic"        %% "scalactic"                   % "3.2.0",
       "org.scalacheck"       %% "scalacheck"                  % "1.14.0"     % "it,test",
-      "org.scalatest"        %% "scalatest"                   % "3.2.0"      % "test",
+      "org.scalatest"        %% "scalatest"                   % "3.0.6"      % "test",
       "org.scalatest"        %% "scalatest-wordspec"          % "3.2.0"      % Test,
+
       "org.scalatestplus"    %% "scalacheck-1-14"             % "3.1.0.1"    % "it,test",
-      "org.scalatestplus"    %% "scalatestplus-mockito"       % "1.0.0-M2"   % "it,test",
-      "org.scalatestplus"    %% "mockito-3-4"                 % "3.2.2.0"    % "test",
+     // "org.scalatestplus"    %% "scalatestplus-mockito"       % "1.0.0-M2"   % "it,test",
+     // "org.scalatestplus"    %% "mockito-3-4"                 % "3.2.2.0"    % "test",
 
       "org.mockito"          %% "mockito-scala"               % "1.10.2"     % "it,test",
 

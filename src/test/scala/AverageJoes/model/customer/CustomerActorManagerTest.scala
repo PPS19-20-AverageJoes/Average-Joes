@@ -1,10 +1,10 @@
 package AverageJoes.model.customer
 
-import AverageJoes.model.customer.CustomerManager.{CustomerRegistered, RequestCustomerCreation, RequestUserCreation, UserRegistered}
+import AverageJoes.model.customer.CustomerManager.{CustomerRegistered, RequestCustomerCreation}
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class CustomerManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
   "Customer manager actor" must {
     "reply to registration request" in {
