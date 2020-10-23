@@ -1,10 +1,11 @@
 package AverageJoes.controller
 
-import AverageJoes.common.ServerSearch
+import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
 import AverageJoes.model.device._
 import AverageJoes.model.machine._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+
 import scala.collection.mutable
 
 
@@ -15,7 +16,7 @@ object HardwareController {
   private var childD = mutable.Map.empty[String, ActorRef[Device.Msg]] //Child Devices
   private var childPM = mutable.Map.empty[String, ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
 
-  sealed trait Msg
+  sealed trait Msg extends LoggableMsg
   object Msg{
     //final case class PMActorStarted(machineID: String, phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
     final case class CreatePhysicalMachine(machineID: String, phMachineType: PhysicalMachine.MachineType.Type) extends Msg
@@ -23,9 +24,10 @@ object HardwareController {
     final case class MachineActorStarted(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machine: ActorRef[MachineActor.Msg]) extends Msg
   }
 
-  class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch {
+  class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch with LogOnMessage[Msg] {
+    val logName = "Hardware controller"
 
-    override def onMessage(msg: Msg): Behavior[Msg] = {
+     override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       msg match{
         case m: Msg.CreatePhysicalMachine => {
           server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, context.self)
@@ -45,6 +47,7 @@ object HardwareController {
         }
       }
     }
+
   }
 
   //Every PhysicalMachine need a daemon that tell the server of the starting up and retrieve the actorRef of the virtual Machine
