@@ -28,9 +28,7 @@ class CustomerActor(context: ActorContext[CustomerActor.Command], groupId: Strin
    * find Customer with id device : Entity [Customer]
    *
    * Instantiate Customer
-   */
 
-  /**
    * chiede al controller una prenotazione
    */
 
