@@ -27,5 +27,4 @@ class ExerciseTest  extends AnyFlatSpec with Matchers {
     assert(exerciseRunning.executionParameters !== null)
     assert(exerciseRunning.executionParameters.isInstanceOf[Parameters])
   }
-
 }

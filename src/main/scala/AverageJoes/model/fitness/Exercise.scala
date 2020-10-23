@@ -12,7 +12,6 @@ trait Exercise {
     def executionParameters: Parameters = ParameterExtractor.extractParameters(equipment)
 }
 
-
 object Exercise{
     def apply(equipment: MachineEquipment): Exercise  =  ExerciseImpl(equipment)
     private case class ExerciseImpl(equipment: MachineEquipment) extends Exercise
