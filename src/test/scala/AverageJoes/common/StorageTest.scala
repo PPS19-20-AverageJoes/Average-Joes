@@ -20,7 +20,7 @@ class StorageTest extends AnyFlatSpec with Matchers {
     storage = emptyStorage()
   }
 
-  "UselessEntity storage" should "find added UselessEntities" in {
+  it should "find added UselessEntities" in {
     assert(storage.getCount == 0)
     storage add e1
     assert(e1 == storage.get(e1.getId).get)
@@ -31,7 +31,7 @@ class StorageTest extends AnyFlatSpec with Matchers {
   }
 
 
-  "UselessEntity storage" should "remove UselessEntities" in {
+  it should "remove UselessEntities" in {
     assert(storage.getCount == 0)
     storage add e1
     storage add e2
