@@ -1,6 +1,6 @@
 package AverageJoes.model.customer
 
-import AverageJoes.model.customer.CustomerManager.{CustomerRegistered, RequestCustomerCreation}
+import AverageJoes.model.customer.CustomerManager._
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 

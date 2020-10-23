@@ -1,32 +1,30 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.model.fitness.ExerciseExecution.{EQUIPMENT, Equipment, MACHINE_EQUIPMENT}
-import AverageJoes.utils.ExerciseUtils.{FORCE, Force, LEVEL, Level, MUSCLE, Muscle}
+import AverageJoes.utils.ExerciseUtils._
 
-/**
- * TODO class to be refactored
- */
-
-trait Exercise[E<:Equipment] {
+trait Exercise {
     val description: String
     val musclesWorked: Set[Muscle]
     val level: Level
     val force: Force
-    val execution: ExerciseExecution[E]
+    val exerciseExecution: ExerciseExecution
+    def smartExecutionParam(exerciseExecution: ExerciseExecution): Option[Int] = None
 }
 
 object Exercise{
-    def apply(description: String, musclesWorked: Set[Muscle], level: Level, force: Force, execution: ExerciseExecution[Equipment]): Exercise[Equipment]
-        =  ExerciseImpl(description, musclesWorked, level, force, execution)
+    def apply(description: String, musclesWorked: Set[Muscle], level: Level, force: Force, exerciseExecution: ExerciseExecution): Exercise
+    =  ExerciseImpl(description, musclesWorked, level, force, exerciseExecution)
 
-    private case class ExerciseImpl(description: String, musclesWorked: Set[Muscle], level: Level,
-                                    force: Force, execution: ExerciseExecution[Equipment]) extends Exercise[Equipment]
-}
+    def apply(description: String, musclesWorked: Set[Muscle], execution: ExerciseExecution): Exercise
+    =  ExerciseImpl(description, musclesWorked, LEVEL.DEFAULT, FORCE.DEFAULT, execution)
 
+    private case class ExerciseImpl(description: String, musclesWorked: Set[Muscle], level: Level, force: Force, exerciseExecution: ExerciseExecution)
+      extends Exercise {
+        //verride type Parameters = this.type
 
-object Main extends App{
-    val ex: Exercise[Equipment] =  Exercise("first exercise", Set(MUSCLE.ABDOMINAL, MUSCLE.BICEPS), LEVEL.ADVANCED,
-        FORCE.PULL, BasicExerciseExecution(List(EQUIPMENT.BANDS, EQUIPMENT.DUMBBELLS, MACHINE_EQUIPMENT.CyclingMachine(5,6))))
-    println(ex)
-
+        override def smartExecutionParam(exerciseExecution: ExerciseExecution): Option[Int] = exerciseExecution match {
+            case ee if ee.withoutMachineExecution => None
+            case _ => smartExecutionParam(exerciseExecution)
+        }
+    }
 }

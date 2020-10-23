@@ -4,11 +4,15 @@ import AverageJoes.model.fitness.ExerciseExecutionEquipment.Equipment
 import AverageJoes.model.fitness.ExerciseExecutionMetric.ExecutionMetric
 import AverageJoes.model.fitness.IllegalEquipment.IllegalEquipmentException
 
+
 /** Exercise execution metric : sets & timer/repetitions */
 object ExerciseExecutionMetric {
-  trait ExecutionMetric {def sets: Int}
-  case class WithRepetitions(sets: Int, repetitions: Int) extends ExecutionMetric
-  case class WithTimer(sets: Int, timer: Int) extends ExecutionMetric
+  import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
+
+  type PropValue = NonNegInt
+  trait ExecutionMetric {def sets: PropValue}
+  case class WithRepetitions(sets: PropValue, repetitions: PropValue) extends ExecutionMetric
+  case class WithTimer(sets: PropValue, timer: PropValue) extends ExecutionMetric
 }
 
 /** Equipment for exercise execution  */
@@ -33,21 +37,22 @@ object ExerciseExecutionEquipment {
 
 
 trait ExerciseExecution {
-  type Parameters
   /** Firstly no parameters are used because withoutMachineExecution is initialized to true */
   def equipments: List[Equipment]
   def metric: ExecutionMetric
   def withoutMachineExecution: Boolean = true
-  def smartExecutionParam: Option[Parameters] = None
 }
 
 /** Static object to control the correctness of the equipment list passed to parameter constructor
  * If BasicExerciseExecution has a smart machine in equipment list, throw exception, otherwise continue
  * */
 object EquipmentChecker {
-  val NOT_ALLOWED_EQUIPMENT = "MACHINE"
+  val MACHINE_EQUIPMENT = "MACHINE"
   def checkEquipmentCorrectness(withoutSmartMachine: Boolean, equipments: List[Equipment]): Unit =
-    if (withoutSmartMachine && equipments.exists (e => e.exEquipment.equals (NOT_ALLOWED_EQUIPMENT)))
+    if (withoutSmartMachine && equipments.exists(e => e.exEquipment.equals(MACHINE_EQUIPMENT)))
+      throw new IllegalEquipmentException;
+    else if (!withoutSmartMachine && (!equipments.exists(e => e.exEquipment.equals(MACHINE_EQUIPMENT)) ||
+            equipments.count(e => e.exEquipment.equals(MACHINE_EQUIPMENT)) > 1))
       throw new IllegalEquipmentException
 }
 
@@ -58,9 +63,11 @@ case class BasicExerciseExecution(metric: ExecutionMetric, equipments: List[Equi
   checkEquipmentCorrectness(withoutMachineExecution, equipments)
 }
 
+/** Todo Test onlyOneSmartMachine */
 /** Decorator adding smart machines as an execution type */
 trait MachineExecution extends ExerciseExecution {
   abstract override def withoutMachineExecution = false
+  def smartMachine(): Equipment = equipments.find(eq => eq.exEquipment.equals("MACHINE")).get
 }
 class MachineExerciseExecution(override val metric: ExecutionMetric, override val equipments: List[Equipment])
   extends BasicExerciseExecution(metric, equipments) with MachineExecution
@@ -70,4 +77,3 @@ class MachineExerciseExecution(override val metric: ExecutionMetric, override va
 object IllegalEquipment{
   class IllegalEquipmentException extends IllegalArgumentException
 }
-

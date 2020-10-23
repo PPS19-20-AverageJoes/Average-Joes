@@ -1,8 +1,8 @@
 package AverageJoes.model.customer
 
 import scala.concurrent.duration._
-import AverageJoes.model.customer.CustomerActor.{CustomerAlive, CustomerAliveSignal, Passivate}
-import AverageJoes.model.customer.CustomerManager.{CustomerRegistered, ReplyCustomerList, RequestCustomerCreation, RequestCustomerList}
+import AverageJoes.model.customer.CustomerActor._
+import AverageJoes.model.customer.CustomerManager._
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 

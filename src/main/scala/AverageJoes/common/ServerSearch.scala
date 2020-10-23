@@ -6,7 +6,7 @@ import akka.actor.typed.scaladsl.ActorContext
 
 trait ServerSearch {
   //import com.typesafe.config.Config
-  //import com.typesafe.config.ConfigFactory
+ /* //import com.typesafe.config.ConfigFactory
   //val config = ConfigFactory.parseFile(new Nothing("src/main/scala/AverageJoes/client.conf"))
   //val system: Nothing = ActorSystem.create("MySystem", config)
   //
@@ -16,9 +16,9 @@ trait ServerSearch {
       ServerSearch.serverDummy
       //ActorSelection = context.actorSelection("akka://MySystem@127.0.0.1:25520/user/myActor")
       //public scala.concurrent.Future<ActorRef> resolveOne(Timeout timeout)
-    }
+    }*/
 }
 
 object ServerSearch{
-  private val serverDummy: ActorSystem[GymController.Msg] = ActorSystem(GymController(), "GymController")
+ // private val serverDummy: ActorSystem[GymController.Msg] = ActorSystem(GymController(), "GymController")
 }
