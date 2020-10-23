@@ -1,5 +1,8 @@
 package AverageJoes.model.fitness
 
+import AverageJoes.model.fitness.ExerciseConfiguration.ExerciseParameters
+import AverageJoes.model.fitness.ParameterExtractor.Extractor
+
 object ExerciseConfiguration {
   import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
   import AverageJoes.utils.ExerciseUtils.ExerciseParameter
@@ -42,11 +45,11 @@ object ParameterExtractor {
    * ToDo: Mixin to not decorate parameter to DRY
    * ToDo: Type of tuple ->
    */
-  import AverageJoes.model.fitness.ExerciseExecutionMetric._
-  import AverageJoes.utils.ExerciseUtils.CONFIGURABLE_PARAMETERS._
-  import AverageJoes.model.fitness.ExerciseExecutionEquipment.MACHINE_EQUIPMENT._
-
   object ImplicitParameterExtractors {
+    import AverageJoes.model.fitness.ExerciseExecutionMetric._
+    import AverageJoes.utils.ExerciseUtils.CONFIGURABLE_PARAMETERS._
+    import AverageJoes.model.fitness.ExerciseExecutionEquipment.MACHINE_EQUIPMENT._
+
     implicit val basicExecutionParamExtractor: Extractor[ExerciseExecution] = (e: ExerciseExecution) => e.metric match {
       case WithTimer(sets, timer) => new ExerciseParameters()
         .addValueOf((SETS, sets))
@@ -66,9 +69,11 @@ object ParameterExtractor {
         .addValueOf((INCLINE, incline))
     }
   }
+
 }
 
-object Main extends App {
+
+object Main2 extends App {
   import AverageJoes.model.fitness.ExerciseExecutionEquipment._
   import AverageJoes.model.fitness.ExerciseExecutionMetric._
   import AverageJoes.model.fitness.ExerciseConfiguration.Parameters
