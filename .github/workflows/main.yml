@@ -1,4 +1,4 @@
-name: Scala CI
+name: AverageJoes CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    name: AverageJoes Build and Tests
     strategy:
        matrix:
          java_version: [11]
@@ -16,7 +17,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
+    - name: Install Java version
       uses: actions/setup-java@v1
       with:
         java-version: ${{ matrix.java_version }}
