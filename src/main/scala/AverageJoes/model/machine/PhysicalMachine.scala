@@ -39,7 +39,7 @@ object PhysicalMachine {
     }
   }
 
-  private class ChestFly(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+  private class ChestFly(context: ActorContext[Msg], override val ma: ActorRef[MachineActor.Msg], override val machineID: String)
     extends AbstractBehavior[Msg](context) with PhysicalMachine{
 
     override def display(s: String): Unit = {
@@ -50,7 +50,7 @@ object PhysicalMachine {
     def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
   }
 
-  private class LegPress(override val context: ActorContext[Msg], ma: ActorRef[MachineActor.Msg], machineID: String)
+  private class LegPress(override val context: ActorContext[Msg], override val ma: ActorRef[MachineActor.Msg], override val machineID: String)
     extends AbstractBehavior[Msg](context) with PhysicalMachine{
 
     override def display(s: String): Unit = {
