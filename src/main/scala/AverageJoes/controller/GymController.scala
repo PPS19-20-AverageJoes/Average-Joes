@@ -1,5 +1,6 @@
 package AverageJoes.controller
 
+import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.device.Device
 import AverageJoes.model.machine.{MachineActor, PhysicalMachine}
@@ -15,7 +16,7 @@ object GymController {
   private var childUserActor = mutable.Map.empty[String, ActorRef[CustomerManager.Command]] //Child User
   private var childMachineActor = mutable.Map.empty[String, ActorRef[MachineActor.Msg]] //Child Machines
 
-  sealed trait Msg
+  sealed trait Msg extends LoggableMsg
   object Msg{
     final case class DeviceInGym(deviceID: String, replyTo: ActorRef[Device.Msg]) extends Msg //Device enter in Gym
     final case class UserLogin(userID: String) extends Msg //User logged
@@ -26,9 +27,10 @@ object GymController {
     final case class UserLogInStatus(status: Boolean) extends Msg
   }
 
-  class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context){
+  class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
+    val logName = "Gym controller"
 
-    override def onMessage(msg: Msg): Behavior[Msg] = {
+    override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       msg match {
         case m: Msg.DeviceInGym => {
           val userID = m.deviceID //ToDo: recuperare utente relativo a device
