@@ -32,6 +32,10 @@ class CustomerActor(context: ActorContext[CustomerActor.Command], groupId: Strin
    * chiede al controller una prenotazione
    */
 
+  /**
+   * chiede al controller una prenotazione
+   */
+
   println("Customer actor {"+groupId+"}-{"+customerId+"} started")
 
   override def onMessage(msg: Command): Behavior[Command] = {
