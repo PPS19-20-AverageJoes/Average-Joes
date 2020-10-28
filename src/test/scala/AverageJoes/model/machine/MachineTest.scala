@@ -1,22 +1,33 @@
 package AverageJoes.model.machine
 
-import AverageJoes.model.user.{SmartGymUser, SmartGymUserImpl}
-import AverageJoes.model.device.Wristband
-import akka.actor.{ActorSystem, Props}
-import org.junit.Test
+import AverageJoes.controller.GymController
+import AverageJoes.model.machine.PhysicalMachine.LegPress
+import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import akka.actor.typed.{ActorRef, ActorSystem}
+import org.scalatest.wordspec.AnyWordSpecLike
 
 
-class MachineTest extends App {
-
-  @Test
-  def testExamResultsBasicBehaviour():Unit = {
-    val system = ActorSystem("mySystem")
-    val userActor = system.actorOf(Props(new SmartGymUserImpl("","","","")), "actorUser")
-    val machine = system.actorOf(Props(classOf[MachineActor], userActor), "machineActor")
-    val watchActor = system.actorOf(Props[Wristband](),"wristbandActor")
-    val physicalMachineActor = system.actorOf(Props(new LegPress(machine, " ")), "physicalActor")
-
-    //machine ! MsgConstructor(userActor, "USER_LOG_IN")
+class MachineTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+"Machine actor" must{
+  "notify booking " in {
+    /*val probe = createTestProbe[MachineActor.Msg.BookingStatus]
+    ActorSystem(GymController(), "GymController")
+    import GymController.Msg
+    val machineActor = spawn(MachineActor(ActorRef[Msg],PhysicalMachine.MachineType.legPress))
+    machineActor ! MachineActor.Msg.MachineBooking("12",probe.ref)
+    val response = probe.receiveMessage()
+    response.status should ===(true)*/
   }
+
+  "log the user in the machine " in {
+    /*val probe = createTestProbe[MachineActor.Msg.UserLoggedInMachine]
+    val machineActor = spawn(MachineActor(ActorRef[GymController.Msg],PhysicalMachine.MachineType.legPress))
+    machineActor ! MachineActor.Msg.UserRef(probe.ref)
+    val response = probe.receiveMessage()
+    response should ===(true)*/
+  }
+}
+
+
 
 }
