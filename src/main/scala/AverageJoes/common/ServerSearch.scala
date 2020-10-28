@@ -12,11 +12,11 @@ trait ServerSearch {
   //
   //def context : ActorContext
   def server: ActorRef[GymController.Msg] =
-    {//ToDo: temporaneamente istanziato un gym controller
-      ServerSearch.serverDummy
-      //ActorSelection = context.actorSelection("akka://MySystem@127.0.0.1:25520/user/myActor")
-      //public scala.concurrent.Future<ActorRef> resolveOne(Timeout timeout)
-    }
+  {//ToDo: temporaneamente istanziato un gym controller
+    ServerSearch.serverDummy
+    //ActorSelection = context.actorSelection("akka://MySystem@127.0.0.1:25520/user/myActor")
+    //public scala.concurrent.Future<ActorRef> resolveOne(Timeout timeout)
+  }
 }
 
 object ServerSearch{

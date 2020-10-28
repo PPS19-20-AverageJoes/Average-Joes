@@ -22,6 +22,20 @@ class CustomerActor(context: ActorContext[CustomerActor.Command], groupId: Strin
   extends AbstractBehavior[CustomerActor.Command](context) {
   import CustomerActor._
 
+  /**
+   * wristband login -> create customer actor -> device id : id wristband
+   *
+   * find Customer with id device : Entity [Customer]
+   *
+   * Instantiate Customer
+
+   * chiede al controller una prenotazione
+   */
+
+  /**
+   * chiede al controller una prenotazione
+   */
+
   println("Customer actor {"+groupId+"}-{"+customerId+"} started")
 
   override def onMessage(msg: Command): Behavior[Command] = {
