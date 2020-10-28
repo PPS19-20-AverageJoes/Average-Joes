@@ -1,38 +1,34 @@
-import AverageJoes.model.customer.Customer
+package AverageJoes.view
 
-import scala.swing.{BorderPanel, Button, Component, Dimension, Frame, GridPanel, MainFrame, SimpleSwingApplication, TextArea, TextField}
+import scala.swing.{BorderPanel, Button, Dimension, Frame, GridPanel, MainFrame, SimpleSwingApplication, TextArea, TextField}
 
 object View extends SimpleSwingApplication {
+    val machinePanel: GridPanel = new GridPanel(3,3)
+    val userPanel: GridPanel = new GridPanel(10,1)
+
     def top: Frame = new MainFrame {
-        title = "AverageJoes"
+        title = "AverageJos"
 
         preferredSize = new Dimension(1200, 600)
-
-        val machinePanel: MachineView = MachineView()
-
-        val userPanel: UserView = UserView()
 
         contents = new BorderPanel {
             add(machinePanel, BorderPanel.Position.Center)
             add(userPanel, BorderPanel.Position.West)
         }
     }
+
+    def _getMachineView(): GridPanel = machinePanel
+    def _getUserView(): GridPanel = userPanel
 }
 
-case class MachineView() extends GridPanel(4,3) {
+case class UserGui() extends GridPanel(2,1){
+    preferredSize = new Dimension(300, 600)
+    contents += new Button("Customer Info")
+    contents += new TextArea()
 
-    def addUser () {
-        contents += new TextField("Machine Info")
-        contents += new TextArea()
-    }
 }
 
-case class UserView() extends GridPanel(10,1) {
-
-    def addUser () {
-        contents += new TextField("Customer Info")
-        contents += new TextArea()
-    }
-
-    contents += new Button("user")
+case class MachineGUI(val machineID: String) extends GridPanel(2,1){
+    contents += new Button("Machine Info")
+    contents += new TextArea()
 }
