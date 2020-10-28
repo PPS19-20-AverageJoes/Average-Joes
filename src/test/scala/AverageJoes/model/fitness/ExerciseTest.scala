@@ -6,6 +6,7 @@ import AverageJoes.utils.ExerciseUtils.MACHINE_TYPE
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+
 class ExerciseTest  extends AnyFlatSpec with Matchers {
 
   val exerciseRunning: Exercise = Exercise(RunningMachine(speed = 10.0, incline = 20.0, timer = 30))
@@ -27,4 +28,5 @@ class ExerciseTest  extends AnyFlatSpec with Matchers {
     assert(exerciseRunning.executionParameters !== null)
     assert(exerciseRunning.executionParameters.isInstanceOf[Parameters])
   }
+
 }
