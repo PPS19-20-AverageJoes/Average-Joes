@@ -28,6 +28,8 @@ object MachineActor{
     final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: Exercise]) extends Msg
     final case class UserMachineWorkoutCompleted(user: ActorRef[Msg], exercise: Class[_ <: Exercise]) extends Msg
     final case class UserLogOut() extends Msg
+
+    final case class BookingRequest(replyTo: ActorRef[CustomerManager.Command]) extends Msg
   }
 }
 

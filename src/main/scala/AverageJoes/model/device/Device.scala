@@ -1,6 +1,6 @@
 package AverageJoes.model.device
 
-import AverageJoes.common.ServerSearch
+import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
 import AverageJoes.model.machine.{MachineActor, PhysicalMachine}
 import akka.actor.typed.scaladsl.{AbstractBehavior, Behaviors}
@@ -9,7 +9,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 /**
  * AC
  */
-trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
+trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMessage[Device.Msg]{
   val deviceID: String
 
   //Search for the Gym Controller (the server) and send a message
@@ -17,7 +17,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
 
   //noinspection SpellCheckingInspection
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
-  override def onMessage(msg: Device.Msg): Behavior[Device.Msg] = {
+  override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
       case m: Device.Msg.UserLoggedInMachine => display(m.refMachineActor.toString()); Behaviors.same //ToDo: va passato un id o similari
       case m: Device.Msg.NearDevice => rfid(m.refPM); Behaviors.same
@@ -33,7 +33,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
 
 object Device {
 
-  sealed trait Msg
+  sealed trait Msg extends LoggableMsg
   object Msg {
     final case class UserLoggedInMachine(refMachineActor: ActorRef[MachineActor.Msg]) extends Msg
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg

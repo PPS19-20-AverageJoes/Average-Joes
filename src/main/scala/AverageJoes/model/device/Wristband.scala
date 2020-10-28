@@ -16,6 +16,8 @@ class Wristband(context: ActorContext[Device.Msg], override val deviceID: String
 
   def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = {ref ! PhysicalMachine.Msg.Rfid(deviceID)}
 
+  override val logName: String = "Device Wristband"
+  override val loggingContext: ActorContext[Device.Msg] = this.context
 }
 
 object Wristband{
