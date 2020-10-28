@@ -2,9 +2,10 @@ package AverageJoes.controller
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
 import AverageJoes.model.device._
+import AverageJoes.model.machine
 import AverageJoes.model.machine._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
 import scala.collection.mutable
 
@@ -14,7 +15,7 @@ object HardwareController {
 
   //ToDo: servono le Map? O vanno bene le interrogazioni di akka typed?
   private var childD = mutable.Map.empty[String, ActorRef[Device.Msg]] //Child Devices
-  private var childPM = mutable.Map.empty[String, ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
+  private var childPM = mutable.Map.empty[(String, PhysicalMachine.MachineType.Type), ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
 
   sealed trait Msg extends LoggableMsg
   object Msg{
@@ -25,57 +26,42 @@ object HardwareController {
   }
 
   class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch with LogOnMessage[Msg] {
-    val logName = "Hardware controller"
+    override val logName = "HW controller"
+    override val loggingContext: ActorContext[Msg] = this.context
 
      override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       msg match{
-        case m: Msg.CreatePhysicalMachine => {
+        case m: Msg.CreatePhysicalMachine =>
           server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, context.self)
-          //context.spawn[PMDaemon.Msg](PMDaemon(machineID, phMachineType), machineID)
           Behaviors.same
-        }
-        case Msg.MachineActorStarted(machineID, phMachineType, refMA) => {
+
+        case Msg.MachineActorStarted(machineID, phMachineType, refMA) =>
           val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(phMachineType, refMA, machineID), machineID)
-          childPM += ((machineID, pm))
+          childPM += (((machineID,phMachineType), pm))
           refMA ! MachineActor.Msg.PMActorStarted(pm)
           Behaviors.same
-        }
-        case Msg.CreateDevice(deviceID, deviceType) => {
+
+        case Msg.CreateDevice(deviceID, deviceType) =>
           val device = context.spawn[Device.Msg](Device(deviceType, deviceID), deviceID)
           childD += ((deviceID, device))
           Behaviors.same
-        }
       }
     }
-
   }
 
-  //Every PhysicalMachine need a daemon that tell the server of the starting up and retrieve the actorRef of the virtual Machine
-  /*
-  class PMDaemon(context: ActorContext[PMDaemon.Msg], machineID: String, phMachineType: PhysicalMachine.MachineType.Type)
-    extends AbstractBehavior[PMDaemon.Msg](context) with ServerSearch{
+  def getChildDevice(name: String): Option[ActorRef[Device.Msg]] = {childD.get(name)}
 
-    server ! GymController.Msg.PhysicalMachineWakeUp(machineID)
-
-    override def onMessage(msg: PMDaemon.Msg): Behavior[PMDaemon.Msg] = {
-      msg match{
-        case PMDaemon.Msg.MachineActorStarted(refMA) => {
-          val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(phMachineType,refMA,machineID),"name")
-          refMA ! MachineActor.Msg.PMActorStarted(pm)
-          //ToDo: kill daemon
-          Behaviors.same
-        }
-      }
-    }
-
-  }
-
-  object PMDaemon{
-    sealed trait Msg
-    object Msg{
-      case class MachineActorStarted(machine: ActorRef[MachineActor.Msg]) extends Msg
+  def getChildPmByName(name: String): Option[ActorRef[machine.PhysicalMachine.Msg]] = {
+    childPM.filterKeys(k => k._1 == name).last._2 match {
+      case v: ActorRef[machine.PhysicalMachine.Msg] => Some(v)
+      case _ => None
     }
   }
-   */
-
+//ToDo: spostare nel gym controller
+  def getChildPmByType(pmType: PhysicalMachine.MachineType.Type): Option[ActorRef[PhysicalMachine.Msg]] = {
+    childPM.filterKeys(k => k._2 == pmType).last._2 match {
+      case v: ActorRef[machine.PhysicalMachine.Msg] => Some(v)
+      case _ => None
+    }
+  }
 }
