@@ -1,7 +1,9 @@
 package AverageJoes.utils
 
-object ExerciseUtils {
+import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
+object ExerciseUtils {
+/*
   /** Exercise type enum */
   sealed trait Type {def exType: String}
   object Type{
@@ -41,7 +43,7 @@ object ExerciseUtils {
     case object SHOULDERS extends Muscle {val muscleWorked =  "SHOULDERS"}
     case object TRICEPS extends Muscle {val muscleWorked =  "TRICEPS"}
   }
-
+*/
   /** Exercise parameters */
   sealed trait ExerciseParameter
   object CONFIGURABLE_PARAMETERS {
@@ -51,7 +53,14 @@ object ExerciseUtils {
     case object INCLINE extends ExerciseParameter
     case object SPEED extends ExerciseParameter
     case object WIGHT extends ExerciseParameter
+    case object TYPE extends ExerciseParameter
+  }
 
+  sealed trait MachineType
+  object MACHINE_TYPE {
+    case object RUNNING extends MachineType with SafePropertyVal
+    case object CYCLING extends MachineType with SafePropertyVal
+    case object LIFTING extends MachineType with SafePropertyVal
   }
 
 }
