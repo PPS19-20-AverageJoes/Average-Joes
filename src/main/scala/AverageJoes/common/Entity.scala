@@ -3,7 +3,7 @@ package AverageJoes.common
 import AverageJoes.utils.IdGenerator._
 
 trait Entity {
-  def getId: String
+  def getId: String = generateUiid
 }
 
 abstract class BaseEntity(id: String = generateUiid) extends Entity {

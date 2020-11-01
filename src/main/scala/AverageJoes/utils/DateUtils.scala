@@ -5,6 +5,6 @@ import java.util.Date
 
 object DateUtils {
 
-  def stringToDate(stringDate: String): Date = new SimpleDateFormat("dd/MM/yyyy").parse(stringDate)
+  implicit def stringToDate(stringDate: String): Date = new SimpleDateFormat("dd/MM/yyyy").parse(stringDate)
 
 }

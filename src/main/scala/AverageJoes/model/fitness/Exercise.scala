@@ -1,32 +1,17 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.model.fitness.ExerciseExecution.{EQUIPMENT, Equipment, MACHINE_EQUIPMENT}
-import AverageJoes.utils.ExerciseUtils.{FORCE, Force, LEVEL, Level, MUSCLE, Muscle}
+import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
+import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor
+import AverageJoes.model.fitness.MachineExecution.MachineEquipment
 
-/**
- * TODO class to be refactored
- */
+trait Exercise {
+    import AverageJoes.model.fitness.ExerciseExecutionConfig.ImplicitParameterExtractors._
 
-trait Exercise[E<:Equipment] {
-    val description: String
-    val musclesWorked: Set[Muscle]
-    val level: Level
-    val force: Force
-    val execution: ExerciseExecution[E]
+    def equipment: MachineEquipment
+    def executionParameters: Parameters = ParameterExtractor.extractParameters(equipment)
 }
 
 object Exercise{
-    def apply(description: String, musclesWorked: Set[Muscle], level: Level, force: Force, execution: ExerciseExecution[Equipment]): Exercise[Equipment]
-        =  ExerciseImpl(description, musclesWorked, level, force, execution)
-
-    private case class ExerciseImpl(description: String, musclesWorked: Set[Muscle], level: Level,
-                                    force: Force, execution: ExerciseExecution[Equipment]) extends Exercise[Equipment]
-}
-
-
-object Main extends App{
-    val ex: Exercise[Equipment] =  Exercise("first exercise", Set(MUSCLE.ABDOMINAL, MUSCLE.BICEPS), LEVEL.ADVANCED,
-        FORCE.PULL, BasicExerciseExecution(List(EQUIPMENT.BANDS, EQUIPMENT.DUMBBELLS, MACHINE_EQUIPMENT.CyclingMachine(5,6))))
-    println(ex)
-
+    def apply(equipment: MachineEquipment): Exercise  =  ExerciseImpl(equipment)
+    private case class ExerciseImpl(equipment: MachineEquipment) extends Exercise
 }

@@ -2,8 +2,8 @@ package AverageJoes.model.machine
 
 import java.util.Optional
 
+import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import AverageJoes.controller.GymController
-import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.machine.MachineActor._
 import AverageJoes.model.workout.Exercise
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -16,7 +16,7 @@ object MachineActor{
   def apply(controller: ActorRef[GymController.Msg], machineType: PhysicalMachine.MachineType.Type): Behavior[Msg] =
     Behaviors.setup(context => new MachineActor(context, controller, machineType))
 
-  sealed trait Msg
+  sealed trait Msg extends LoggableMsg
   object Msg {
     final case class PMActorStarted(replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg
     final case class UserLogIn(userID: String) extends Msg
@@ -34,12 +34,12 @@ object MachineActor{
 }
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], //da rendere actor ref
-                   machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) {
+                   machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
 
   var booked: (Boolean, String) = (false, "")
   var physicalMachine: Optional[ActorRef[PhysicalMachine.Msg]] = Optional.empty()
 
-  override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+  override def onMessageLogged(msg: Msg): Behavior[Msg] = msg match {
     case Msg.PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
       this
 
@@ -77,4 +77,6 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
       controller ! GymController.Msg.UserLogInStatus(booked._1)
     }
   }
+
+  override val logName: String = "Machine Actor"
 }

@@ -1,7 +1,9 @@
 package AverageJoes.utils
 
-object ExerciseUtils {
+import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
+object ExerciseUtils {
+/*
   /** Exercise type enum */
   sealed trait Type {def exType: String}
   object Type{
@@ -15,6 +17,7 @@ object ExerciseUtils {
   object FORCE{
     case object PULL extends Force {val exForce = "PULL"}
     case object STATIC  extends Force {val exForce = "STATIC"}
+    case object DEFAULT  extends Force {val exForce = "DEFAULT"}
   }
 
   /** Exercise level enum */
@@ -23,6 +26,8 @@ object ExerciseUtils {
     case object BEGINNER extends Level {val exLevel = "BEGINNER"} //<20
     case object INTERMEDIATE extends Level {val exLevel = "INTERMEDIATE"} // 20 - 40
     case object ADVANCED extends Level {val exLevel = "ADVANCED"} // >40
+    case object DEFAULT extends Level {val exLevel = "DEFAULT"} // >40
+
   }
 
   /** Exercise worked muscle enum */
@@ -37,6 +42,25 @@ object ExerciseUtils {
     case object QUADRICEPS extends Muscle {val muscleWorked =  "QUADRICEPS"}
     case object SHOULDERS extends Muscle {val muscleWorked =  "SHOULDERS"}
     case object TRICEPS extends Muscle {val muscleWorked =  "TRICEPS"}
+  }
+*/
+  /** Exercise parameters */
+  sealed trait ExerciseParameter
+  object CONFIGURABLE_PARAMETERS {
+    case object SETS extends ExerciseParameter
+    case object TIMER extends ExerciseParameter
+    case object REPETITIONS extends ExerciseParameter
+    case object INCLINE extends ExerciseParameter
+    case object SPEED extends ExerciseParameter
+    case object WIGHT extends ExerciseParameter
+    case object TYPE extends ExerciseParameter
+  }
+
+  sealed trait MachineType
+  object MACHINE_TYPE {
+    case object RUNNING extends MachineType with SafePropertyVal
+    case object CYCLING extends MachineType with SafePropertyVal
+    case object LIFTING extends MachineType with SafePropertyVal
   }
 
 }
