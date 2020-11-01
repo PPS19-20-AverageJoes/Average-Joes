@@ -41,6 +41,8 @@ object HardwareApp extends App{
             case None => println("! Wristband not found!");
           }
 
+
+
           Behaviors.same
       }
 
