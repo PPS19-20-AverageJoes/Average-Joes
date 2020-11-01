@@ -19,7 +19,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
   override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
-      case m: Device.Msg.UserLoggedInMachine => display(m.refMachineActor.toString()); Behaviors.same //ToDo: va passato un id o similari
+      case m: Device.Msg.UserLoggedInMachine => display(m.machineLabel); Behaviors.same
       case m: Device.Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
@@ -35,7 +35,7 @@ object Device {
 
   sealed trait Msg extends LoggableMsg
   object Msg {
-    final case class UserLoggedInMachine(refMachineActor: ActorRef[MachineActor.Msg]) extends Msg
+    final case class UserLoggedInMachine(machineLabel: String) extends Msg //ToDo: SafePropertyValue sulla lunghezza
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //case class MsgDisplay(message: String) extends MsgDevice
   }
