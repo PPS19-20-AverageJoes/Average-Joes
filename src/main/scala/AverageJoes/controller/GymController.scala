@@ -5,7 +5,7 @@ import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.device.Device
 import AverageJoes.model.machine
 import AverageJoes.model.machine.{MachineActor, PhysicalMachine}
-import AverageJoes.model.workout.Exercise
+import AverageJoes.model.workout.MachineParameters
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -23,10 +23,11 @@ object GymController {
     final case class UserLogin(userID: String, replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
     final case class PhysicalMachineWakeUp(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[HardwareController.Msg]) extends Msg //Login to the controller
 
-    final case class BookmarkMachines(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[CustomerManager.Command]) extends Msg
+    //ToDo: temporaneamente modificato  il replyto per i test, deve essere un CustomerManager.Command
+    final case class BookmarkMachines(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[Device.Msg]) extends Msg
 
-    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: Exercise]) extends Msg
-    final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: Exercise]) extends Msg
+    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
+    final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserLogInStatus(status: Boolean) extends Msg
   }
 

@@ -4,8 +4,9 @@ import java.util.Optional
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import AverageJoes.controller.GymController
+import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.machine.MachineActor._
-import AverageJoes.model.workout.Exercise
+import AverageJoes.model.workout.MachineParameters
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 /**
@@ -25,8 +26,8 @@ object MachineActor{
     final case class BookingStatus(status: Boolean) extends Msg
     final case class UserRef(replyTo: ActorRef[UserLoggedInMachine]) extends Msg
     final case class UserLoggedInMachine() extends Msg
-    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: Exercise]) extends Msg
-    final case class UserMachineWorkoutCompleted(user: ActorRef[Msg], exercise: Class[_ <: Exercise]) extends Msg
+    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
+    final case class UserMachineWorkoutCompleted(user: ActorRef[Msg], exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserLogOut() extends Msg
 
     final case class BookingRequest(replyTo: ActorRef[CustomerManager.Command]) extends Msg
@@ -79,4 +80,5 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   }
 
   override val logName: String = "Machine Actor"
+  override val loggingContext: ActorContext[Msg] = this.context
 }
