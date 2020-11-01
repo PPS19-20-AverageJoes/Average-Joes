@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
+import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -46,7 +46,7 @@ object PhysicalMachine {
       val _display: String = machineID + " " + s
     }
 
-    override val logName: String = "PM ChestFly"
+    override val logName: String = "PM ChestFly: "+machineID
     override val loggingContext: ActorContext[Msg] = this.context
   }
   object ChestFly{
@@ -60,11 +60,11 @@ object PhysicalMachine {
       val _display: String = machineID + " " + s
     }
 
-    override val logName: String = "PM LegPress"
+    override val logName: String = "PM LegPress: "+machineID
     override val loggingContext: ActorContext[Msg] = this.context
   }
   object LegPress{
-    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new LegPress(context, ma, machineID))
   }
 
 }
