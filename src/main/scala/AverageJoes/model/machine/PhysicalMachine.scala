@@ -1,14 +1,14 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.ServerSearch
+import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
-sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
-  val machineID: String //TODO: recuperare da configurazione su DB?
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with LogOnMessage[PhysicalMachine.Msg]{
+  val machineID: String
   val ma: ActorRef[MachineActor.Msg] //MachineActor
 
-  override def onMessage(msg: PhysicalMachine.Msg): Behavior[PhysicalMachine.Msg] = {
+  override def onMessageLogged(msg: PhysicalMachine.Msg): Behavior[PhysicalMachine.Msg] = {
     msg match{
       case m: PhysicalMachine.Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.userID); Behaviors.same
       case m: PhysicalMachine.Msg.Display => display(m.message); Behaviors.same
@@ -19,7 +19,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 }
 
 object PhysicalMachine {
-  sealed trait Msg
+  sealed trait Msg extends LoggableMsg
   object Msg{
     final case class Rfid(userID: String) extends Msg //Rfid fired
     final case class Display(message: String) extends Msg
@@ -45,6 +45,9 @@ object PhysicalMachine {
     override def display(s: String): Unit = {
       val _display: String = machineID + " " + s
     }
+
+    override val logName: String = "PM ChestFly: "+machineID
+    override val loggingContext: ActorContext[Msg] = this.context
   }
   object ChestFly{
     def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
@@ -56,9 +59,12 @@ object PhysicalMachine {
     override def display(s: String): Unit = {
       val _display: String = machineID + " " + s
     }
+
+    override val logName: String = "PM LegPress: "+machineID
+    override val loggingContext: ActorContext[Msg] = this.context
   }
   object LegPress{
-    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID))
+    def apply(ma: ActorRef[MachineActor.Msg], machineID: String): Behavior[Msg] = Behaviors.setup(context => new LegPress(context, ma, machineID))
   }
 
 }
