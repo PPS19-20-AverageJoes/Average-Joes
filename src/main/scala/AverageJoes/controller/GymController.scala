@@ -47,7 +47,7 @@ object GymController {
           m.replyTo ! MachineActor.Msg.MsgUserRef(user)
         */
         case m: Msg.PhysicalMachineWakeUp =>
-          val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.phMachineType), m.machineID)
+          val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.phMachineType), "MA_"+m.machineID)
           childMachineActor += (((m.machineID, m.phMachineType), machine))
           m.replyTo ! HardwareController.Msg.MachineActorStarted(m.machineID, m.phMachineType, machine)
           Behaviors.same
