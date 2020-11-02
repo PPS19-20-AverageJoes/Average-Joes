@@ -1,5 +1,6 @@
 package AverageJoes.model.customer
 
+import AverageJoes.common.LoggableMsg
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -9,42 +10,43 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
  */
 
 object CustomerManager {
-  def apply(): Behavior[Command] = Behaviors.setup(ctx => new CustomerManager(ctx))
+  def apply(): Behavior[Msg] = Behaviors.setup(ctx => new CustomerManager(ctx))
 
-  sealed  trait Command
+  sealed trait Msg extends LoggableMsg
+  final case class RequestCustomerLogin(customerId: String, replyTo: ActorRef[CustomerRegistered]) extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerList(requestId: Long, replyTo: ActorRef[ReplyCustomerList]) extends CustomerManager.Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerCreation(groupId: String, customerId: String, replyTo: ActorRef[CustomerRegistered]) extends CustomerManager.Command with CustomerGroup.Command
-  final case class RequestCustomerList(requestId: Long, groupId: String, replyTo: ActorRef[ReplyCustomerList]) extends CustomerManager.Command with CustomerGroup.Command
   final case class ReplyCustomerList(requestId: Long, ids: Set[String])
+  final case class CustomerRegistered(customer: ActorRef[CustomerActor.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
 
-  final case class CustomerRegistered(customer: ActorRef[CustomerActor.Command]) extends CustomerManager.Command with CustomerGroup.Command
-  private final case class CustomerGroupTerminated(groupId: String) extends CustomerManager.Command
+  private final case class CustomerGroupTerminated(groupId: String) extends CustomerManager.Msg
+
 }
 
-class CustomerManager(ctx: ActorContext[CustomerManager.Command])
-  extends AbstractBehavior[CustomerManager.Command](ctx) {
+class CustomerManager(ctx: ActorContext[CustomerManager.Msg])
+  extends AbstractBehavior[CustomerManager.Msg](ctx) {
 
   import CustomerManager._
 
-  var groupIdToActor = Map.empty[String, ActorRef[CustomerGroup.Command]]
+  /** Memorize all the different groups of customer. In this case, we will have only one group. */
+  var customerGroupsActors = Map.empty[String, ActorRef[CustomerGroup.Msg]]
+  val groupId = "customers"
 
-  println("UserManager started")
-
-  override def onMessage(msg: Command): Behavior[Command] = msg match {
-    case customerCreation @ RequestCustomerCreation(groupId,_, replyTo) =>
-        groupIdToActor.get(groupId) match {
+  override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+    case customerCreation @ RequestCustomerLogin(_,_) =>
+      customerGroupsActors.get(groupId) match {
           case Some(ref) => ref ! customerCreation
           case None =>
-            println("Creating customer group actor for {"+groupId+"}")
+            //println("Creating customer group actor for {"+groupId+"}")
             val groupActor = context.spawn(CustomerGroup(groupId), "group-"+groupId)
             context.watchWith(groupActor, CustomerGroupTerminated(groupId))
             groupActor ! customerCreation
-            groupIdToActor += groupId -> groupActor
+            customerGroupsActors += groupId -> groupActor
         }
       this
 
-    case customerList @ RequestCustomerList(requestId, groupId, replyTo) =>
-      groupIdToActor.get(groupId) match {
+    case customerList @ RequestCustomerList(requestId, replyTo) =>
+      customerGroupsActors.get(groupId) match {
         case Some(ref) =>
           ref ! customerList
         case None =>
@@ -52,19 +54,22 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Command])
       }
       this
 
+
     case CustomerGroupTerminated(groupId) =>
-      println("Customer group actor for {"+groupId+"} has been terminated")
-      groupIdToActor -= groupId
+      //println("Customer group actor for {"+groupId+"} has been terminated")
+      customerGroupsActors -= groupId
       this
 
-    case _ => print("To be handled")
+    case _ =>
+      //print("To be handled")
       this
   }
 
 
-  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
+  override def onSignal: PartialFunction[Signal, Behavior[Msg]] = {
     case PostStop =>
-     println("Customer manager stopped")
-      this
+     //println("Customer manager stopped")
+     this
   }
+
 }

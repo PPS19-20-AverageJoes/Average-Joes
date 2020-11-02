@@ -1,5 +1,6 @@
 package AverageJoes.model.customer
 
+import AverageJoes.common.LoggableMsg
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -10,29 +11,29 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
  */
 
 object CustomerGroup {
-  def apply(groupID: String): Behavior[Command] = Behaviors.setup(ctx => new CustomerGroup(ctx, groupID))
+  def apply(groupID: String): Behavior[Msg] = Behaviors.setup(ctx => new CustomerGroup(ctx, groupID))
 
-  trait Command
-  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Command], groupId: String, customerId: String) extends Command
+  trait Msg extends LoggableMsg
+  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 }
 
-class CustomerGroup(ctx: ActorContext[CustomerGroup.Command], groupId: String)
-  extends AbstractBehavior[CustomerGroup.Command](ctx) {
+class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
+  extends AbstractBehavior[CustomerGroup.Msg](ctx) {
 
-  import CustomerGroup.{Command, CustomerTerminated}
+  import CustomerGroup.{Msg, CustomerTerminated}
   import CustomerManager._
 
-  private var customerIdToActor = Map.empty[String, ActorRef[CustomerActor.Command]]
+  private var customerIdToActor = Map.empty[String, ActorRef[CustomerActor.Msg]]
 
-  println("UserGroup {"+groupId+"} started")
+  //println("UserGroup {"+groupId+"} started")
 
-  override def onMessage(msg: Command): Behavior[Command] =
+  override def onMessage(msg: Msg): Behavior[Msg] =
     msg match {
-      case createUserMsg @ RequestCustomerCreation(`groupId`, customerId, replyTo) =>  // `groupId` is used to check if group param is the same
+      case createUserMsg @ RequestCustomerLogin(customerId, replyTo) =>  // `groupId` is used to check if group param is the same
         customerIdToActor.get(customerId) match {
           case Some(userActor) => replyTo ! CustomerRegistered(userActor)
           case None =>
-              println("Creating customer actor for {"+createUserMsg.customerId+"}")
+              //println("Creating customer actor for {"+createUserMsg.customerId+"}")
               val customerActor = context.spawn(CustomerActor(groupId, customerId), s"user-$customerId")
               context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
               customerIdToActor += customerId -> customerActor
@@ -40,26 +41,24 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Command], groupId: String)
         }
         this
 
-      case RequestCustomerCreation(gId,_,_) =>
-        println("Ignoring UserCreation request for {"+gId+"}. This actor is responsible for {"+groupId+"}.")
+      case RequestCustomerLogin(_,_) =>
+        //println("Ignoring UserCreation request. This actor is responsible for {"+groupId+"}.")
         this
 
-      case RequestCustomerList(requestId, gId, replyTo) =>
-        if(gId == groupId) {
+      case RequestCustomerList(requestId, replyTo) =>
           replyTo ! ReplyCustomerList(requestId, customerIdToActor.keySet)
           this
-        }
-        else Behaviors.unhandled
+
 
       case CustomerTerminated(_,_, userId) =>
-          println("Customer actor for {"+userId+"} has been terminated")
+          //println("Customer actor for {"+userId+"} has been terminated")
           customerIdToActor -= userId
           this
     }
 
-  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
+  override def onSignal: PartialFunction[Signal, Behavior[Msg]] = {
     case PostStop =>
-      println("Customer Group {} stopped", groupId)
+      //println("Customer Group {} stopped", groupId)
       this
   }
 
