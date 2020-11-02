@@ -26,12 +26,12 @@ object View extends SimpleSwingApplication {
 }
 
 case class UserView() extends GridPanel(10,1){
-    contents += UserGui()
+    //contents += UserGui()
 }
 
 case class MachineView() extends GridPanel(3,3){
     private var map:Map[String, ActorRef[PhysicalMachine.Msg]] = Map.empty
-    contents += MachineGUI()
+    //contents += MachineGUI()
 
     def addEntry(name:String, actorRef: ActorRef[PhysicalMachine.Msg]):Unit =
         map += (name -> actorRef)
@@ -60,6 +60,9 @@ case class UserGui(/*deviceActor: ActorRef[Device.Msg]*/) extends GridPanel(2,1)
             }
     }
 
+    def update (msg: String): Unit = {
+        text.text = msg
+    }
 }
 
 case class MachineGUI() extends GridPanel(2,1){
@@ -71,6 +74,10 @@ case class MachineGUI() extends GridPanel(2,1){
 
     reactions +={
         case ButtonClicked(button) => ???
+    }
+
+    def update (msg: String): Unit = {
+        text.text = msg
     }
 
 }

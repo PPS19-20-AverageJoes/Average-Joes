@@ -15,9 +15,11 @@ sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
 
   override def onMessage(msg: ViewToolActor.Msg): Behavior[ViewToolActor.Msg] = msg match {
     case m: ViewToolActor.Msg.CreateViewObject => createViewEntity(); Behaviors.same
+    case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(); Behaviors.same
 
   }
   def createViewEntity()
+  def updateViewEntity()
 }
 
 object ViewToolActor {
@@ -25,7 +27,7 @@ object ViewToolActor {
 
   object Msg {
     final case class CreateViewObject() extends Msg
-
+    final case class UpdateViewObject() extends Msg
   }
 
   case class ViewDeviceActor(override val context: ActorContext[Msg],
@@ -40,6 +42,8 @@ object ViewToolActor {
         panel.contents += machine
       })
     }
+
+    override def updateViewEntity(): Unit = ???
   }
 
   case class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
@@ -57,5 +61,6 @@ object ViewToolActor {
 
     }
 
+    override def updateViewEntity(): Unit = ???
   }
 }
