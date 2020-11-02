@@ -34,7 +34,7 @@ object MachineActor{
   }
 }
 
-class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], //da rendere actor ref
+class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg],
                    machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
 
   var booked: (Boolean, String) = (false, "")
@@ -72,7 +72,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     }
   }
 
-  private def updateAndLogOut(): Behavior[Msg] ={
+  private def updateAndLogOut(): Behavior[Msg] = {
     Behaviors.receiveMessage {
       case Msg.UserMachineWorkoutCompleted(user, exercise) =>
         controller ! GymController.Msg.UserMachineWorkoutCompleted(user, exercise)
@@ -83,8 +83,8 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
   def availabilityCheck(userId: String): Unit = {
     if (!booked._1 || (booked._1 && booked._2.equals(userId))) {
-      booked = (false,"")
       controller ! GymController.Msg.UserLogInStatus(booked._1)
+      booked = (false,"")
       connecting()
     } else {
       controller ! GymController.Msg.UserLogInStatus(booked._1)
