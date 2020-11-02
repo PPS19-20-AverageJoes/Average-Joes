@@ -1,7 +1,7 @@
 package AverageJoes.common
 
 import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.AbstractBehavior
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext}
 
 trait LoggableMsg
 
@@ -12,9 +12,10 @@ trait LoggableMsg
 trait LogOnMessage[Msg <: LoggableMsg] extends AbstractBehavior[Msg]{
 
   val logName: String
+  val loggingContext: ActorContext[Msg]
 
-  override def onMessage(msg: Msg): Behavior[ Msg]={
-    println(logName, msg)
+  override def onMessage(msg: Msg): Behavior[Msg]={
+    println(logName, context.self, msg)
 
     onMessageLogged(msg)
   }
