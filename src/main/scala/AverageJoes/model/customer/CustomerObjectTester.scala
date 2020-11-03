@@ -8,7 +8,7 @@ object CustomerObjectTester {
   def apply(): Behavior[Msg] = Behaviors.setup[Msg](context => {
     val customerManager: ActorRef[Msg] = context.spawn(CustomerManager(), "customer-manager")
 
-    customerManager ! RequestCustomerLogin("customer1", customerManager)
+    customerManager ! RequestCustomerLogin("customer1", customerManager, customerManager)
 
     CustomerManager()
   })

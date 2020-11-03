@@ -2,7 +2,6 @@ package AverageJoes.model.customer
 
 import AverageJoes.model.customer.CustomerManager._
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import akka.actor.typed.ActorRef
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
@@ -12,10 +11,11 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
       val probe = createTestProbe[CustomerRegistered]()
       val managerActor = spawn(CustomerManager())
 
-      managerActor ! RequestCustomerLogin("customer", probe.ref)
+      /** Suppose that replyTo and device have the same ref, only for testing */
+      managerActor ! RequestCustomerLogin("customer", probe.ref, probe.ref)
       val registered1 = probe.receiveMessage()
 
-      managerActor ! RequestCustomerLogin("customer", probe.ref)
+      managerActor ! RequestCustomerLogin("customer", probe.ref, probe.ref)
       val registered2 = probe.receiveMessage()
 
       registered1.customer should === (registered2.customer)

@@ -13,11 +13,16 @@ object CustomerManager {
   def apply(): Behavior[Msg] = Behaviors.setup(ctx => new CustomerManager(ctx))
 
   sealed trait Msg extends LoggableMsg
-  final case class RequestCustomerLogin(customerId: String, replyTo: ActorRef[CustomerRegistered]) extends CustomerManager.Msg with CustomerGroup.Msg
-  final case class RequestCustomerList(requestId: Long, replyTo: ActorRef[ReplyCustomerList]) extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerLogin(customerId: String, replyTo: ActorRef[CustomerRegistered], device: ActorRef[CustomerRegistered])
+    extends CustomerManager.Msg with CustomerGroup.Msg
 
-  final case class ReplyCustomerList(requestId: Long, ids: Set[String])
-  final case class CustomerRegistered(customer: ActorRef[CustomerActor.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerList(replyTo: ActorRef[ReplyCustomerList])
+    extends CustomerManager.Msg with CustomerGroup.Msg
+
+  final case class ReplyCustomerList(customerActors: Set[ActorRef[CustomerActor.Msg]])
+
+  final case class CustomerRegistered(customer: ActorRef[CustomerActor.Msg])
+    extends CustomerManager.Msg with CustomerGroup.Msg
 
   private final case class CustomerGroupTerminated(groupId: String) extends CustomerManager.Msg
 
@@ -33,7 +38,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg])
   val groupId = "customers"
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
-    case customerCreation @ RequestCustomerLogin(_,_) =>
+
+    case customerCreation @ RequestCustomerLogin(_,_,_) =>
       customerGroupsActors.get(groupId) match {
           case Some(ref) => ref ! customerCreation
           case None =>
@@ -45,12 +51,12 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg])
         }
       this
 
-    case customerList @ RequestCustomerList(requestId, replyTo) =>
+    case customerList @ RequestCustomerList(replyTo) =>
       customerGroupsActors.get(groupId) match {
         case Some(ref) =>
           ref ! customerList
         case None =>
-          replyTo ! ReplyCustomerList(requestId, Set.empty)
+          replyTo ! ReplyCustomerList(Set.empty)
       }
       this
 

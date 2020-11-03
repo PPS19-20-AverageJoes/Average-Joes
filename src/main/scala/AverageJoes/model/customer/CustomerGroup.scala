@@ -5,9 +5,7 @@ import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 /**
- * Group actor will handle the requests that will be passed by User Manager Actor *
- * Groups provides other services too.
- * TODO: implement UserGroup services
+ * Group actor will handle the requests that will be passed by Customer Manager Actor
  */
 
 object CustomerGroup {
@@ -27,9 +25,9 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
 
   //println("UserGroup {"+groupId+"} started")
 
-  override def onMessage(msg: Msg): Behavior[Msg] =
-    msg match {
-      case createUserMsg @ RequestCustomerLogin(customerId, replyTo) =>  // `groupId` is used to check if group param is the same
+  override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+
+      case RequestCustomerLogin(customerId, replyTo, device) =>
         customerIdToActor.get(customerId) match {
           case Some(userActor) => replyTo ! CustomerRegistered(userActor)
           case None =>
@@ -38,15 +36,16 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
               context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
               customerIdToActor += customerId -> customerActor
               replyTo ! CustomerRegistered(customerActor)
+              device ! CustomerRegistered(customerActor)
         }
         this
 
-      case RequestCustomerLogin(_,_) =>
+      case RequestCustomerLogin(_,_,_) =>
         //println("Ignoring UserCreation request. This actor is responsible for {"+groupId+"}.")
         this
 
-      case RequestCustomerList(requestId, replyTo) =>
-          replyTo ! ReplyCustomerList(requestId, customerIdToActor.keySet)
+      case RequestCustomerList(replyTo) =>
+          replyTo ! ReplyCustomerList(customerIdToActor.values.toSet)
           this
 
 
