@@ -1,10 +1,14 @@
 package AverageJoes.view
 
-import scala.swing.{BorderPanel, Button, Dimension, Frame, GridPanel, MainFrame, SimpleSwingApplication, TextArea, TextField}
+import AverageJoes.model.machine.PhysicalMachine
+import akka.actor.typed.ActorRef
+
+import scala.swing.event.ButtonClicked
+import scala.swing.{BorderPanel, Button, Dialog, Dimension, Frame, GridPanel, MainFrame, SimpleSwingApplication, TextArea}
 
 object View extends SimpleSwingApplication {
-    val machinePanel: GridPanel = new GridPanel(3,3)
-    val userPanel: GridPanel = new GridPanel(10,1)
+    private val machinePanel: MachineView = MachineView()
+    private val userPanel: UserView = UserView()
 
     def top: Frame = new MainFrame {
         title = "AverageJos"
@@ -17,18 +21,63 @@ object View extends SimpleSwingApplication {
         }
     }
 
-    def _getMachineView(): GridPanel = machinePanel
+    def _getMachineView(): MachineView = machinePanel
     def _getUserView(): GridPanel = userPanel
 }
 
-case class UserGui() extends GridPanel(2,1){
-    preferredSize = new Dimension(300, 600)
-    contents += new Button("Customer Info")
-    contents += new TextArea()
-
+case class UserView() extends GridPanel(10,1){
+    //contents += UserGui()
 }
 
-case class MachineGUI(val machineID: String) extends GridPanel(2,1){
-    contents += new Button("Machine Info")
-    contents += new TextArea()
+case class MachineView() extends GridPanel(3,3){
+    private var map:Map[String, ActorRef[PhysicalMachine.Msg]] = Map.empty
+    //contents += MachineGUI()
+
+    def addEntry(name:String, actorRef: ActorRef[PhysicalMachine.Msg]):Unit =
+        map += (name -> actorRef)
+
+    def _getMapKeyList(): List[String] = map.keySet.toList
+
+    def _getMapValue(key:String): Option[ActorRef[PhysicalMachine.Msg]] = map.get(key)
+}
+
+case class UserGui(/*deviceActor: ActorRef[Device.Msg]*/) extends GridPanel(2,1){
+    preferredSize = new Dimension(300, 600)
+    val button:Button = new Button("Customer Info")
+    var text:TextArea = new TextArea()
+    var physicalActor: Option[ActorRef[PhysicalMachine.Msg]] = None
+    contents += button
+    contents += text
+    listenTo(button)
+
+    reactions += {
+        case ButtonClicked(button) =>
+            val machineChoice = Dialog.showInput(contents.head,"Choose Machine","",
+                entries = View._getMachineView()._getMapKeyList(), initial = 0)
+            if(machineChoice.get != None){
+                physicalActor = View._getMachineView()._getMapValue(machineChoice.get.asInstanceOf[String])
+                /*Send physical machine path to device*/
+            }
+    }
+
+    def update (msg: String): Unit = {
+        text.text = msg
+    }
+}
+
+case class MachineGUI() extends GridPanel(2,1){
+    val button:Button = new Button("Machine Info")
+    var text:TextArea = new TextArea()
+    contents += button
+    contents += text
+    listenTo(button)
+
+    reactions +={
+        case ButtonClicked(button) => ???
+    }
+
+    def update (msg: String): Unit = {
+        text.text = msg
+    }
+
 }
