@@ -10,7 +10,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
  */
 
 class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
-
+/*
   "Customer group" should {
 
     "register a customer actor" in {
@@ -102,5 +102,5 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
     }
 
   }
-
+*/
 }

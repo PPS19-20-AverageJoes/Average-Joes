@@ -5,7 +5,7 @@ import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
-
+/*
   "Customer manager actor" should {
     "reply to registration request" in {
       val probe = createTestProbe[CustomerRegistered]()
@@ -21,5 +21,5 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
       registered1.customer should === (registered2.customer)
     }
   }
-
+*/
 }
