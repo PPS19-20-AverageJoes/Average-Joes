@@ -12,10 +12,10 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
       val managerActor = spawn(CustomerManager())
 
       /** Suppose that replyTo and device have the same ref, only for testing */
-      managerActor ! RequestCustomerLogin("customer", probe.ref, probe.ref)
+      managerActor ! RequestCustomerCreation("customer", probe.ref, probe.ref)
       val registered1 = probe.receiveMessage()
 
-      managerActor ! RequestCustomerLogin("customer", probe.ref, probe.ref)
+      managerActor ! RequestCustomerCreation("customer", probe.ref, probe.ref)
       val registered2 = probe.receiveMessage()
 
       registered1.customer should === (registered2.customer)

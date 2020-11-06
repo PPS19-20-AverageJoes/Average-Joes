@@ -20,12 +20,12 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       val groupActor = spawn(CustomerGroup("group"))
 
       /* Customer 1 */
-      groupActor ! RequestCustomerLogin("customer1", probe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
       val registered1 = probe.receiveMessage()
       val customerActor1 = registered1.customer
 
       /* Customer 2 */
-      groupActor ! RequestCustomerLogin("customer2", probe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer2", probe.ref, devProbe.ref)
       val registered2 = probe.receiveMessage()
       val customerActor2 = registered2.customer
       customerActor1 should !== (customerActor2)
@@ -44,11 +44,11 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       val devProbe = createTestProbe[CustomerRegistered]()
       val groupActor = spawn(CustomerGroup("group"))
 
-      groupActor ! RequestCustomerLogin("customer1", probe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
       val registered1 = probe.receiveMessage()
 
       /* Registering the same customer actor again */
-      groupActor ! RequestCustomerLogin("customer1", probe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
       val registered2 = probe.receiveMessage()
 
       registered1.customer should === (registered2.customer)
@@ -59,13 +59,13 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       val devProbe = createTestProbe[CustomerRegistered]()
       val groupActor = spawn(CustomerGroup("group"))
 
-      groupActor ! RequestCustomerLogin("customer1", registeredProbe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer1", registeredProbe.ref, devProbe.ref)
       registeredProbe.receiveMessage()
 
-      groupActor ! RequestCustomerLogin("customer2", registeredProbe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer2", registeredProbe.ref, devProbe.ref)
       registeredProbe.receiveMessage()
 
-      val usersListProbe = createTestProbe[ReplyCustomerList]()
+      val usersListProbe = createTestProbe[CustomerList]()
       groupActor ! RequestCustomerList(usersListProbe.ref)
 
       //usersListProbe.receiveMessage()
@@ -77,14 +77,14 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       val devProbe = createTestProbe[CustomerRegistered]()
       val groupActor = spawn(CustomerGroup("group"))
 
-      groupActor ! RequestCustomerLogin("customer1", registeredProbe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer1", registeredProbe.ref, devProbe.ref)
       val registered1 = registeredProbe.receiveMessage()
       val customerToShutDown = registered1.customer
 
-      groupActor ! RequestCustomerLogin("customer2", registeredProbe.ref, devProbe.ref)
+      groupActor ! RequestCustomerCreation("customer2", registeredProbe.ref, devProbe.ref)
       registeredProbe.receiveMessage()
 
-      val customersListProbe = createTestProbe[ReplyCustomerList]()
+      val customersListProbe = createTestProbe[CustomerList]()
       groupActor ! RequestCustomerList(customersListProbe.ref)
 
       assert(customersListProbe.receiveMessage().customerActors.size == 2)

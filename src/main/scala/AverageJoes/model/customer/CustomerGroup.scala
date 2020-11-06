@@ -1,6 +1,8 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
+import AverageJoes.model.device.Device
+import AverageJoes.model.machine.MachineActor
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -13,6 +15,9 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
+
+  final case class CustomerLogin(machine: ActorRef[MachineActor], device: ActorRef[Device]) extends Msg
+
 }
 
 class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
@@ -27,7 +32,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-      case RequestCustomerLogin(customerId, replyTo, device) =>
+      case RequestCustomerCreation(customerId, replyTo, device) =>
         customerIdToActor.get(customerId) match {
           case Some(userActor) => replyTo ! CustomerRegistered(userActor)
           case None =>
@@ -40,12 +45,12 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
         }
         this
 
-      case RequestCustomerLogin(_,_,_) =>
+      case RequestCustomerCreation(_,_,_) =>
         //println("Ignoring UserCreation request. This actor is responsible for {"+groupId+"}.")
         this
 
       case RequestCustomerList(replyTo) =>
-          replyTo ! ReplyCustomerList(customerIdToActor.values.toSet)
+          replyTo ! CustomerList(customerIdToActor.values.toSet)
           this
 
 
