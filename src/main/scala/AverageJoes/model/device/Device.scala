@@ -10,10 +10,10 @@ import akka.actor.typed.{ActorRef, Behavior}
  * AC
  */
 trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMessage[Device.Msg]{
-  val deviceID: String
+  val customerID: String
 
   //Search for the Gym Controller (the server) and send a message
-  server ! GymController.Msg.DeviceInGym(deviceID, context.self)
+  server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
   //noinspection SpellCheckingInspection
   //ToDo: è possibile uilizzare sia la receive della classe che quella della superclasse?
