@@ -1,19 +1,26 @@
 package AverageJoes.model.machine
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg}
-import AverageJoes.model.workout.{ChestFlyParameters, LegPressParameters, MachineParameters}
+import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet}
+import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with LogOnMessage[PhysicalMachine.Msg]{
   val machineID: String
-  val machineLabel: String //To show on device
+  val machineLabel: PhysicalMachine.MachineLabel //To show on device
   val machineType: PhysicalMachine.MachineType.Type
-  val ma: ActorRef[MachineActor.Msg]
+  //val ma: ActorRef[MachineActor.Msg]
   override val logName: String = "PM %s: %s".format(machineType, machineID)
 
   override def onMessageLogged(msg: PhysicalMachine.Msg): Behavior[PhysicalMachine.Msg] = {
     msg match{
+      case m: PhysicalMachine.Msg.MachineActorStarted => operative(m.refMA)
+    }
+  }
+
+  private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[PhysicalMachine.Msg] = {
+    Behaviors.receiveMessage {
       case m: PhysicalMachine.Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.userID); Behaviors.same
       case m: PhysicalMachine.Msg.Display => display(m.message); Behaviors.same
       case m: PhysicalMachine.Msg.ConfigMachine => configure(m.machineParameters); Behaviors.same
@@ -22,16 +29,20 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
 
   def display (s: String)
   def configure (machineParameters: MachineParameters)
-  def formatConfiguration (machineParameters: MachineParameters): String
+  def formatConfiguration(machineParameters: MachineParameters): String
 }
 
 object PhysicalMachine {
   sealed trait Msg extends LoggableMsg
   object Msg{
-    final case class Rfid(userID: String) extends Msg //Rfid fired
+    //From MachineActor
+    final case class MachineActorStarted(machineID: String, refMA: ActorRef[MachineActor.Msg]) extends Msg
     final case class Display(message: String) extends Msg
     final case class ConfigMachine(machineParameters: MachineParameters) extends Msg
+    //From Device
+    final case class Rfid(userID: String) extends Msg //Rfid fired
   }
+  type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
   object MachineType extends Enumeration {
     type Type = Value
@@ -44,10 +55,10 @@ object PhysicalMachine {
   }
 
   import MachineType._
-  def apply(phMachineType: Type, ma: ActorRef[MachineActor.Msg], machineID: String, machineLabel: String): Behavior[Msg] = {
+  def apply(machineID: String, phMachineType: Type, machineLabel: MachineLabel): Behavior[Msg] = {
     phMachineType match{
-        case MachineType.legPress => LegPress(ma, machineID, machineLabel)
-        case MachineType.chestFly => ChestFly(ma, machineID, machineLabel)
+        case MachineType.legPress => LegPress(machineID, machineLabel)
+        case MachineType.chestFly => ChestFly(machineID, machineLabel)
 
     }
   }
@@ -64,9 +75,9 @@ object PhysicalMachine {
   }
 
   object LegPress{
-    def apply(ma: ActorRef[MachineActor.Msg], machineID: String, machineLabel: String): Behavior[Msg] = Behaviors.setup(context => new LegPress(context, ma, machineID, machineLabel))
+    def apply(machineID: String, machineLabel: MachineLabel): Behavior[Msg] = Behaviors.setup(context => new LegPress(context, machineID, machineLabel))
 
-    private class LegPress(context: ActorContext[Msg], override val ma: ActorRef[MachineActor.Msg], override val machineID: String, override val machineLabel: String)
+    private class LegPress(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine with DefaultSimulatedPhysicalBehavior {
 
       override val machineType: Type = legPress
@@ -75,17 +86,26 @@ object PhysicalMachine {
       override def formatConfiguration(machineParameters: MachineParameters): String = {
         machineParameters match {
           case p: LegPressParameters => p.length.toString //ToDo: inviare messaggio a view
+            //p.sets
+            //setwith(p.weight)
           case _ => throw new IllegalArgumentException
         }
       }
 
     }
+
+    /**
+     * @param weight: load
+     * @param length: adjustable length according to the customer
+     */
+    case class LegPressParameters(weight: NonNegInt, length: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt) extends MachineParametersBySet { override val machineType: Type = legPress }
+
   }
 
   object ChestFly{
-    def apply(ma: ActorRef[MachineActor.Msg], machineID: String, machineLabel: String): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, ma, machineID, machineLabel))
+    def apply(machineID: String, machineLabel: MachineLabel): Behavior[Msg] = Behaviors.setup(context => new ChestFly(context, machineID, machineLabel))
 
-    private class ChestFly(context: ActorContext[Msg], override val ma: ActorRef[MachineActor.Msg], override val machineID: String, override val machineLabel: String)
+    private class ChestFly(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine with DefaultSimulatedPhysicalBehavior {
 
       override val machineType: Type = chestFly
@@ -98,6 +118,12 @@ object PhysicalMachine {
         }
       }
     }
+
+    /**
+     * @param weight: load
+     * @param height: adjustable height of the sit according to the customer
+     */
+    case class ChestFlyParameters(weight: NonNegInt, height: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt) extends  MachineParametersBySet { override val machineType: Type = chestFly }
   }
 
 }
