@@ -17,26 +17,27 @@ object CustomerManager {
   def apply(): Behavior[Msg] = Behaviors.setup(ctx => new CustomerManager(ctx))
 
   sealed trait Msg extends LoggableMsg
+
   /** Receive Messages */
-  final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
-    extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg])
-    extends CustomerManager.Msg
+  final case class RequestCustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg]) extends CustomerManager.Msg
 
-  final case class RequestCustomerList(controller: ActorRef[GymController.Msg])
-    extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
+
+   // BookingConfirmation(confirmed: Boolean)
+
 }
+
 
 class CustomerManager(ctx: ActorContext[CustomerManager.Msg])
   extends AbstractBehavior[CustomerManager.Msg](ctx) {
 
   import CustomerManager._
-
+  var deviceRef: ActorRef[Device.Msg] = _
   val groupId = "customers"
   var customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId), "group-"+groupId)
 
-  var deviceRef: ActorRef[Device.Msg] = _
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
