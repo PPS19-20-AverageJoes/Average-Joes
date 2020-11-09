@@ -1,7 +1,7 @@
 package AverageJoes
 
 import AverageJoes.common.ServerSearch
-import AverageJoes.controller.{GymController, HardwareController}
+import AverageJoes.controller.HardwareController
 import AverageJoes.model.device.Device
 import AverageJoes.model.machine.PhysicalMachine
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -10,9 +10,9 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 object HardwareApp extends App{
   private val controller: ActorSystem[HardwareController.Msg] = ActorSystem(HardwareController(), "GymHardware")
 
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",PhysicalMachine.MachineType.legPress)
-  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",PhysicalMachine.MachineType.chestFly)
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress2",PhysicalMachine.MachineType.legPress)
+  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",PhysicalMachine.MachineType.legPress,"LegPress A")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",PhysicalMachine.MachineType.chestFly,"ChestFly")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress2",PhysicalMachine.MachineType.legPress,"LegPress B")
 
   controller ! HardwareController.Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
   controller ! HardwareController.Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
@@ -37,7 +37,7 @@ object HardwareApp extends App{
                 case Some(l) => w ! Device.Msg.NearDevice(l)
                 case None => ;
               }
-              server ! GymController.Msg.BookmarkMachines(PhysicalMachine.MachineType.legPress, w)
+              //server ! GymController.Msg.BookmarkMachines(PhysicalMachine.MachineType.legPress, w)
             case None => println("! Wristband not found!");
           }
 

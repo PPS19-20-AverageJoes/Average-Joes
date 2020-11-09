@@ -1,7 +1,5 @@
 package AverageJoes.model.machine
 
-import java.util.Optional
-
 import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerManager
@@ -14,8 +12,8 @@ import akka.actor.typed.{ActorRef, Behavior}
  * controller: controller ActorRef
  */
 object MachineActor{
-  def apply(controller: ActorRef[GymController.Msg], machineType: PhysicalMachine.MachineType.Type): Behavior[Msg] =
-    Behaviors.setup(context => new MachineActor(context, controller, machineType))
+  def apply(controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg], machineType: PhysicalMachine.MachineType.Type): Behavior[Msg] =
+    Behaviors.setup(context => new MachineActor(context, controller, physicalMachine, machineType))
 
   sealed trait Msg extends LoggableMsg
   object Msg {
@@ -24,18 +22,17 @@ object MachineActor{
     final case class UserMachineWorkoutPlan(customerID: String) extends Msg
     final case class UserMachineWorkout(customerID: String, exercise: Class[_ <: MachineParameters]) extends Msg
     final case class deadDevice() extends Msg
-    final case class BookingRequest(replyTo: ActorRef[CustomerManager.Command], customerID) extends Msg
+    final case class BookingRequest(replyTo: ActorRef[CustomerManager.Command], customerID: String) extends Msg
   }
 }
 
-class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg],
+class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
                    machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
 
-  var bookedCustomer: Optional[String] = Optional.empty()
-  var physicalMachine: Optional[ActorRef[PhysicalMachine.Msg]] = Optional.empty()
+  var bookedCustomer: Option[String] = Option.empty
 
-  override def onMessageLogged(msg: Msg): Behavior[Msg] = msg match {
-    case Msg.PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
+
+  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       idle()
   }
 
@@ -46,7 +43,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
-        bookedCustomer = Optional.of(customerID)
+        bookedCustomer = Option.apply(customerID)
         //replyTo ! CustomerManager.BookingConfirmation(boolean)
         //da aggiungereMachineType
        bookedStatus()
@@ -67,7 +64,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
       if(!isLogged){
          idle()
       } else {
-        physicalMachine.get() ! Msg.UserMachineWorkoutPlan(customerID)
+        physicalMachine ! Msg.UserMachineWorkoutPlan(customerID)
         updateAndLogOut()
       }
 
@@ -82,7 +79,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
     Behaviors.receiveMessage {
       case Msg.UserLogIn(customerID) =>
-        physicalMachine.get() ! Msg.UserMachineWorkoutPlan(customerID)
+        physicalMachine ! Msg.UserMachineWorkoutPlan(customerID)
       case Msg.UserMachineWorkout(customerID, exercise) =>
         //spawn su disco
         updateAndLogOut()

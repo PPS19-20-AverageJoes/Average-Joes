@@ -5,7 +5,7 @@ import AverageJoes.model.device._
 import AverageJoes.model.machine
 import AverageJoes.model.machine._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.actor.typed.{ActorRef, Behavior}
 
 import scala.collection.mutable
 
@@ -20,9 +20,9 @@ object HardwareController {
   sealed trait Msg extends LoggableMsg
   object Msg{
     //final case class PMActorStarted(machineID: String, phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
-    final case class CreatePhysicalMachine(machineID: String, phMachineType: PhysicalMachine.MachineType.Type) extends Msg
+    final case class CreatePhysicalMachine(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machineLabel: String) extends Msg
     final case class CreateDevice(deviceID: String, deviceType: Device.DeviceType.Type) extends Msg
-    final case class MachineActorStarted(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machine: ActorRef[MachineActor.Msg]) extends Msg
+    //final case class MachineActorStarted(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machineLabel: String, refMA: ActorRef[MachineActor.Msg]) extends Msg
   }
 
   class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch with LogOnMessage[Msg] {
@@ -32,14 +32,20 @@ object HardwareController {
      override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       msg match{
         case m: Msg.CreatePhysicalMachine =>
-          server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, context.self)
+          if(childPM.keySet.exists(_._1 == m.machineID)) //ToDo: machine label deve essere univoco
+            println("machineID already exists") //ToDo: inserire nel log
+          else { //TODO: probabilmente la PM va creata contestualmente per gestire la presenza del codice univoco, rivedere la questione del machineactorref (la pm può entrare nel behaviour "ref waiting")
+            val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(m.machineID, m.phMachineType, m.machineLabel), m.machineID)
+            childPM += (((m.machineID,m.phMachineType), pm))
+            server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, pm)
+          }
           Behaviors.same
 
-        case Msg.MachineActorStarted(machineID, phMachineType, refMA) =>
-          val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(phMachineType, refMA, machineID), machineID)
-          childPM += (((machineID,phMachineType), pm))
-          refMA ! MachineActor.Msg.PMActorStarted(pm)
-          Behaviors.same
+        /*case m: Msg.MachineActorStarted =>
+          val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(m.phMachineType, m.refMA, m.machineID, m.machineLabel), m.machineID)
+          childPM += (((m.machineID,m.phMachineType), pm))
+          m.refMA ! MachineActor.Msg.PMActorStarted(pm)
+          Behaviors.same*/
 
         case Msg.CreateDevice(deviceID, deviceType) =>
           val device = context.spawn[Device.Msg](Device(deviceType, deviceID), deviceID)
@@ -57,11 +63,5 @@ object HardwareController {
       case _ => None
     }
   }
-//ToDo: spostare nel gym controller
-  def getChildPmByType(pmType: PhysicalMachine.MachineType.Type): Option[ActorRef[PhysicalMachine.Msg]] = {
-    childPM.filterKeys(k => k._2 == pmType).last._2 match {
-      case v: ActorRef[machine.PhysicalMachine.Msg] => Some(v)
-      case _ => None
-    }
-  }
+
 }
