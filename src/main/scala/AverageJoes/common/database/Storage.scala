@@ -1,4 +1,6 @@
-package AverageJoes.common
+package AverageJoes.common.database
+
+import AverageJoes.common.database.table.Entity
 
 trait Storage[E] {
   def add(e: E): List[E]

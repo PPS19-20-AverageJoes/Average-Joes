@@ -1,4 +1,4 @@
-package AverageJoes.common.database
+package AverageJoes.common.database.table
 
 import AverageJoes.utils.IdGenerator._
 
