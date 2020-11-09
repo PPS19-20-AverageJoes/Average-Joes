@@ -57,6 +57,9 @@ object ExerciseExecutionConfig {
     import AverageJoes.utils.ExerciseUtils.CONFIGURABLE_PARAMETERS._
     import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT._
 
+    /**
+     * TODO: Use uniques enum for machine type
+     */
     implicit val machineExecutionParamExtractor: Extractor[MachineEquipment] = {
       case LiftMachine(wight, sets) => ExerciseParameters()
         .addValueOf((SETS, sets))
