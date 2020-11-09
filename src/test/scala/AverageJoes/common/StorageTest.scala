@@ -1,5 +1,6 @@
 package AverageJoes.common
 
+import AverageJoes.common.database.{GymStorage, Storage}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

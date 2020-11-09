@@ -2,8 +2,8 @@ package AverageJoes.model.customer
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
 import AverageJoes.common._
+import AverageJoes.common.database.{GymStorage, Storage}
 import AverageJoes.utils.DateUtils._
 
 class CustomerTest extends AnyFlatSpec with Matchers {
