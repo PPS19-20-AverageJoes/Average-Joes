@@ -10,16 +10,14 @@ object MachineExecution {
   }
 
   object MACHINE_EQUIPMENT {
-    type IntVal = NonNegInt
-    type DoubleVal = NonNegDouble
 
-    case class LiftMachine(wight: IntVal, set: IntVal) extends MachineEquipment
+    case class LiftMachine(wight: Int, set: Int) extends MachineEquipment
     { override val machineType: MachineType = MACHINE_TYPE.LIFTING }
 
-    case class RunningMachine(incline: DoubleVal, speed: DoubleVal, timer: IntVal) extends MachineEquipment
+    case class RunningMachine(incline: Double, speed: Double, timer: Int) extends MachineEquipment
     { override val machineType: MachineType = MACHINE_TYPE.RUNNING }
 
-    case class CyclingMachine(resistance: DoubleVal, timer: IntVal) extends MachineEquipment
+    case class CyclingMachine(resistance: Double, timer: Int) extends MachineEquipment
     { override val machineType: MachineType = MACHINE_TYPE.CYCLING }
   }
 }
