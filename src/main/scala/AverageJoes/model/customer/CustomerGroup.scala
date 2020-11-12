@@ -1,12 +1,10 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
-import AverageJoes.controller.GymController.Msg.{CustomerList, CustomerRegistered}
+import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.device.Device
-import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -35,12 +33,12 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
 
     case RequestCustomerCreation(customerId, replyTo, _) =>
       customerIdToActor.get(customerId) match {
-        case Some(userActor) => replyTo ! CustomerRegistered(userActor)
+        case Some(userActor) => replyTo ! GymController.Msg.CustomerRegistered(customerId, userActor)
         case None =>
           val customerActor = context.spawn(CustomerActor(groupId, customerId), s"user-$customerId")
           context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
           customerIdToActor += customerId -> customerActor
-          replyTo ! CustomerRegistered(customerActor)
+          replyTo ! GymController.Msg.CustomerRegistered(customerId, customerActor)
       }
       this
 
@@ -48,10 +46,10 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
           /** Check if can log in and than notify machine and device */
-          machine ! CustomerLogging(customerId, isLogged = true)
-          device ! CustomerLogged(customerActor)
+          machine ! MachineActor.Msg.CustomerLogging(customerId, isLogged = true)
+          device ! Device.Msg.UserLoggedInMachine("Machine Label")//ToDo: insert machine label
         case None =>
-          machine ! CustomerLogging(customerId, isLogged = false)
+          machine ! MachineActor.Msg.CustomerLogging(customerId, isLogged = false)
       }
       this
 
@@ -59,7 +57,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg], groupId: String)
       this
 
     case RequestCustomerList(replyTo) =>
-      replyTo ! CustomerList(customerIdToActor.values.toSet)
+      replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
       this
 
 
