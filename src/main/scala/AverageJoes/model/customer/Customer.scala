@@ -4,7 +4,7 @@ import java.util.Date
 
 import AverageJoes.common.BaseEntity
 
-trait Customer extends BaseEntity{
+trait Customer extends BaseEntity {
   def CF: String
   def name: String
   def surname: String
