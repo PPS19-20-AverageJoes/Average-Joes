@@ -23,10 +23,18 @@ object GymController {
     final case class UserLogin(customerID: String, replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
     final case class PhysicalMachineWakeUp(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg //Login to the controller
 
-    final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Command]) extends Msg
+    final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
+
+
+
+    /** Receiving responses */
+    final case class CustomerList(customers: Set[ActorRef[CustomerActor.Msg]]) extends Msg
+
+
+
 
     //ToDo: temporaneamente modificato  il replyto per i test, deve essere un CustomerManager.Command
-    final case class MachinesToBookmark(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[Device.Msg]) extends Msg
+    final case class MachinesToBookmark(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[CustomerManager.Msg]) extends Msg
 
     final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
@@ -37,15 +45,13 @@ object GymController {
     override val logName = "Gym controller"
     override val loggingContext: ActorContext[Msg] = this.context
 
-    val customerManager: ActorRef[CustomerManager.Command] = context.spawn(CustomerManager(), "CustomerManager")
+    val customerManager: ActorRef[CustomerManager.Msg] = context.spawn(CustomerManager(), "CustomerManager")
 
     override def onMessageLogged(msg: Msg): Behavior[Msg] = {
       msg match {
-        case m: Msg.DeviceInGym =>
-          customerManager ! CustomerManager.RequestCustomerCreation("", m.customerID, context.self)
-          Behaviors.same
+        case m: Msg.DeviceInGym => customerManager ! CustomerManager.RequestCustomerCreation(m.customerID, context.self, m.replyTo); Behaviors.same
 
-        case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerCreation("", m.customerID, m.replyTo)
+        case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.replyTo); Behaviors.same
 
         //case m: Msg.CustomerRegistered => childUserActor += ((m.customerID, m.customer)); Behaviors.same
 
