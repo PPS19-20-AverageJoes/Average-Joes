@@ -12,8 +12,8 @@ import AverageJoes.model.customer.Customer
 
 trait TrainingProgram {
   val customer: Customer
-  def addExercise(ex: Exercise)
-  def removeExercise(ex: Exercise)
+  def addExercise(ex: Exercise): TrainingProgram
+  def removeExercise(ex: Exercise): TrainingProgram
   def allExercises: Set[Exercise]
 }
 
@@ -26,10 +26,13 @@ object TrainingProgram {
 
       override def allExercises: Set[Exercise] = exercises
 
-      override def addExercise(ex: Exercise): Unit = exercises = exercises + ex
+      override def addExercise(ex: Exercise): TrainingProgram = {exercises = exercises + ex; this}
 
-      override def removeExercise(ex: Exercise): Unit = if (exercises.isEmpty) throw new NoExercisesFound; else  exercises = exercises - ex
-
+      override def removeExercise(ex: Exercise): TrainingProgram = {
+        if (exercises.isEmpty) throw new NoExercisesFound;
+        else  exercises = exercises - ex;
+        this
+      }
   }
 }
 
