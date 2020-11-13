@@ -2,7 +2,9 @@ package AverageJoes.model.fitness
 
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT.RunningMachine
-// import AverageJoes.utils.ExerciseUtils.MACHINE_TYPE
+import AverageJoes.utils.ExerciseUtils.MachineTypes
+import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -21,12 +23,12 @@ class ExerciseTest  extends AnyFlatSpec with Matchers {
   }
 
   it should "have a RUNNING machine as equipment" in {
-   // assert(exerciseRunning.equipment.machineType == MACHINE_TYPE.RUNNING)
+    assert(exerciseRunning.equipment.machineType == MachineTypes.RUNNING)
   }
 
   it should "have an list of parameters configured" in {
-  //  assert(exerciseRunning.executionParameters !== null)
-   // assert(exerciseRunning.executionParameters.isInstanceOf[Parameters])
+    assert(exerciseRunning.executionParameters !== null)
+    assert(exerciseRunning.executionParameters.isInstanceOf[Parameters[SafePropertyVal]])
   }
 
 }
