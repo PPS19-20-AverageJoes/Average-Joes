@@ -8,6 +8,10 @@ import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 trait Exercise {
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ImplicitParameterExtractors._
 
+    /**
+     * TODO: durata di un esercizio
+     */
+
     def equipment: MachineEquipment
     def executionParameters: Parameters[SafePropertyVal] = ParameterExtractor.extractParameters(equipment)
 }

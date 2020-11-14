@@ -2,9 +2,13 @@ package AverageJoes.model.customer
 
 import java.util.Date
 
-import AverageJoes.common.database.table.BaseEntity
 
-trait Customer extends BaseEntity {
+
+/**
+ * TODO: check input length
+ */
+
+trait Customer {
   def CF: String
   def name: String
   def surname: String
