@@ -5,7 +5,7 @@ import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.fitness.{Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.BookingRequest
-import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
+import AverageJoes.common.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout

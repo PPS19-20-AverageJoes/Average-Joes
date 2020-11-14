@@ -4,9 +4,9 @@ import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
-import AverageJoes.model.device.Device
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
+import AverageJoes.common.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 

@@ -1,12 +1,11 @@
-package AverageJoes.model.machine
+package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg}
+import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
+import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime}
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
-import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import akka.actor.typed.{ActorRef, Behavior}
 
 
 
@@ -14,7 +13,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
   import PhysicalMachine._
   val machineID: String
   val machineLabel: MachineLabel //To show on device
-  val machineType: MachineType.Type
+  val machineType: MachineTypes.MachineType
 
   //val ma: ActorRef[MachineActor.Msg]
   override val logName: String = "PM %s: %s".format(machineType, machineID)
@@ -72,7 +71,7 @@ object PhysicalMachine {
 
   type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
-  object MachineType extends Enumeration {
+  /*object MachineType extends Enumeration {
     type Type = Value
     val legPress
       , chestFly
@@ -80,10 +79,10 @@ object PhysicalMachine {
       , runningMachine
       , cyclingMachine
       = Value
-  }
+  }*/
 
-  import MachineType._
-  def apply(machineID: String, phMachineType: Type, machineLabel: MachineLabel): Behavior[Msg] = {
+  import AverageJoes.common.MachineTypes._
+  def apply(machineID: String, phMachineType: MachineType, machineLabel: MachineLabel): Behavior[Msg] = {
     /*phMachineType match{
         case MachineType.legPress => Behaviors.setup(context => new LegPress(context, machineID, machineLabel))
         case MachineType.chestFly => Behaviors.setup(context => new ChestFly(context, machineID, machineLabel))
@@ -91,9 +90,9 @@ object PhysicalMachine {
     }*/
     Behaviors.setup(context =>
       phMachineType match{
-        case MachineType.legPress => new LegPress(context, machineID, machineLabel)
-        case MachineType.chestFly => new ChestFly(context, machineID, machineLabel)
-        case MachineType.cyclingMachine => new CyclingMachine(context, machineID, machineLabel)
+        case MachineTypes.LEG_PRESS => new LegPress(context, machineID, machineLabel)
+        case MachineTypes.CHEST_FLY => new ChestFly(context, machineID, machineLabel)
+        case MachineTypes.CYCLING => new CyclingMachine(context, machineID, machineLabel)
       }
     )
   }
@@ -138,10 +137,10 @@ object PhysicalMachine {
    * @param weight: load
    * @param length: adjustable length according to the customer
    */
-  case class LegPressParameters(weight: NonNegInt, length: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends MachineParametersBySet { override val machineType: Type = legPress }
+  case class LegPressParameters(weight: NonNegInt, length: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends MachineParametersBySet { override val machineType: MachineType = LEG_PRESS }
 
   private class LegPress(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String) extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){
-    override val machineType: Type = legPress
+    override val machineType: MachineType = LEG_PRESS
 
     override def formatConfiguration(machineParameters: MachineParameters): String = {
       machineParameters match {
@@ -157,10 +156,10 @@ object PhysicalMachine {
    * @param weight: load
    * @param height: adjustable height of the sit according to the customer
    */
-  case class ChestFlyParameters(weight: NonNegInt, height: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends  MachineParametersBySet { override val machineType: Type = chestFly }
+  case class ChestFlyParameters(weight: NonNegInt, height: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends  MachineParametersBySet { override val machineType: MachineType = CHEST_FLY }
 
   private class ChestFly(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String) extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){
-    override val machineType: Type = chestFly
+    override val machineType: MachineType = CHEST_FLY
 
     override def formatConfiguration(machineParameters: MachineParameters): String = {
       machineParameters match {
@@ -171,10 +170,10 @@ object PhysicalMachine {
   }
 
 
-  case class CyclingMachineParameters(resistance: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: Type = cyclingMachine }
+  case class CyclingMachineParameters(resistance: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: MachineType = CYCLING }
 
   private class CyclingMachine(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String) extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){
-    override val machineType: Type = cyclingMachine
+    override val machineType: MachineType = CYCLING
 
     override def formatConfiguration(machineParameters: MachineParameters): String = {
       machineParameters match {

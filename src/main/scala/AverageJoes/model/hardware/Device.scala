@@ -2,7 +2,6 @@ package AverageJoes.model.hardware
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
-import AverageJoes.model.machine.PhysicalMachine
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -35,7 +34,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
           case (hr, Pos()) if hr >= maxHeartRate => (hr, Neg())
           case (hr, s: Neg) if hr > minHeartRate => (hr - 1, s)
           case (hr, Neg()) if hr <= minHeartRate => (hr, Pos())
-          case _ => _
+          case hr => hr
         }
         pm ! PhysicalMachine.Msg.HeartRate(heartRateSim._1)
         timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
