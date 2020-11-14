@@ -1,46 +1,30 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
-<<<<<<< HEAD
 import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
 import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
-<<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
 import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTraingProgram}
-=======
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
->>>>>>> Booking feature + testing
-=======
-import AverageJoes.controller.GymController.Msg.{CustomerList, CustomerRegistered}
-import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
->>>>>>> e6ee1c94b998e526f9e5adc2aa035babf8a38a79
 import AverageJoes.model.device.Device
-import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.fitness.TrainingProgram
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
+
 object CustomerGroup {
   def apply(groupID: String, manager: ActorRef[CustomerManager.Msg]): Behavior[Msg] = Behaviors.setup(ctx => new CustomerGroup(ctx, manager, groupID))
 
   trait Msg extends LoggableMsg
 
-<<<<<<< HEAD
-<<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
+
   final case class CustomerLogin(customerId: String, machineLabel: MachineLabel,machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg])   extends Msg
   private final case class UploadCustomerTraingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg])         extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String)   extends Msg
-=======
-=======
->>>>>>> e6ee1c94b998e526f9e5adc2aa035babf8a38a79
-  final case class CustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
-  private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
-  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
->>>>>>> Booking feature + testing
+
+
 }
 
 
@@ -96,7 +80,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       this
 
 
-    case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
+    case UploadCustomerTraingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
       customer ! CustomerTrainingProgram(trainingProgramOf(customerId) )
     this
 
