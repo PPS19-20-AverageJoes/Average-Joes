@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.model.device.Device
 import AverageJoes.model.machine.PhysicalMachine
 import akka.actor.typed.ActorRef
 
@@ -41,7 +42,7 @@ case class MachineView() extends GridPanel(3,3){
     def _getMapValue(key:String): Option[ActorRef[PhysicalMachine.Msg]] = map.get(key)
 }
 
-case class UserGui(/*deviceActor: ActorRef[Device.Msg]*/) extends GridPanel(2,1){
+case class UserGui(deviceActor: ActorRef[Device.Msg]) extends GridPanel(2,1){
     preferredSize = new Dimension(300, 600)
     val button:Button = new Button("Customer Info")
     var text:TextArea = new TextArea()
@@ -57,6 +58,7 @@ case class UserGui(/*deviceActor: ActorRef[Device.Msg]*/) extends GridPanel(2,1)
             if(machineChoice.get != None){
                 physicalActor = View._getMachineView()._getMapValue(machineChoice.get.asInstanceOf[String])
                 /*Send physical machine path to device*/
+                deviceActor ! Device.Msg.NearDevice(physicalActor.get)
             }
     }
 

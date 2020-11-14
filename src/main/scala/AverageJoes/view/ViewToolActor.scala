@@ -2,6 +2,7 @@ package AverageJoes.view
 
 import AverageJoes.model.device.Device
 import AverageJoes.model.machine.PhysicalMachine
+import AverageJoes.view.ViewToolActor.Msg
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import javax.swing.SwingUtilities
@@ -15,11 +16,11 @@ sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
 
   override def onMessage(msg: ViewToolActor.Msg): Behavior[ViewToolActor.Msg] = msg match {
     case m: ViewToolActor.Msg.CreateViewObject => createViewEntity(); Behaviors.same
-    case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(); Behaviors.same
+    case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
 
   }
   def createViewEntity()
-  def updateViewEntity()
+  def updateViewEntity(mg: String)
 }
 
 object ViewToolActor {
@@ -27,7 +28,7 @@ object ViewToolActor {
 
   object Msg {
     final case class CreateViewObject() extends Msg
-    final case class UpdateViewObject() extends Msg
+    final case class UpdateViewObject(msg: String) extends Msg
   }
 
   case class ViewDeviceActor(override val context: ActorContext[Msg],
@@ -35,7 +36,7 @@ object ViewToolActor {
                              actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
 
-    override var machine: GridPanel = UserGui(/*actorRef: ActorRef[Device.Msg]*/)
+    override var machine: UserGui = UserGui(actorRef: ActorRef[Device.Msg])
 
     override def createViewEntity(): Unit = {
       SwingUtilities.invokeLater(() => {
@@ -43,7 +44,11 @@ object ViewToolActor {
       })
     }
 
-    override def updateViewEntity(): Unit = ???
+    override def updateViewEntity(msg: String): Unit = {
+      SwingUtilities.invokeAndWait(()=>{
+        machine.update(msg)
+      })
+    }
   }
 
   case class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
@@ -51,7 +56,7 @@ object ViewToolActor {
                                       actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
 
-    override var machine: GridPanel = MachineGUI()
+    override var machine: MachineGUI = MachineGUI()
 
     override def createViewEntity(): Unit = {
       SwingUtilities.invokeLater(() => {
@@ -61,6 +66,10 @@ object ViewToolActor {
 
     }
 
-    override def updateViewEntity(): Unit = ???
+    override def updateViewEntity(msg: String): Unit = {
+      SwingUtilities.invokeAndWait(()=>{
+         machine.update(msg)
+      })
+    }
   }
 }
