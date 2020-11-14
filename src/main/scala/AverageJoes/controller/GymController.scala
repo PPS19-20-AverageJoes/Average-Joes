@@ -2,7 +2,7 @@ package AverageJoes.controller
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg}
 import AverageJoes.model.customer.{CustomerActor, CustomerManager}
-import AverageJoes.model.device.Device
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine
 import AverageJoes.model.machine.{MachineActor, PhysicalMachine}
 import AverageJoes.model.workout.MachineParameters
@@ -32,8 +32,6 @@ object GymController {
 
 
 
-
-    //ToDo: temporaneamente modificato  il replyto per i test, deve essere un CustomerManager.Command
     final case class MachinesToBookmark(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[CustomerManager.Msg]) extends Msg
 
     final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
