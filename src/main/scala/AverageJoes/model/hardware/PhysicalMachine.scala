@@ -49,7 +49,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
       case ExerciseEnds() => exerciseEnds(ma, customerID, machineParameters, heartBeats)
 
       case m: Msg.Rfid =>
-          m.customerID match {
+        m.customerID match {
           case `customerID` => exerciseEnds(ma, customerID, machineParameters, heartBeats)
           case _ => Behaviors.same
         }
@@ -65,7 +65,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
 
     ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters)
     println(max, min, avg) //ToDo: struttura dati
-    
+
     operative(ma)
   }
 
@@ -153,8 +153,8 @@ object PhysicalMachine {
     override def formatConfiguration(machineParameters: MachineParameters): String = {
       machineParameters match {
         case p: LegPressParameters => p.length.toString //ToDo: inviare messaggio a view
-          //p.sets
-          //setwith(p.weight)
+        //p.sets
+        //setwith(p.weight)
         case _ => throw new IllegalArgumentException
       }
     }
