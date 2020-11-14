@@ -1,8 +1,9 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg}
+import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerManager
+import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.machine.MachineActor._
 import AverageJoes.model.workout.MachineParameters
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -13,7 +14,7 @@ import akka.actor.typed.{ActorRef, Behavior}
  * controller: controller ActorRef
  */
 object MachineActor{
-  def apply(controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg], machineType: PhysicalMachine.MachineType.Type): Behavior[Msg] =
+  def apply(controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg], machineType: MachineTypes.MachineType): Behavior[Msg] =
     Behaviors.setup(context => new MachineActor(context, controller, physicalMachine, machineType))
 
   sealed trait Msg extends LoggableMsg
@@ -30,7 +31,7 @@ object MachineActor{
 }
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
-                   machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
+                   machineType: MachineTypes.MachineType) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
 
   var bookedCustomer: Option[String] = Option.empty
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
