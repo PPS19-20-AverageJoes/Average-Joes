@@ -1,8 +1,11 @@
 package AverageJoes.model.customer
 
 import java.util.Date
-
 import AverageJoes.common.BaseEntity
+
+/**
+ * TODO: check input length
+ */
 
 trait Customer extends BaseEntity {
   def CF: String

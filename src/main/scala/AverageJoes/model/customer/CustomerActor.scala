@@ -2,11 +2,10 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
-import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.fitness.{Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.BookingRequest
-import AverageJoes.utils.ExerciseUtils.MachineType
+import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
@@ -47,7 +46,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg],
     /** Customer group informs me about my training program. Now I will extract the exercises
      * and initialize the data structure to keep track of ActorRef of MachineActors */
     case CustomerTrainingProgram(tp) =>
-      requestMachineList(tp)
+      //requestMachineList(tp)
       booking(tp)
 
     case Passivate =>
@@ -81,20 +80,19 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg],
 
   private def requestMachineList(tp: TrainingProgram) = {
     initializeExMachines(tp.allExercises)
-    managerRef ! MachineListOf(machineToBeExecuted(tp.allExercises).get, context.self)
+   managerRef ! MachineListOf(machineToBeExecuted(tp.allExercises.head).get, context.self)
   }
 
   /** Method to return a map of an exercise and a set of ActorRef of the machines to be able
    * to execute the exercise on. Firstly it is an empty set. */
   private def initializeExMachines(exercises: Set[Exercise]): Map[Exercise, Set[ActorRef[MachineActor.Msg]]] = {
-    val initMachineRef = (m: Map[Exercise, Set[ActorRef[MachineActor.Msg]]], ex: Exercise) =>  m + (ex -> Set.empty[ActorRef[MachineActor.Msg]])
-    exercises.foldLeft (Map.empty[Exercise, Set[ActorRef[MachineActor.Msg]]]) (initMachineRef)
+    val initMachinesRef = (m: Map[Exercise, Set[ActorRef[MachineActor.Msg]]], ex: Exercise) =>  m + (ex -> Set.empty[ActorRef[MachineActor.Msg]])
+    exercises.foldLeft (Map.empty[Exercise, Set[ActorRef[MachineActor.Msg]]]) (initMachinesRef)
   }
 
 
-  private def machineToBeExecuted(exercises: Set[Exercise]): Option[MachineType] = {
-    import AverageJoes.utils.ExerciseUtils.ExerciseParameters._
-    exercises.head.executionParameters.valueOf(TYPE)[MachineType]
+  private def machineToBeExecuted(ex: Exercise): Option[MachineType] = {
+    if (ex != null)  Option.apply(ex.executionParameters.typeParams) else Option.empty
   }
 
   /**
@@ -102,5 +100,5 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg],
    */
   private def updatedTrainingProgram(tp: TrainingProgram): TrainingProgram =
     tp.removeExercise(tp.allExercises.head)
-
 }
+

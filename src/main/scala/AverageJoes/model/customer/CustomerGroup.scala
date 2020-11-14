@@ -3,7 +3,7 @@ package AverageJoes.model.customer
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController.Msg.{CustomerList, CustomerRegistered}
 import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTaringProgram}
+import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
 import AverageJoes.model.device.Device
 import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.fitness.TrainingProgram
@@ -12,15 +12,14 @@ import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
-
 object CustomerGroup {
   def apply(groupID: String, manager: ActorRef[CustomerManager.Msg]): Behavior[Msg] = Behaviors.setup(ctx => new CustomerGroup(ctx, manager, groupID))
 
   trait Msg extends LoggableMsg
 
-  final case class CustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg])   extends Msg
-  private final case class UploadCustomerTaringProgram(customerId: String, customer: ActorRef[CustomerActor.Msg])         extends Msg
-  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String)   extends Msg
+  final case class CustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
+  private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
+  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 }
 
 
@@ -39,14 +38,14 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
         case Some(customerActor) =>
           replyTo ! CustomerRegistered(customerId, customerActor)
-          context.self ! UploadCustomerTaringProgram(customerId, customerActor)
+          context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
         case None =>
           if(isCustomerOnStorage(customerId)) {
             val customerActor = context.spawn(CustomerActor(manager, customerId), s"customer-$customerId")
             context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
             customerIdToActor += customerId -> customerActor
             replyTo ! CustomerRegistered(customerId, customerActor)
-            context.self ! UploadCustomerTaringProgram(customerId, customerActor)
+            context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
           }
           else{
             /** Do something because customerId is not present on storage */
@@ -69,7 +68,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       replyTo ! CustomerList(customerIdToActor.values.toSet)
       this
 
-    case UploadCustomerTaringProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
+    case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
       customer ! CustomerTrainingProgram(trainingProgramOf(customerId) )
     this
 
@@ -85,7 +84,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
   private def trainingProgramOf(customerId: String): TrainingProgram = {
     /** TODO: Search for customer training program on database */
-    ???
+    null
   }
 
 }

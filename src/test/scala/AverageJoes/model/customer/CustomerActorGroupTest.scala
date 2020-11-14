@@ -1,8 +1,15 @@
 package AverageJoes.model.customer
 
-import AverageJoes.model.customer.CustomerActor._
-import AverageJoes.model.customer.CustomerManager._
+import AverageJoes.controller.GymController
+import AverageJoes.controller.GymController.Msg.CustomerRegistered
+import AverageJoes.model.customer.CustomerGroup.CustomerLogin
+import AverageJoes.model.customer.CustomerManager.RequestCustomerCreation
+import AverageJoes.model.device.Device.Msg.CustomerLogged
+import AverageJoes.model.device.{Device, Wristband}
+import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import akka.actor.typed.ActorRef
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
@@ -10,97 +17,76 @@ import org.scalatest.wordspec.AnyWordSpecLike
  */
 
 class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
-/*
+
+  val gymProbe = createTestProbe[GymController.Msg]()
+  val machineProbe = createTestProbe[MachineActor.Msg]()
+  val deviceProbe = createTestProbe[Device.Msg]()
+
+
+
+  val managerActor = spawn(CustomerManager())
+
   "Customer group" should {
 
-    "register a customer actor" in {
-      val probe = createTestProbe[CustomerRegistered]()
-      val devProbe = createTestProbe[CustomerRegistered]()
+    "create one customer" in {
+      val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
 
-      val groupActor = spawn(CustomerGroup("group"))
+      managerActor ! RequestCustomerCreation("customer", gymProbe.ref, deviceProbe.ref)
+      val registered = gymProbe.receiveMessage()
 
-      /* Customer 1 */
-      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
-      val registered1 = probe.receiveMessage()
-      val customerActor1 = registered1.customer
-
-      /* Customer 2 */
-      groupActor ! RequestCustomerCreation("customer2", probe.ref, devProbe.ref)
-      val registered2 = probe.receiveMessage()
-      val customerActor2 = registered2.customer
-      customerActor1 should !== (customerActor2)
-
-
-      /* Check if the customers actors are running */
-      val recordProbe = createTestProbe[CustomerAliveSignal]()
-      customerActor1 ! CustomerAlive(requestId = 10L, recordProbe.ref)
-      recordProbe.expectMessage(CustomerAliveSignal(10L))
-      customerActor2 ! CustomerAlive(requestId = 11L, recordProbe.ref)
-      recordProbe.expectMessage(CustomerAliveSignal(11L))
+      assert(registered.isInstanceOf[CustomerRegistered])
     }
 
     "return the same customer actor for the same customer" in {
-      val probe = createTestProbe[CustomerRegistered]()
-      val devProbe = createTestProbe[CustomerRegistered]()
-      val groupActor = spawn(CustomerGroup("group"))
+      val groupActor = spawn(CustomerGroup("group", managerActor))
 
-      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
-      val registered1 = probe.receiveMessage()
+      groupActor ! RequestCustomerCreation("customer1", gymProbe.ref, deviceProbe.ref)
+      val registered1 = gymProbe.receiveMessage()
 
       /* Registering the same customer actor again */
-      groupActor ! RequestCustomerCreation("customer1", probe.ref, devProbe.ref)
-      val registered2 = probe.receiveMessage()
+      groupActor ! RequestCustomerCreation("customer1", gymProbe.ref, deviceProbe.ref)
+      val registered2 = gymProbe.receiveMessage()
 
-      registered1.customer should === (registered2.customer)
+      managerActor ! RequestCustomerCreation("customer-other", gymProbe.ref, deviceProbe.ref)
+      val registered3 = gymProbe.receiveMessage()
+
+      assert(registered1 == registered2)
+      assert(registered2 !== registered3)
+      assert(registered1 !== registered3)
     }
 
-    "list active customers" in {
-      val registeredProbe = createTestProbe[CustomerRegistered]()
-      val devProbe = createTestProbe[CustomerRegistered]()
-      val groupActor = spawn(CustomerGroup("group"))
+    "review logging request and notify machine and device" in {
+      /* No customer registered */
+      val groupActor = spawn(CustomerGroup("group", managerActor))
 
-      groupActor ! RequestCustomerCreation("customer1", registeredProbe.ref, devProbe.ref)
-      registeredProbe.receiveMessage()
+      groupActor ! CustomerLogin("customer-no", machineProbe.ref, deviceProbe.ref)
 
-      groupActor ! RequestCustomerCreation("customer2", registeredProbe.ref, devProbe.ref)
-      registeredProbe.receiveMessage()
+      val negativeRespMachine = machineProbe.receiveMessage()
 
-      val usersListProbe = createTestProbe[CustomerList]()
-      groupActor ! RequestCustomerList(usersListProbe.ref)
+      assert(negativeRespMachine.isInstanceOf[CustomerLogging])
 
-      //usersListProbe.receiveMessage()
-      assert(usersListProbe.receiveMessage().customerActors.size == 2)
-    }
-
-    "list active customers after one shuts down" in {
-      val registeredProbe = createTestProbe[CustomerRegistered]()
-      val devProbe = createTestProbe[CustomerRegistered]()
-      val groupActor = spawn(CustomerGroup("group"))
-
-      groupActor ! RequestCustomerCreation("customer1", registeredProbe.ref, devProbe.ref)
-      val registered1 = registeredProbe.receiveMessage()
-      val customerToShutDown = registered1.customer
-
-      groupActor ! RequestCustomerCreation("customer2", registeredProbe.ref, devProbe.ref)
-      registeredProbe.receiveMessage()
-
-      val customersListProbe = createTestProbe[CustomerList]()
-      groupActor ! RequestCustomerList(customersListProbe.ref)
-
-      assert(customersListProbe.receiveMessage().customerActors.size == 2)
-
-      customerToShutDown ! Passivate
-      registeredProbe.expectTerminated(customerToShutDown, registeredProbe.remainingOrDefault)
-
-      /* using awaitAssert to retry because it might take longer for
-      the group actor to notice the terminated customer actor */
-      registeredProbe.awaitAssert{
-        groupActor ! RequestCustomerList(customersListProbe.ref)
-        assert(customersListProbe.receiveMessage().customerActors.size == 1)
-
+      negativeRespMachine match {
+        case CustomerLogging("customer-no", isLogged) => assert(isLogged === false)
+        case _ => assert(false)
       }
+
+      /* Register customer-yes */
+      groupActor ! RequestCustomerCreation("customer-yes", gymProbe.ref, deviceProbe.ref)
+      groupActor ! CustomerLogin("customer-yes", machineProbe.ref, deviceProbe.ref)
+
+      val positiveRespMachine = machineProbe.receiveMessage()
+
+      assert(positiveRespMachine.isInstanceOf[CustomerLogging])
+
+      positiveRespMachine match {
+        case CustomerLogging("customer-yes", isLogged) => assert(isLogged === true)
+        case _ => assert(false)
+      }
+
+      val deviceResp = deviceProbe.receiveMessage()
+      assert(deviceResp.isInstanceOf[CustomerLogged])
+
     }
 
   }
-*/
 }

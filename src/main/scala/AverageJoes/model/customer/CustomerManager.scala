@@ -2,11 +2,11 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
-import AverageJoes.controller.GymController.Msg.RequestMachineList
+import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.device.Device
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.utils.ExerciseUtils.MachineType
+import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -38,10 +38,13 @@ object CustomerManager {
 class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBehavior[CustomerManager.Msg](ctx) {
   import CustomerManager._
 
+  /**
+   * TODO: to optional ref
+   */
   var controllerRef: ActorRef[GymController.Msg] = _
   var deviceRef: ActorRef[Device.Msg] = _
   val groupId = "customers"
-  var customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId, context.self), "group-"+groupId)
+  val customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId, context.self), "group-"+groupId)
 
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
@@ -61,9 +64,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       this
 
     case MachineListOf(machineType, customer) =>
-      controllerRef ! RequestMachineList(machineType, customer)
+      controllerRef ! MachinesToBookmark(machineType, customer)
       this
-
 
   }
 
