@@ -56,12 +56,12 @@ object ExerciseUtils {
     case object TYPE extends ExerciseParameter
   }
 
-/*
+
   sealed trait MachineType
   object MACHINE_TYPE {
     case object RUNNING extends MachineType with SafePropertyVal
     case object CYCLING extends MachineType with SafePropertyVal
     case object LIFTING extends MachineType with SafePropertyVal
-  }*/
+  }
 
 }
