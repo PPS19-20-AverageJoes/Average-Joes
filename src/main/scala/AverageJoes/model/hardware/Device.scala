@@ -20,19 +20,25 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   import Device._
   override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
-      case m: Msg.UserLoggedInMachine => display(m.machineLabel); inExercise(m.refPM)
+      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
 
   private case object TimerKey
   private def inExercise(pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
-    timers.startSingleTimer(TimerKey, HeartRateSimulation(70), 2.seconds)
+    timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
     Behaviors.receiveMessage {
       case m: HeartRateSimulation =>
-        val heartRate: Int = 100
-        pm ! PhysicalMachine.Msg.HeartRate(heartRate)
-        timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRate), 2.seconds)
+        val heartRateSim: (Int,Sign) = (m.heartRate, m.sign) match {
+          case (hr, s: Pos) if hr < maxHeartRate => (hr + 3, s)
+          case (hr, Pos()) if hr >= maxHeartRate => (hr, Neg())
+          case (hr, s: Neg) if hr > minHeartRate => (hr - 1, s)
+          case (hr, Neg()) if hr <= minHeartRate => (hr, Pos())
+          case _ => _
+        }
+        pm ! PhysicalMachine.Msg.HeartRate(heartRateSim._1)
+        timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
         Behaviors.same
     }
   }
@@ -48,12 +54,19 @@ object Device {
 
   sealed trait Msg extends LoggableMsg
   object Msg {
-    final case class UserLoggedInMachine(refPM: ActorRef[PhysicalMachine.Msg], machineLabel: PhysicalMachine.MachineLabel) extends Msg
+    final case class CustomerLogged(refPM: ActorRef[PhysicalMachine.Msg], machineLabel: PhysicalMachine.MachineLabel) extends Msg
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //case class MsgDisplay(message: String) extends MsgDevice
   }
   //Self messages
-  private final case class HeartRateSimulation(heartRate: Int) extends Msg
+  private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg
+
+  private trait Sign
+  private final case class Pos() extends Sign
+  private final case class Neg() extends Sign
+  private val minHeartRate: Int = 70
+  private val maxHeartRate: Int = 130
+  private val heartRateSchedule: FiniteDuration = 2.seconds
 
   object DeviceType extends Enumeration {
     type Type = Value
