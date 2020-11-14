@@ -1,6 +1,7 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
+<<<<<<< HEAD
 import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
@@ -10,6 +11,11 @@ import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTr
 =======
 import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
 >>>>>>> Booking feature + testing
+=======
+import AverageJoes.controller.GymController.Msg.{CustomerList, CustomerRegistered}
+import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
+import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
+>>>>>>> e6ee1c94b998e526f9e5adc2aa035babf8a38a79
 import AverageJoes.model.device.Device
 import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.fitness.TrainingProgram
@@ -23,11 +29,14 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
 
+<<<<<<< HEAD
 <<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
   final case class CustomerLogin(customerId: String, machineLabel: MachineLabel,machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg])   extends Msg
   private final case class UploadCustomerTraingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg])         extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String)   extends Msg
 =======
+=======
+>>>>>>> e6ee1c94b998e526f9e5adc2aa035babf8a38a79
   final case class CustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
@@ -49,25 +58,18 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       customerIdToActor.get(customerId) match {
 
         case Some(customerActor) =>
-<<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
           controller ! CustomerRegistered(customerId, customerActor)
           context.self ! UploadCustomerTraingProgram(customerId, customerActor)
-=======
-          replyTo ! CustomerRegistered(customerId, customerActor)
-          context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
->>>>>>> Booking feature + testing
+
         case None =>
           if(isCustomerOnStorage(customerId)) {
             val customerActor = context.spawn(CustomerActor(manager, customerId), s"customer-$customerId")
             context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
             customerIdToActor += customerId -> customerActor
-<<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
+
             controller !  CustomerRegistered(customerId, customerActor)
             context.self ! UploadCustomerTraingProgram(customerId, customerActor)
-=======
-            replyTo ! CustomerRegistered(customerId, customerActor)
-            context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
->>>>>>> Booking feature + testing
+
           }
           else{
             /** Do something because customerId is not present on storage */
@@ -93,11 +95,8 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
       this
 
-<<<<<<< f1ef03025616fafb2fa0d05b241473de4143630a
-    case UploadCustomerTraingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
-=======
+
     case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
->>>>>>> Booking feature + testing
       customer ! CustomerTrainingProgram(trainingProgramOf(customerId) )
     this
 

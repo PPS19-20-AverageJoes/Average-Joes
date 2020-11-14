@@ -11,5 +11,5 @@ object ExerciseUtils {
     type MachineType = Value
     val RUNNING, CYCLING, LEG_PRESS, CHEST_FLY, LIFTING = Value
   }
-
 }
+

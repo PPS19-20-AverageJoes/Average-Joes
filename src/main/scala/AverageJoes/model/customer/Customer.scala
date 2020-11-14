@@ -2,13 +2,12 @@ package AverageJoes.model.customer
 
 import java.util.Date
 
-
-
 /**
  * TODO: check input length
  */
 
-trait Customer {
+
+trait Customer  {
   def CF: String
   def name: String
   def surname: String
