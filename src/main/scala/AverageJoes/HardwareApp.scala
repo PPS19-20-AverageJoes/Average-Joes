@@ -2,7 +2,7 @@ package AverageJoes
 
 import AverageJoes.common.ServerSearch
 import AverageJoes.controller.HardwareController
-import AverageJoes.model.device.Device
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.PhysicalMachine
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}

@@ -1,7 +1,7 @@
 package AverageJoes.controller
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
-import AverageJoes.model.device._
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine
 import AverageJoes.model.machine._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
