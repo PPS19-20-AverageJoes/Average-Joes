@@ -7,6 +7,7 @@ import AverageJoes.model.machine.MachineActor._
 import AverageJoes.model.workout.MachineParameters
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+
 /**
  * Machine actor class
  * controller: controller ActorRef
@@ -17,79 +18,106 @@ object MachineActor{
 
   sealed trait Msg extends LoggableMsg
   object Msg {
-    //final case class PMActorStarted(replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg
-    final case class UserLogIn(userID: String) extends Msg
-    final case class UserLogInStatus(status: Boolean) extends Msg
-    final case class MachineBooking(userID: String, replyTo: ActorRef[BookingStatus]) extends Msg
-    final case class BookingStatus(status: Boolean) extends Msg
-    final case class UserRef(replyTo: ActorRef[UserLoggedInMachine]) extends Msg
-    final case class UserLoggedInMachine() extends Msg
-    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
-    final case class UserMachineWorkoutCompleted(user: ActorRef[Msg], exercise: Class[_ <: MachineParameters]) extends Msg
-    final case class UserLogOut() extends Msg
+    final case class UserLogIn(customerID: String) extends Msg
+    final case class UserMachineWorkoutPlan(customerID: String) extends Msg
+    final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters) extends Msg
+    final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
+    final case class BookingRequest(replyTo: ActorRef[CustomerManager.Msg], customerID: String) extends Msg
+    final case class CustomerLogging(customerID: String, machineParameters: MachineParameters, isLogged:Boolean) extends Msg
 
-    final case class BookingRequest(replyTo: ActorRef[CustomerManager.Command]) extends Msg
+
   }
 }
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
                    machineType: PhysicalMachine.MachineType.Type) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
 
-  var booked: (Boolean, String) = (false, "")
-  //var physicalMachine: Optional[ActorRef[PhysicalMachine.Msg]] = Optional.empty()
+  var bookedCustomer: Option[String] = Option.empty
+  physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
 
   override def onMessageLogged(msg: Msg): Behavior[Msg] = {
-    //case Msg.PMActorStarted(replyTo) => physicalMachine = Optional.of(replyTo)
       idle()
   }
 
   private def idle(): Behavior[Msg] = {
     Behaviors.receiveMessage {
-      case Msg.UserLogIn(userID) =>
-        availabilityCheck(userID)
-        Behaviors.same
+      case Msg.UserLogIn(customerID) =>
+        controller ! GymController.Msg.UserLogin(customerID, context.self)
+        connecting()
 
-      case Msg.MachineBooking(userID, replyTo) =>
-        if (booked._1) {
-          booked = (true, userID)
-        }
-        replyTo ! Msg.BookingStatus(booked._1)
-        Behaviors.same
+      case Msg.BookingRequest(replyTo, customerID) =>
+        bookedCustomer = Option.apply(customerID)
+        //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType,true)
+       bookedStatus()
     }
   }
 
+  /**
+   * receive machine parameters and let the physical machine know about them
+   * check if the user is still connected
+   * @return
+   */
   private def connecting(): Behavior[Msg] = {
-    Behaviors.receiveMessage{
-      case Msg.UserRef(replyTo) =>
-        replyTo ! Msg.UserLoggedInMachine()
-        Behaviors.same
-
-      case Msg.UserMachineWorkoutPlan(userID, exercise) =>
-        controller ! GymController.Msg.UserMachineWorkoutPlan(userID, exercise)
+    ///risposta dal customer manager (customer id, parameteri, isLogged) --> cUSTUMER LOGGING
+    //se false torno in idle
+    //phymachine(parametri, customerID)
+    //TODO necessario il machine type
+    Behaviors.receiveMessage {
+     case Msg.CustomerLogging(customerID, machineParameters, isLogged) =>
+      if(!isLogged){
+         idle()
+      } else {
+        //physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, machineParameters)
         updateAndLogOut()
+      }
+
+      case Msg.BookingRequest(replyTo, customerID) =>
+      //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
+      Behaviors.same
     }
   }
 
+  //userlogin()--> sloggato => chiedo i parametri di uscita alla physicalmachine
+  //spawn sotto attore che scrive su disco
+  //deaddevice() --> idle => chiedo i parametri
+  //spawn sotto attore che scrive su disco
   private def updateAndLogOut(): Behavior[Msg] = {
+
     Behaviors.receiveMessage {
-      case Msg.UserMachineWorkoutCompleted(user, exercise) =>
-        controller ! GymController.Msg.UserMachineWorkoutCompleted(user, exercise)
-        user ! Msg.UserLogOut()
+      case Msg.BookingRequest(replyTo, customerID) =>
+        //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
+        Behaviors.same
+
+      //case Msg.UserLogIn(customerID) =>
+        //physicalMachine ! manca il messaggio
+
+      case Msg.UserMachineWorkout(customerID, parameters) =>
+        var child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"")
+        child ! FileWriterActor.WriteOnFile(customerID,parameters)
+        idle()
+
+      case Msg.DeadDevice(customerID, parameters) =>
+        var child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"")
+        child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
     }
   }
+  //verificare che i custumer id coincida con quello bookato
+  private def bookedStatus(): Behavior[Msg]= {
+    Behaviors.receiveMessage{
+      case Msg.UserLogIn(customerID) =>
+        if(bookedCustomer.get.equals(customerID))
+        controller ! GymController.Msg.UserLogin(customerID, context.self)
+        connecting()
 
-  def availabilityCheck(userId: String): Unit = {
-    if (!booked._1 || (booked._1 && booked._2.equals(userId))) {
-      controller ! GymController.Msg.UserLogInStatus(booked._1)
-      booked = (false,"")
-      connecting()
-    } else {
-      controller ! GymController.Msg.UserLogInStatus(booked._1)
-      idle()
+      case Msg.BookingRequest(replyTo, customerID) =>
+        //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
+        Behaviors.same
     }
   }
 
+
   override val logName: String = "Machine Actor"
   override val loggingContext: ActorContext[Msg] = this.context
+
 }

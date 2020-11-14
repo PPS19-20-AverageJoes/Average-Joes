@@ -2,7 +2,7 @@ package AverageJoes.model.customer
 
 import java.util.Date
 
-import AverageJoes.common.BaseEntity
+import AverageJoes.common.database.table.BaseEntity
 
 trait Customer extends BaseEntity {
   def CF: String

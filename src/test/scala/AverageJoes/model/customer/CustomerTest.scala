@@ -2,12 +2,12 @@ package AverageJoes.model.customer
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
 import AverageJoes.common._
+import AverageJoes.common.database.{GymStorage, Storage}
 import AverageJoes.utils.DateUtils._
 
 class CustomerTest extends AnyFlatSpec with Matchers {
-
+/*
   val c1 =  Customer("aabb00", "sokol", "guri", stringToDate("20/05/2020"))
   val c2 =  Customer("aabb01", "andrea", "rossi", stringToDate("10/04/2010"))
   val c3 =  Customer("aabb02", "elena", "bianchi", stringToDate("20/01/2010"))
@@ -47,5 +47,7 @@ class CustomerTest extends AnyFlatSpec with Matchers {
   }
 
   def emptyStorage() = new GymStorage[Customer]()
+
+ */
 
 }

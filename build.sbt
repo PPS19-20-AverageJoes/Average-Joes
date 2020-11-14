@@ -32,8 +32,10 @@ lazy val root = (project in file("."))
       "org.scala-lang.modules" %% "scala-swing" % "2.0.3",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.1",
       "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
-      "org.scala-lang.modules" %% "scala-swing" % "1.0.2"
+      "org.scala-lang.modules" %% "scala-swing" % "1.0.2",
 
+      "net.liftweb" %% "lift-json" % "3.4.2",
+      "com.typesafe.play" %% "play-json" % "2.9.1"
 
 ),
     crossPaths := false,
