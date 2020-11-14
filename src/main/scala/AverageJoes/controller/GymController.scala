@@ -14,7 +14,6 @@ import scala.collection.mutable
 object GymController {
   def apply(): Behavior[Msg] = Behaviors.setup(context => new GymController(context))
 
-  //private var childUserActor = mutable.Map.empty[String, ActorRef[CustomerManager.Command]] //Child User
   private var childMachineActor = mutable.Map.empty[(String, PhysicalMachine.MachineType.Type), ActorRef[MachineActor.Msg]] //Child Machines
 
   sealed trait Msg extends LoggableMsg
@@ -25,14 +24,7 @@ object GymController {
 
     final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
 
-
-
-    /** Receiving responses */
-    final case class CustomerList(customers: Set[ActorRef[CustomerActor.Msg]]) extends Msg
-
-
-
-    final case class MachinesToBookmark(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[CustomerManager.Msg]) extends Msg
+    final case class MachinesToBookmark(phMachineType: PhysicalMachine.MachineType.Type, replyTo: ActorRef[CustomerActor.Msg]) extends Msg
 
     final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
@@ -60,8 +52,9 @@ object GymController {
           Behaviors.same
 
         case m: Msg.MachinesToBookmark => //ToDo: il messaggio va mandato al customer actor, che ciclerà sulla risposta
-          val children = getChildrenMachinesByType(m.phMachineType).toIterator
-          if (children.nonEmpty) for (elem <- children) elem ! MachineActor.Msg.BookingRequest(m.replyTo)
+          //val children = getChildrenMachinesByType(m.phMachineType).toSet
+          m.replyTo ! CustomerManager.MachineList(getChildrenMachinesByType(m.phMachineType).toSet)
+          //if (children.nonEmpty) for (elem <- children) elem ! MachineActor.Msg.BookingRequest(m.replyTo)
           Behaviors.same
       }
     }
