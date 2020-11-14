@@ -3,14 +3,14 @@ package AverageJoes.model.customer
 import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.customer.MachineBooker.BookMachine
-import AverageJoes.model.device.Device
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
-import AverageJoes.model.machine.PhysicalMachine.MachineLabel
-import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout

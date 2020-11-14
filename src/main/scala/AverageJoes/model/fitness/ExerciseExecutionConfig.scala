@@ -1,11 +1,12 @@
 package AverageJoes.model.fitness
 
+
 import AverageJoes.model.fitness.MachineExecution.MachineEquipment
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
 object ExerciseExecutionConfig {
   import AverageJoes.utils.ExerciseUtils.ExerciseParameters.ExerciseParameter
-  import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
+  import AverageJoes.common.MachineTypes.MachineType
 
   object ExerciseConfiguration {
 
@@ -52,7 +53,7 @@ object ExerciseExecutionConfig {
   object ImplicitParameterExtractors {
     import AverageJoes.utils.ExerciseUtils.ExerciseParameters._
     import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT._
-    import AverageJoes.utils.ExerciseUtils.MachineTypes._
+    import AverageJoes.common.MachineTypes._
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.ExerciseParameters
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor.Extractor
 

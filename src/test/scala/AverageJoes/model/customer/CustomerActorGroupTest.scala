@@ -1,7 +1,7 @@
 package AverageJoes.model.customer
 
 import AverageJoes.controller.GymController
-import AverageJoes.model.device.{Device, Wristband}
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike

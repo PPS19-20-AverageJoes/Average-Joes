@@ -1,16 +1,15 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
-import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerActor.{CustomerTrainingProgram, CustomerMachineLogin}
+import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram}
 import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
-import AverageJoes.model.device.Device
 import AverageJoes.model.fitness.TrainingProgram
+import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
-
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -69,7 +68,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
 
     case RequestCustomerList(replyTo) =>
-      replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
+      //replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
       this
 
 

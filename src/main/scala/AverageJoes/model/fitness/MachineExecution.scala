@@ -1,6 +1,6 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.utils.ExerciseUtils.MachineTypes._
+import AverageJoes.common.MachineTypes._
 
 object MachineExecution {
   trait MachineEquipment {

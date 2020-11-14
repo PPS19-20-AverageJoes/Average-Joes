@@ -1,12 +1,12 @@
 package AverageJoes.model.workout
 
-import AverageJoes.model.machine.PhysicalMachine
-import AverageJoes.model.machine.PhysicalMachine.MachineType._
+import AverageJoes.common.MachineTypes._
 import AverageJoes.utils.SafePropertyValue.NonNegative.{NonNegInt, toInt}
+
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 sealed trait ExerciseMetrics { def duration: FiniteDuration }
-sealed trait MachineParameters extends ExerciseMetrics{ val machineType: PhysicalMachine.MachineType.Type }
+sealed trait MachineParameters extends ExerciseMetrics{ val machineType: MachineType }
 
 sealed trait ExerciseMetricsBySet extends ExerciseMetrics {
   val sets: NonNegInt
@@ -24,9 +24,9 @@ trait MachineParametersBySet extends MachineParameters with ExerciseMetricsBySet
 trait MachineParametersByTime extends MachineParameters with ExerciseMetricsByTime
 
 //ToDo: spostare nella dichiarazione della macchina in Physical Machine
-case class LiftMachineParameters(weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends MachineParametersBySet { override val machineType: Type = liftMachine }
-case class RunningMachineParameters(incline: NonNegInt, speed: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: Type = runningMachine }
-case class CyclingMachineParameters(resistance: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: Type = cyclingMachine }
+case class LiftMachineParameters(weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt) extends MachineParametersBySet { override val machineType: MachineType = LIFTING }
+case class RunningMachineParameters(incline: NonNegInt, speed: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: MachineType = RUNNING }
+
 /*
 metrica esercizi: set, ripetizioni/tempo
 configurazione macchine: peso, inclinazione, ...

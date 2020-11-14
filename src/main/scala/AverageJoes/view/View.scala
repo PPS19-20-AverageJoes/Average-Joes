@@ -1,7 +1,6 @@
 package AverageJoes.view
 
-import AverageJoes.model.device.Device
-import AverageJoes.model.machine.PhysicalMachine
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.ActorRef
 
 import scala.swing.event.ButtonClicked
