@@ -1,26 +1,26 @@
 package AverageJoes.common
 
-import AverageJoes.common.database.{Database,  GymStorage, Storage}
+import AverageJoes.common.database.{Customer, Workout}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 
 class ParserTest extends AnyFlatSpec with Matchers {
-  val path: String = "src/main/resources/customer.json"
 
   "Storage" should "not be empty" in {
-    /*var storage = CustomerDatabase.customerStorage
-    storage = Parser.parsing(path, storage)*/
+    val storage = Customer.customerStorage
 
-    assert(Database.customerStorage.getCount > 0)
+    assert(storage.getCount > 0)
   }
 
-  "Customer" should "have different id" in {
-    /*var storage = CustomerDatabase.customerStorage
-    storage = Parser.parsing(path, storage)*/
-    //val cust = new Customer("Erika", 3)
-    for(customer <- Database.customerStorage.getAll) println(customer.name)
-    //assert(!customer.getId.equals(cust.getId))
+  "Workout storage" should "not be empty" in {
+    val storage = Workout.workoutStorage
+    assert(storage.getCount > 0)
+  }
+
+  "Workout list for user" should "not be empty" in {
+    val storage = Workout.workoutStorage
+    assert(storage.getWorkoutForCustomer(1).nonEmpty)
   }
 }
 
