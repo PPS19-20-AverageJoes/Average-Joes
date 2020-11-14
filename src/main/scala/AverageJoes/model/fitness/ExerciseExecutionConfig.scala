@@ -1,78 +1,73 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.{ExerciseParameters, Parameters}
-import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor.Extractor
 import AverageJoes.model.fitness.MachineExecution.MachineEquipment
-import AverageJoes.utils.ExerciseUtils.MACHINE_TYPE
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
 object ExerciseExecutionConfig {
+  import AverageJoes.utils.ExerciseUtils.ExerciseParameters.ExerciseParameter
+  import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
 
   object ExerciseConfiguration {
-    import AverageJoes.utils.ExerciseUtils.ExerciseParameter
 
-    trait Parameters {
-      type Property = ExerciseParameter
-      type PropValue = SafePropertyVal
-      type ConfigValue = (Property, PropValue)
-
-      def valueOf(prop: Property): Option[(Property, PropValue)]
-      def addValueOf(cv: ConfigValue): Parameters
-      def allParameters: Set[ConfigValue]
+    trait Parameters[T <: SafePropertyVal] {
+      val typeParams: MachineType
+      def valueOf(prop: ExerciseParameter): Option[T]
+      def addValueOf(cv: (ExerciseParameter, T)): Parameters[T]
+      def allParameters: List[(ExerciseParameter, T)]
     }
 
-    case class ExerciseParameters() extends Parameters {
-      private var parameters: Set[ConfigValue] = Set()
+    object ExerciseParameters {
 
-      override def valueOf(prop: Property): Option[ConfigValue] = parameters.find(p => p._1.equals(prop))
+      def apply[T<: SafePropertyVal](maType: MachineType, params: List[(ExerciseParameter, T)]): Parameters[T] = new ExerciseParametersImpl(maType, params)
 
-      override def addValueOf(cv: ConfigValue): Parameters = {
-        if (valueOf(cv._1).isEmpty) parameters = parameters + cv
-        else removeOldParam(cv._1); parameters = parameters + cv
-        this
+      private class ExerciseParametersImpl[T<: SafePropertyVal](override val typeParams: MachineType,
+                                              parameters: List[(ExerciseParameter, T)]) extends Parameters[T] {
+
+        override def valueOf(param: ExerciseParameter): Option[T] = parameters.find(p => p._1.equals(param)) match {
+          case Some(value) => Option.apply(value._2)
+          case _ => Option.empty
+        }
+
+        override def addValueOf(cv: (ExerciseParameter, T)): Parameters[T] =
+          if (valueOf(cv._1).isEmpty) new ExerciseParametersImpl(typeParams, cv :: parameters)
+          else new ExerciseParametersImpl(typeParams, parameters.filter(p => p._1 != cv._1) :+ cv)
+
+        override def allParameters: List[(ExerciseParameter, T)] = parameters
+
       }
-
-      def removeOldParam(prop: Property): Unit =
-        if (valueOf(prop).isDefined) parameters = parameters - valueOf(prop).get
-
-      override def allParameters: Set[ConfigValue] = parameters
-
     }
-
   }
 
   object ParameterExtractor {
+    import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
+
     trait Extractor[E <: MachineEquipment] {
-      def extract(e: E): Parameters
+      def extract(e: E): Parameters[SafePropertyVal]
     }
 
-    def extractParameters[E <: MachineEquipment](e: E)(implicit extractor: Extractor[E]): Parameters = {
-      extractor.extract(e)
-    }
+    def extractParameters[E <: MachineEquipment](e: E)(implicit extractor: Extractor[E]): Parameters[SafePropertyVal] = extractor.extract(e)
   }
 
 
   object ImplicitParameterExtractors {
-
-    import AverageJoes.utils.ExerciseUtils.CONFIGURABLE_PARAMETERS._
+    import AverageJoes.utils.ExerciseUtils.ExerciseParameters._
     import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT._
+    import AverageJoes.utils.ExerciseUtils.MachineTypes._
+    import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.ExerciseParameters
+    import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor.Extractor
 
-    /**
-     * TODO: Use uniques enum for machine type
-     */
     implicit val machineExecutionParamExtractor: Extractor[MachineEquipment] = {
-      case LiftMachine(wight, sets) => ExerciseParameters()
-        .addValueOf((SETS, sets))
-        .addValueOf((WIGHT, wight))
-      case RunningMachine(incline, speed, timer) => ExerciseParameters()
-        .addValueOf((TYPE, MACHINE_TYPE.RUNNING))
-        .addValueOf((SPEED, speed))
-        .addValueOf((TIMER, timer))
-        .addValueOf((INCLINE, incline))
+
+      case LiftMachine(wight, sets) => ExerciseParameters[SafePropertyVal](LIFTING, List.empty[(ExerciseParameter, SafePropertyVal)])
+          .addValueOf((SETS, sets))
+          .addValueOf((WIGHT, wight))
+
+      case RunningMachine(incline, speed, timer) => ExerciseParameters[SafePropertyVal](RUNNING, List.empty[(ExerciseParameter, SafePropertyVal)])
+          .addValueOf((SPEED, speed))
+          .addValueOf((TIMER, timer))
+          .addValueOf((INCLINE, incline))
 
       /** other machines */
     }
   }
-
-
 }

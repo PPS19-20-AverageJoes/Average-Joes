@@ -26,7 +26,6 @@ object SafePropertyValue {
       implicit def toNonEmptyString(v: String): NonEmptyString = NonEmptyString(v)
     }
 
-
     case class NonNegInt private (value: Int) extends SafePropertyVal
     implicit def toInt(nn: NonNegInt): Int = nn.value
 
