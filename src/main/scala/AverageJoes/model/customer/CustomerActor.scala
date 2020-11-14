@@ -11,6 +11,9 @@ import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exerc
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
