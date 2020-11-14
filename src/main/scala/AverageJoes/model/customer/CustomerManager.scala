@@ -6,6 +6,7 @@ import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.common.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -24,7 +25,7 @@ object CustomerManager {
   final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
     extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg]) extends Msg
+  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg]) extends Msg
 
   final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
@@ -55,8 +56,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       customerGroup ! customerCreation
       this
 
-    case RequestCustomerLogin(customerId, machine) =>
-      customerGroup ! CustomerLogin(customerId, machine, deviceRef)
+    case RequestCustomerLogin(customerId, machineLabel, machine) =>
+      customerGroup ! CustomerLogin(customerId, machineLabel, machine, deviceRef)
       this
 
     case customerList @ RequestCustomerList(_) =>
