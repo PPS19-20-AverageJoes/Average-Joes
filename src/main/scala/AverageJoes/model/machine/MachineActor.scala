@@ -88,18 +88,11 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
         Behaviors.same
 
-      //case Msg.UserLogIn(customerID) =>
-        //physicalMachine ! manca il messaggio
-
       case Msg.UserMachineWorkout(customerID, parameters) =>
         var child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"")
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
 
-      case Msg.DeadDevice(customerID, parameters) =>
-        var child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"")
-        child ! FileWriterActor.WriteOnFile(customerID,parameters)
-        idle()
     }
   }
   //verificare che i custumer id coincida con quello bookato
