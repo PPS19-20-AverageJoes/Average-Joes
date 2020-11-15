@@ -2,6 +2,8 @@ package AverageJoes.model.hardware
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
+import AverageJoes.view.ViewToolActor
+import AverageJoes.view.ViewToolActor.ViewDeviceActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -16,10 +18,12 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
+  val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
+
   import Device._
   override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
     msg match{
-      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
+      case m: Msg.CustomerLogged => deviceGui ! ViewToolActor.Msg.UpdateViewObject(m.machineLabel); inExercise(m.refPM) //display(m.machineLabel
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
@@ -53,8 +57,11 @@ object Device {
 
   sealed trait Msg extends LoggableMsg
   object Msg {
-    final case class CustomerLogged(refPM: ActorRef[PhysicalMachine.Msg], machineLabel: PhysicalMachine.MachineLabel) extends Msg
+    //From GUI
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
+    //From CustomerActor
+    final case class CustomerLogged(refPM: ActorRef[PhysicalMachine.Msg], machineLabel: PhysicalMachine.MachineLabel) extends Msg
+    final case class CustomerLogOut() extends Msg
     //case class MsgDisplay(message: String) extends MsgDevice
   }
   //Self messages
@@ -67,6 +74,7 @@ object Device {
   private val maxHeartRate: Int = 130
   private val heartRateSchedule: FiniteDuration = 2.seconds
 
+  //For further device types (new model of wristband, smartwatch, ...)
   object DeviceType extends Enumeration {
     type Type = Value
     val wristband = Value
@@ -84,6 +92,8 @@ object Device {
    * @param customerID: ID of the device. In real devices, is stored on config files
    */
   class Wristband(context: ActorContext[Device.Msg], override val customerID: String) extends AbstractBehavior[Device.Msg](context) with Device {
+
+    //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(context, customerID,context.self) , "DevGui_"+customerID)
 
     def display (s: String): Unit = {
       println(s)
