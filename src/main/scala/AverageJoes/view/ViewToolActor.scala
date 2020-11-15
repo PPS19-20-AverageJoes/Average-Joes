@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.model.hardware
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -27,7 +28,7 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
   }
 
-  case class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
+   class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
                              actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
     val panel: GridPanel = View._getUserView()
@@ -46,10 +47,11 @@ object ViewToolActor {
     }
   }
 
-  case class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
+   class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
                                        override val machineID: String,
                                       actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
+
     var panel: MachineView = View._getMachineView()
     var machine: MachineGUI = MachineGUI()
 
@@ -67,4 +69,15 @@ object ViewToolActor {
       })
     }
   }
+
+  object ViewPhysicalMachineActor {
+    def apply(machineID:String, actorRef: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] =
+      Behaviors.setup(context => new ViewPhysicalMachineActor(context, machineID, actorRef))
+  }
+
+  object ViewDeviceActor {
+    def apply(machineID:String, actorRef: ActorRef[Device.Msg]): Behavior[Msg] =
+      Behaviors.setup(context => new ViewDeviceActor(context, machineID, actorRef))
+  }
 }
+
