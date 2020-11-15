@@ -2,6 +2,7 @@ package AverageJoes.controller
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
 import AverageJoes.model.customer.{CustomerActor, CustomerManager}
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.machine
 import AverageJoes.model.machine.MachineActor
@@ -18,20 +19,23 @@ object GymController {
 
   sealed trait Msg extends LoggableMsg
   object Msg{
+    //From Device
     final case class DeviceInGym(customerID: String, replyTo: ActorRef[Device.Msg]) extends Msg //Device enter in Gym
-    final case class UserLogin(customerID: String, replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
+    //From MachineActor
+    final case class UserLogin(customerID: String, machineLabel: MachineLabel, replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
+    //From HardwareController
     final case class PhysicalMachineWakeUp(machineID: String, phMachineType: MachineTypes.MachineType, replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg //Login to the controller
-
+    //From CustomerActor & Co
     final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
-
     final case class MachinesToBookmark(phMachineType: MachineTypes.MachineType, replyTo: ActorRef[CustomerActor.Msg]) extends Msg
+
 
     final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
     final case class UserLogInStatus(status: Boolean) extends Msg
   }
 
-  class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
+  private class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
     override val logName = "Gym controller"
     override val loggingContext: ActorContext[Msg] = this.context
 
@@ -41,7 +45,7 @@ object GymController {
       msg match {
         case m: Msg.DeviceInGym => customerManager ! CustomerManager.RequestCustomerCreation(m.customerID, context.self, m.replyTo); Behaviors.same
 
-        case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.replyTo); Behaviors.same
+        case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.replyTo); Behaviors.same
 
         //case m: Msg.CustomerRegistered => childUserActor += ((m.customerID, m.customer)); Behaviors.same
 

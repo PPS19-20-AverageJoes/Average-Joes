@@ -4,6 +4,8 @@ import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime}
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
+import AverageJoes.view.ViewToolActor
+import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -26,7 +28,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
 
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
     Behaviors.receiveMessage {
-      case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID); Behaviors.same
+      case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
       case m: Msg.Display => display(m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
@@ -71,23 +73,8 @@ object PhysicalMachine {
 
   type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
-  /*object MachineType extends Enumeration {
-    type Type = Value
-    val legPress
-      , chestFly
-      , liftMachine
-      , runningMachine
-      , cyclingMachine
-      = Value
-  }*/
-
   import AverageJoes.common.MachineTypes._
   def apply(machineID: String, phMachineType: MachineType, machineLabel: MachineLabel): Behavior[Msg] = {
-    /*phMachineType match{
-        case MachineType.legPress => Behaviors.setup(context => new LegPress(context, machineID, machineLabel))
-        case MachineType.chestFly => Behaviors.setup(context => new ChestFly(context, machineID, machineLabel))
-        case MachineType.cyclingMachine => Behaviors.setup(context => new CyclingMachine(context, machineID, machineLabel))
-    }*/
     Behaviors.setup(context =>
       phMachineType match{
         case MachineTypes.LEG_PRESS => new LegPress(context, machineID, machineLabel)
@@ -114,6 +101,8 @@ object PhysicalMachine {
       extends AbstractBehavior[Msg](context) with PhysicalMachine {
 
       override val loggingContext: ActorContext[Msg] = this.context
+
+      val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
 
       override def display(s: String): Unit = {
         val _display: String = machineID + " " + s

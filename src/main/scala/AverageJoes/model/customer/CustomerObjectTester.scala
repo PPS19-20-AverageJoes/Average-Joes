@@ -12,7 +12,7 @@ object CustomerObjectTester {
       context.spawn(CustomerManager(), "customer-manager")
 
     val controller: ActorRef[GymController.Msg] =
-      context.spawn(new GymController(context), "gym-contoller")
+      context.spawn[Msg](GymController(), "gym-contoller")
 
     customerManager ! RequestCustomerList(controller)
 
