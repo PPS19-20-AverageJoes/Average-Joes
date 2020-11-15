@@ -4,6 +4,7 @@ import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.hardware.PhysicalMachine
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor._
 import AverageJoes.model.workout.MachineParameters
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -19,7 +20,7 @@ object MachineActor{
 
   sealed trait Msg extends LoggableMsg
   object Msg {
-    final case class UserLogIn(customerID: String) extends Msg
+    final case class UserLogIn(customerID: String, machineLabel: MachineLabel) extends Msg
     final case class UserMachineWorkoutPlan(customerID: String) extends Msg
     final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters) extends Msg
     final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
@@ -42,8 +43,8 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
   private def idle(): Behavior[Msg] = {
     Behaviors.receiveMessage {
-      case Msg.UserLogIn(customerID) =>
-        controller ! GymController.Msg.UserLogin(customerID, context.self)
+      case Msg.UserLogIn(customerID, machineLabel) =>
+        controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
@@ -99,9 +100,9 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   //verificare che i custumer id coincida con quello bookato
   private def bookedStatus(): Behavior[Msg]= {
     Behaviors.receiveMessage{
-      case Msg.UserLogIn(customerID) =>
+      case Msg.UserLogIn(customerID, machineLabel) =>
         if(bookedCustomer.get.equals(customerID))
-        controller ! GymController.Msg.UserLogin(customerID, context.self)
+        controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
