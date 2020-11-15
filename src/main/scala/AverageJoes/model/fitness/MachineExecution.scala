@@ -1,7 +1,6 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.utils.ExerciseUtils.{MACHINE_TYPE, MachineType}
-import AverageJoes.utils.SafePropertyValue.NonNegative._
+import AverageJoes.common.MachineTypes._
 
 object MachineExecution {
   trait MachineEquipment {
@@ -10,14 +9,15 @@ object MachineExecution {
   }
 
   object MACHINE_EQUIPMENT {
+    import AverageJoes.utils.SafePropertyValue.NonNegative._
 
-    case class LiftMachine(wight: Int, set: Int) extends MachineEquipment
-    { override val machineType: MachineType = MACHINE_TYPE.LIFTING }
+    case class LiftMachine(wight: NonNegInt, set: NonNegInt) extends MachineEquipment
+    { override val machineType: MachineType =  LIFTING }
 
-    case class RunningMachine(incline: Double, speed: Double, timer: Int) extends MachineEquipment
-    { override val machineType: MachineType = MACHINE_TYPE.RUNNING }
+    case class RunningMachine(incline: NonNegDouble, speed: NonNegDouble, timer: NonNegInt) extends MachineEquipment
+    { override val machineType: MachineType = RUNNING }
 
-    case class CyclingMachine(resistance: Double, timer: Int) extends MachineEquipment
-    { override val machineType: MachineType = MACHINE_TYPE.CYCLING }
+    case class CyclingMachine(resistance: NonNegDouble, timer: NonNegInt) extends MachineEquipment
+    { override val machineType: MachineType = CYCLING }
   }
 }

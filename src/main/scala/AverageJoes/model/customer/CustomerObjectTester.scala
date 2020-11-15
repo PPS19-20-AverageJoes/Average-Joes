@@ -1,6 +1,5 @@
 package AverageJoes.model.customer
 
-import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.{GymController, Msg}
 import AverageJoes.model.customer.CustomerManager.RequestCustomerList

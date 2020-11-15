@@ -2,9 +2,12 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
+import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
-import AverageJoes.model.device.Device
+import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.machine.PhysicalMachine.MachineLabel
+import AverageJoes.common.MachineTypes.MachineType
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -19,40 +22,52 @@ object CustomerManager {
   sealed trait Msg extends LoggableMsg
 
   /** Receive Messages */
-  final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
+    extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machine: ActorRef[MachineActor.Msg]) extends CustomerManager.Msg
+  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg]) extends Msg
 
-  final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends CustomerManager.Msg with CustomerGroup.Msg
+  final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
-   // BookingConfirmation(confirmed: Boolean)
+  final case class MachineListOf(machineType: MachineType, customer: ActorRef[CustomerActor.Msg]) extends Msg
+
+  final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg with CustomerActor.Msg
 
 }
 
 
-class CustomerManager(ctx: ActorContext[CustomerManager.Msg])
-  extends AbstractBehavior[CustomerManager.Msg](ctx) {
-
+class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBehavior[CustomerManager.Msg](ctx) {
   import CustomerManager._
+
+  /**
+   * TODO: to optional ref
+   */
+  var controllerRef: ActorRef[GymController.Msg] = _
   var deviceRef: ActorRef[Device.Msg] = _
   val groupId = "customers"
-  var customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId), "group-"+groupId)
+  val customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId, context.self), "group-"+groupId)
 
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-    case customerCreation @ RequestCustomerCreation(_,_,device) =>
-        deviceRef = device
-        customerGroup ! customerCreation
+    case customerCreation @ RequestCustomerCreation(_, controller, device) =>
+      controllerRef = controller
+      deviceRef = device
+      customerGroup ! customerCreation
       this
 
-    case RequestCustomerLogin(customerId, machine) =>
-      customerGroup ! CustomerLogin(customerId, machine, deviceRef)
+    case RequestCustomerLogin(customerId, machineLabel, machine) =>
+      customerGroup ! CustomerLogin(customerId, machineLabel, machine, deviceRef)
       this
 
     case customerList @ RequestCustomerList(_) =>
       customerGroup ! customerList
       this
+
+    case MachineListOf(machineType, customer) =>
+      controllerRef ! MachinesToBookmark(machineType, customer)
+      this
+
   }
 
 }

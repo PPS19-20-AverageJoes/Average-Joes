@@ -1,7 +1,6 @@
 package AverageJoes.view
 
-import AverageJoes.model.device.Device
-import AverageJoes.model.machine.PhysicalMachine
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.view.ViewToolActor.Msg
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
