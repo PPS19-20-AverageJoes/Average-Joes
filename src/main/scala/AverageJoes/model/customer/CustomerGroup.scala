@@ -4,12 +4,13 @@ import AverageJoes.common.LoggableMsg
 import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTraingProgram}
+import AverageJoes.model.customer.CustomerActor.{CustomerTrainingProgram, CustomerMachineLogin}
+import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
 import AverageJoes.model.device.Device
 import AverageJoes.model.fitness.TrainingProgram
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -19,12 +20,9 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
 
-
-  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel,machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg])   extends Msg
-  private final case class UploadCustomerTraingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg])         extends Msg
-  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String)   extends Msg
-
-
+  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
+  private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
+  private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 }
 
 
@@ -43,7 +41,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
         case Some(customerActor) =>
           controller ! CustomerRegistered(customerId, customerActor)
-          context.self ! UploadCustomerTraingProgram(customerId, customerActor)
+          context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
 
         case None =>
           if(isCustomerOnStorage(customerId)) {
@@ -52,8 +50,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
             customerIdToActor += customerId -> customerActor
 
             controller !  CustomerRegistered(customerId, customerActor)
-            context.self ! UploadCustomerTraingProgram(customerId, customerActor)
-
+            context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
           }
           else{
             /** Do something because customerId is not present on storage */
@@ -61,26 +58,22 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       }
       this
 
-    /**
-     * TODO: booking -> login
-     */
-    case CustomerLogin(customerId, machineLabel: MachineLabel, machine, device) =>
+    case CustomerLogin(customerId, machineLabel, machine, device) =>
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
-          /** Check if can log in and than notify machine and device */
-          machine ! CustomerLogging(customerId, isLogged = true)
-          device ! CustomerLogged(machineLabel, machine)
+          customerActor ! CustomerMachineLogin(machineLabel, machine, device)
         case None =>
-          machine ! CustomerLogging(customerId, isLogged = false)
+          machine ! CustomerLogging(customerId, null, isLogged = false)
       }
       this
+
 
     case RequestCustomerList(replyTo) =>
       replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
       this
 
 
-    case UploadCustomerTraingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
+    case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
       customer ! CustomerTrainingProgram(trainingProgramOf(customerId) )
     this
 
