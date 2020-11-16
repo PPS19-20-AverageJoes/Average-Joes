@@ -9,7 +9,7 @@ import AverageJoes.model.device.Device.Msg.CustomerLogged
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.fitness.{CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
 import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.utils.ExerciseUtils.MachineTypes.MachineType
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
@@ -128,7 +128,8 @@ object MachineBooker {
       case BookMachine(machines) =>
         implicit val timeout: Timeout = 3 seconds
 
-        context.ask(machines.head, _ => MachineActor.Msg.BookingRequest(customer, customerId)) {
+        /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
+        context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
           case Success(OnBookingResponse(_, true)) => BookedAndFinished() // Send msg to customer actor
           case Failure(_) => BookMachine(machines.tail)
         }
