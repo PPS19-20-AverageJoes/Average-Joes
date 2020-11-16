@@ -2,7 +2,7 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerActor.{CustomerTrainingProgram, CustomerMachineLogin}
+import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram}
 import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
 import AverageJoes.model.fitness.TrainingProgram
 import AverageJoes.model.hardware.Device

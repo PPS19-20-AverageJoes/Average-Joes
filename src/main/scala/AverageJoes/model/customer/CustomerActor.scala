@@ -59,7 +59,6 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
       booking(machines)
       Behaviors.same
 
-
     case CustomerMachineLogin(machineLabel, machine, device) =>
       if(loggingAllowed()) {
         logged = true
@@ -75,7 +74,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     case ExerciseStarted(tp) =>
       exercising(tp)
       Behaviors.same
-      
+
 
     case ExerciseCompleted(tp) =>
       logged = false
@@ -164,5 +163,7 @@ object MachineBooker {
       case BookedAndFinished() => Behaviors.stopped[Msg]
     }
   }
+
 }
+
 

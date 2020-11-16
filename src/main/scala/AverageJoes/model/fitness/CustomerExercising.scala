@@ -17,6 +17,7 @@ object CustomerExercising {
   }
 }
 
+
 class CustomerExercising(
                           timers: TimerScheduler[CustomerExercising.Msg],
                           target: ActorRef[CustomerActor.Msg],
@@ -72,4 +73,3 @@ class BookWhileExercising(
     }
   }
 }
-

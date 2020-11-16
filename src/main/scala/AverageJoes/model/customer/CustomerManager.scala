@@ -1,12 +1,12 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
-import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.hardware.Device
-import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
+import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
