@@ -1,7 +1,6 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
-import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
@@ -11,7 +10,7 @@ import AverageJoes.model.fitness.{CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -152,16 +151,16 @@ object MachineBooker {
 
   def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
     Behaviors.receiveMessage[Msg] {
-      /* case BookMachine(machines) =>
-         implicit val timeout: Timeout = 3 seconds
+     /* case BookMachine(machines) =>
+        implicit val timeout: Timeout = 3 seconds
 
-         /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
-         context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
-           case Success(OnBookingResponse(_, true)) => BookedAndFinished()
-           case Success(OnBookingResponse(_, false)) => BookMachine(machines.tail)
-           case Failure(_) => BookMachine(machines.tail)
-         }
-         Behaviors.same */
+        /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
+        context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
+          case Success(OnBookingResponse(_, true)) => BookedAndFinished() // Send msg to customer actor
+          case Failure(_) => BookMachine(machines.tail)
+        }
+        Behaviors.same
+      */
 
       case BookedAndFinished() => Behaviors.stopped[Msg]
     }
