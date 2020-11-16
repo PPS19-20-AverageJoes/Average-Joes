@@ -1,17 +1,19 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
+import AverageJoes.model.customer.CustomerActor.CustomerTrainingProgram
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
-import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
-import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
-import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+import AverageJoes.model.fitness.BookWhileExercising
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.fitness.{CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
 
@@ -30,6 +32,7 @@ object CustomerActor {
   final case class NextMachineBooking(ex: Exercise) extends Msg
   final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
   final case class TrainingCompleted() extends Msg
+
   final case object Passivate extends Msg
 }
 
@@ -44,18 +47,22 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   override def onMessage(msg: Msg): Behavior[Msg] = waiting()
 
   private def waiting(): Behavior[Msg] = Behaviors.receiveMessage[Msg]{
+
     case CustomerTrainingProgram(tp) =>
       trainingProgram = Option.apply(tp)
       context.self ! NextMachineBooking(trainingProgram.get.allExercises.head)
       Behaviors.same
 
+
     case NextMachineBooking(ex) =>
       requestMachineList(ex)
       Behaviors.same
 
+
     case MachineList(machines) =>
       booking(machines)
       Behaviors.same
+
 
     case CustomerMachineLogin(machineLabel, machine, device) =>
       if(loggingAllowed()) {
@@ -65,36 +72,42 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         //device ! CustomerLogged(machineLabel, machine)
         context.self ! ExerciseStarted(trainingProgram.get)
       }
-      else machine ! CustomerLogging(customerId, null, isLogged = false)
+      else  machine ! CustomerLogging(customerId, null, isLogged = false)
       Behaviors.same
+
 
     case ExerciseStarted(tp) =>
       exercising(tp)
       Behaviors.same
       
+
     case ExerciseCompleted(tp) =>
       logged = false
       context.self ! UpdateTrainingProgram(updatedTrainingProgram(tp))
       this
+
 
     case UpdateTrainingProgram(tp) =>
       if(tp.allExercises.isEmpty) TrainingCompleted()
       trainingProgram = Option.apply(tp)
       Behaviors.same
 
+
     case TrainingCompleted() =>
       Behaviors.stopped
+
 
     case Passivate =>
       Behaviors.stopped
   }
 
 
+
   private def booking(machines: Set[ActorRef[MachineActor.Msg]]): Unit = {
     val machineBooker = context.spawn(MachineBooker(context.self, customerId), "machine-booker")
     machineBooker ! BookMachine(machines)
   }
-  
+
   private def exercising(tp: TrainingProgram): Unit = {
     /** TODO: handle exercise duration */
     context.spawn(CustomerExercising(context.self, 10.seconds, tp), "exercising")
@@ -105,6 +118,8 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   private def requestMachineList(ex: Exercise): Unit = {
     managerRef ! MachineListOf(machineToBeExecuted(ex).get, context.self)
   }
+
+
 
   /* private def initializeExMachines(exercises: Set[Exercise]): Map[Exercise, Set[ActorRef[MachineActor.Msg]]] = {
     val initMachinesRef = (m: Map[Exercise, Set[ActorRef[MachineActor.Msg]]], ex: Exercise) =>  m + (ex -> Set.empty[ActorRef[MachineActor.Msg]])
@@ -125,8 +140,8 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     tp.removeExercise(tp.allExercises.head)
 
   private def parameters(tp: TrainingProgram): Parameters[SafePropertyVal] = tp.allExercises.head.executionParameters
-}
 
+}
 
 
 object MachineBooker {
@@ -152,8 +167,5 @@ object MachineBooker {
     }
   }
 }
-
-
-
 
 

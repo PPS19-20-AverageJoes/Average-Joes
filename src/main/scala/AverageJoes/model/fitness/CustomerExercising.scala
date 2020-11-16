@@ -1,7 +1,8 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.model.customer.CustomerActor
-import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineBooking}
+import AverageJoes.model.customer.CustomerActor.NextMachineBooking
+import AverageJoes.model.customer.CustomerActor.ExerciseCompleted
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
@@ -15,8 +16,8 @@ object CustomerExercising {
   def apply(target: ActorRef[CustomerActor.Msg], after: FiniteDuration, tp: TrainingProgram): Behavior[Msg] = {
     Behaviors.withTimers(timers => new CustomerExercising(timers, target, after, tp).initializing())
   }
-
 }
+
 class CustomerExercising(
                           timers: TimerScheduler[CustomerExercising.Msg],
                           target: ActorRef[CustomerActor.Msg],
@@ -39,6 +40,8 @@ class CustomerExercising(
     }
   }
 }
+
+
 
 object BookWhileExercising {
   trait Msg
@@ -72,4 +75,3 @@ class BookWhileExercising(
     }
   }
 }
-
