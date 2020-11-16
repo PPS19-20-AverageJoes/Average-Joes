@@ -4,17 +4,16 @@ import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
+import AverageJoes.model.fitness.BookWhileExercising
+
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.fitness.{CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
-import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
+import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
-import AverageJoes.common.MachineTypes.MachineType
-import AverageJoes.model.hardware.Device
-import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
 
@@ -54,9 +53,11 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
       context.self ! NextMachineBooking(trainingProgram.get.allExercises.head)
       Behaviors.same
 
+
     case NextMachineBooking(ex) =>
       requestMachineList(ex)
       Behaviors.same
+
 
     case MachineList(machines) =>
       booking(machines)
@@ -95,9 +96,6 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
       Behaviors.stopped
 
 
-    case TrainingCompleted() =>
-      Behaviors.stopped
-
 
     case Passivate =>
       Behaviors.stopped
@@ -120,6 +118,8 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   private def requestMachineList(ex: Exercise): Unit = {
     managerRef ! MachineListOf(machineToBeExecuted(ex).get, context.self)
   }
+
+
 
   /* private def initializeExMachines(exercises: Set[Exercise]): Map[Exercise, Set[ActorRef[MachineActor.Msg]]] = {
     val initMachinesRef = (m: Map[Exercise, Set[ActorRef[MachineActor.Msg]]], ex: Exercise) =>  m + (ex -> Set.empty[ActorRef[MachineActor.Msg]])

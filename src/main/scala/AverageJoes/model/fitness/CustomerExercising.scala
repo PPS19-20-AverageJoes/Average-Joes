@@ -1,7 +1,8 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.model.customer.CustomerActor
-import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineBooking}
+import AverageJoes.model.customer.CustomerActor.NextMachineBooking
+import AverageJoes.model.customer.CustomerActor.ExerciseCompleted
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
@@ -40,6 +41,8 @@ class CustomerExercising(
     }
   }
 }
+
+
 
 object BookWhileExercising {
   trait Msg
