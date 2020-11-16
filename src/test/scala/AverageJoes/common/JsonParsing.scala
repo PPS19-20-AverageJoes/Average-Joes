@@ -1,7 +1,7 @@
 package AverageJoes.common
 
+import AverageJoes.model.hardware.PhysicalMachine.CyclingMachineParameters
 import AverageJoes.model.machine.FileWriterActor.WriteOnFile
-import AverageJoes.model.workout.CyclingMachineParameters
 import AverageJoes.utils.FileParser
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
