@@ -1,6 +1,6 @@
 package AverageJoes
 
-import AverageJoes.common.ServerSearch
+import AverageJoes.common.{MachineTypes, ServerSearch}
 import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
@@ -8,9 +8,9 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 object HardwareApp extends App{
   private val controller: ActorSystem[HardwareController.Msg] = ActorSystem(HardwareController(), "GymHardware")
 
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",PhysicalMachine.MachineType.legPress,"LegPress A")
-  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",PhysicalMachine.MachineType.chestFly,"ChestFly")
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress2",PhysicalMachine.MachineType.legPress,"LegPress B")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",MachineTypes.LEG_PRESS,"LegPress A")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",MachineTypes.CHEST_FLY,"ChestFly")
+  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress2",MachineTypes.LEG_PRESS,"LegPress B")
 
   controller ! HardwareController.Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
   controller ! HardwareController.Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
