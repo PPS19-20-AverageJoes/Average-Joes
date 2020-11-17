@@ -1,6 +1,7 @@
 package AverageJoes.model.hardware
 
 import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
+import AverageJoes.model.hardware.PhysicalMachine.Msg.HeartRate
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime}
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
@@ -8,6 +9,8 @@ import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+
+import scala.collection.mutable.ListBuffer
 
 
 
@@ -17,7 +20,6 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
   val machineLabel: MachineLabel //To show on device
   val machineType: MachineTypes.MachineType
 
-  //val ma: ActorRef[MachineActor.Msg]
   override val logName: String = "PM %s: %s".format(machineType, machineID)
 
   override def onMessageLogged(msg: Msg): Behavior[Msg] = {
@@ -37,18 +39,33 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
   private case object TimerKey
   private def inExercise(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, ExerciseEnds(), machineParameters.duration)
-    Behaviors.receiveMessage {
-      case ExerciseEnds() => exerciseEnds(ma, customerID, machineParameters)
+    var heartBeats = new ListBuffer[Int]()
 
-      case m: Msg.Rfid => m.customerID match {
-        case `customerID` => exerciseEnds(ma, customerID, machineParameters)
-        case _ => Behaviors.same
-      }
+    Behaviors.receiveMessage {
+      case m: HeartRate =>
+        heartBeats += m.heartRate
+        Behaviors.same
+
+      case ExerciseEnds() => exerciseEnds(ma, customerID, machineParameters, heartBeats)
+
+      case m: Msg.Rfid =>
+          m.customerID match {
+          case `customerID` => exerciseEnds(ma, customerID, machineParameters, heartBeats)
+          case _ => Behaviors.same
+        }
+
     }
   }
 
-  def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = {
+  import org.scalactic.anyvals.NonZeroInt.apply
+  def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
+    val max = heartBeats.max
+    val min = heartBeats.min
+    val avg: Int = heartBeats.sum[Int] / (heartBeats.count(_ => true) match { case c: Int if c > 0 => c; case _ => 1})
+
     ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters)
+    println(max, min, avg) //ToDo: struttura dati
+    
     operative(ma)
   }
 
@@ -102,7 +119,7 @@ object PhysicalMachine {
 
       override val loggingContext: ActorContext[Msg] = this.context
 
-      val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
+      private val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
 
       override def display(s: String): Unit = {
         val _display: String = machineID + " " + s
@@ -121,6 +138,8 @@ object PhysicalMachine {
 
     }
   }
+
+  /***** LEG PRESS *****/
 
   /**
    * @param weight: load
@@ -141,6 +160,8 @@ object PhysicalMachine {
     }
   }
 
+  /***** CHEST FLY *****/
+
   /**
    * @param weight: load
    * @param height: adjustable height of the sit according to the customer
@@ -158,6 +179,7 @@ object PhysicalMachine {
     }
   }
 
+  /***** CYCLING MACHINE *****/
 
   case class CyclingMachineParameters(resistance: NonNegInt, override val minutes: NonNegInt) extends MachineParametersByTime { override val machineType: MachineType = CYCLING }
 
