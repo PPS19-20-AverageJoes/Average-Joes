@@ -1,7 +1,7 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.model.customer.CustomerActor
-import AverageJoes.model.customer.CustomerActor.ExerciseCompleted
+import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineBooking}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
@@ -39,3 +39,37 @@ class CustomerExercising(
     }
   }
 }
+
+object BookWhileExercising {
+  trait Msg
+  private case object BookAnotherMachine extends Msg
+  private case object TimerKey
+
+  def apply(target: ActorRef[CustomerActor.Msg], after: FiniteDuration, tp: TrainingProgram): Behavior[Msg] = {
+    Behaviors.withTimers(timers => new BookWhileExercising(timers, target, new FiniteDuration(after.length-10, after.unit), tp).initializing())
+  }
+}
+
+class BookWhileExercising(
+                           timers: TimerScheduler[BookWhileExercising.Msg],
+                           target: ActorRef[CustomerActor.Msg],
+                           after: FiniteDuration,
+                           tp: TrainingProgram) {
+  import BookWhileExercising._
+
+  private def initializing(): Behavior[BookWhileExercising.Msg] = {
+    Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
+      timers.startSingleTimer(TimerKey, BookAnotherMachine, after)
+      waitUntilTimeout()
+    }
+  }
+
+  def waitUntilTimeout(): Behavior[Msg] = {
+    Behaviors.receiveMessage[Msg] {
+      case BookAnotherMachine =>
+        target ! NextMachineBooking(tp.allExercises.tail.head)
+        Behaviors.stopped
+    }
+  }
+}
+
