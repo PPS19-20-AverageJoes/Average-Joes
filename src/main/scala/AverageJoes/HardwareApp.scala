@@ -1,19 +1,20 @@
 package AverageJoes
 
 import AverageJoes.common.{MachineTypes, ServerSearch}
+import AverageJoes.model.hardware.HardwareController.Msg
 import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
 object HardwareApp extends App{
-  private val controller: ActorSystem[HardwareController.Msg] = ActorSystem(HardwareController(), "GymHardware")
+  private val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")
 
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress1",MachineTypes.LEG_PRESS,"LegPress A")
-  controller ! HardwareController.Msg.CreatePhysicalMachine("ChestFly1",MachineTypes.CHEST_FLY,"ChestFly")
-  controller ! HardwareController.Msg.CreatePhysicalMachine("LegPress2",MachineTypes.LEG_PRESS,"LegPress B")
+  controller ! Msg.CreatePhysicalMachine("LegPress1",MachineTypes.LEG_PRESS,"LegPress A")
+  controller ! Msg.CreatePhysicalMachine("ChestFly1",MachineTypes.CHEST_FLY,"ChestFly")
+  controller ! Msg.CreatePhysicalMachine("LegPress2",MachineTypes.LEG_PRESS,"LegPress B")
 
-  controller ! HardwareController.Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
-  controller ! HardwareController.Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
+  controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
+  controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
 
   private val test: ActorSystem[HwControllerTestMsg] = ActorSystem(HwControllerTest(controller), "GymHardware")
   test ! StartTest()
@@ -47,7 +48,7 @@ object HardwareApp extends App{
     }
   }
   object HwControllerTest{
-    def apply(controller: ActorRef[HardwareController.Msg]): Behavior[HwControllerTestMsg] = Behaviors.setup(context => new HwControllerTest(context, controller))
+    def apply(controller: ActorRef[Msg]): Behavior[HwControllerTestMsg] = Behaviors.setup(context => new HwControllerTest(context, controller))
   }
 
 
