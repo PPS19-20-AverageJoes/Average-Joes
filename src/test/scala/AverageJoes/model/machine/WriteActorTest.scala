@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
+import AverageJoes.model.hardware.PhysicalMachine.CyclingMachineParameters
 import AverageJoes.model.machine.FileWriterActor.WriteOnFile
-import AverageJoes.model.workout.CyclingMachineParameters
 import org.scalatest.wordspec.AnyWordSpecLike
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 
