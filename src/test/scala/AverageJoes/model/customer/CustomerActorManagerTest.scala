@@ -4,7 +4,7 @@ import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.{CustomerList, CustomerRegistered}
 import AverageJoes.model.customer.CustomerManager.{RequestCustomerCreation, RequestCustomerList}
 import AverageJoes.model.device.{Device, Wristband}
-import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestProbe}
+import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.typed.ActorRef
 import org.scalatest.wordspec.AnyWordSpecLike
 
