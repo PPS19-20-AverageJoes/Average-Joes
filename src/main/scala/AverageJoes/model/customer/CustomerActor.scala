@@ -2,10 +2,16 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
-import AverageJoes.model.fitness.{Exercise, TrainingProgram}
-import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.BookingRequest
+import AverageJoes.model.customer.MachineBooker.BookMachine
+import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.hardware.Device
+import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
+import AverageJoes.model.machine.MachineActor
+import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
@@ -15,90 +21,146 @@ import scala.util.{Failure, Success}
 
 
 object CustomerActor {
-  def apply(manager: ActorRef[CustomerManager.Msg], customerId: String): Behavior[Msg] =
-    Behaviors.setup(context => new CustomerActor(context, manager, customerId))
+  def apply(manager: ActorRef[CustomerManager.Msg], customerId: String): Behavior[Msg] = Behaviors.setup(context => new CustomerActor(context, manager, customerId))
 
   trait Msg extends LoggableMsg
-
-  final case class OnBookingResponse(machine: ActorRef[MachineActor.Msg], isBooked: Boolean) extends Msg
   final case class CustomerTrainingProgram(tp: TrainingProgram) extends Msg
-
+  final case class CustomerMachineLogin(machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
   final case class ExerciseStarted(trainingProgram: TrainingProgram) extends Msg
-  final case class ExerciseFinished() extends Msg
-  final case object Passivate extends Msg
+  final case class ExerciseCompleted(tp: TrainingProgram) extends Msg
+  final case class NextMachineBooking(ex: Exercise) extends Msg
+  final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
+  final case class TrainingCompleted() extends Msg
 
+  final case object Passivate extends Msg
 }
 
-
-class CustomerActor(ctx: ActorContext[CustomerActor.Msg],
-                    manager: ActorRef[CustomerManager.Msg],
-                    customerId: String) extends AbstractBehavior[CustomerActor.Msg](ctx) {
-
+class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[CustomerManager.Msg], customerId: String) extends AbstractBehavior[CustomerActor.Msg](ctx) {
   import CustomerActor._
 
   val managerRef: ActorRef[CustomerManager.Msg] = manager
   var exercisesWithMachines: Map[Exercise, Option[Set[ActorRef[MachineActor.Msg]]]] = Map.empty
+  var logged: Boolean = false
+  var trainingProgram: Option[TrainingProgram] = None
 
   override def onMessage(msg: Msg): Behavior[Msg] = waiting()
 
-
   private def waiting(): Behavior[Msg] = Behaviors.receiveMessage[Msg]{
-    /** Customer group informs me about my training program. Now I will extract the exercises
-     * and initialize the data structure to keep track of ActorRef of MachineActors */
+
     case CustomerTrainingProgram(tp) =>
-      //requestMachineList(tp)
-      booking(tp)
+      trainingProgram = Option.apply(tp)
+      context.self ! NextMachineBooking(trainingProgram.get.allExercises.head)
+      Behaviors.same
+
+    case NextMachineBooking(ex) =>
+      requestMachineList(ex)
+      Behaviors.same
+
+    case MachineList(machines) =>
+      booking(machines)
+      Behaviors.same
+
+    case CustomerMachineLogin(machineLabel, machine, device) =>
+      if(loggingAllowed()) {
+        logged = true
+        /** TODO: machine actor should expect Parameters, and not MachineParameters */
+        //machine ! CustomerLogging(customerId, parameters(trainingProgram.get), isLogged = true)
+        //device ! CustomerLogged(machineLabel, machine)
+        context.self ! ExerciseStarted(trainingProgram.get)
+      }
+      else  machine ! CustomerLogging(customerId, null, isLogged = false)
+      Behaviors.same
+
+
+    case ExerciseStarted(tp) =>
+      exercising(tp)
+      Behaviors.same
+
+
+    case ExerciseCompleted(tp) =>
+      logged = false
+      context.self ! UpdateTrainingProgram(updatedTrainingProgram(tp))
+      this
+
+
+    case UpdateTrainingProgram(tp) =>
+      if(tp.allExercises.isEmpty) TrainingCompleted()
+      trainingProgram = Option.apply(tp)
+      Behaviors.same
+
+
+    case TrainingCompleted() =>
+      Behaviors.stopped
+
 
     case Passivate =>
       Behaviors.stopped
   }
 
-  private def booking(tp: TrainingProgram): Behavior[Msg] = Behaviors.receiveMessage {
-    case MachineList(machines) =>
-      implicit val timeout: Timeout = 3 seconds
 
-      context.ask(machines.head, BookingRequest) {
-        case Success(OnBookingResponse(_, true)) => ExerciseStarted(tp)
-        case Failure(_) => MachineList(machines.tail)
-      }
-      this
-    case ExerciseStarted(tp) => exercising(tp)
 
-    case _ => this
+  private def booking(machines: Set[ActorRef[MachineActor.Msg]]): Unit = {
+    val machineBooker = context.spawn(MachineBooker(context.self, customerId), "machine-booker")
+    machineBooker ! BookMachine(machines)
   }
 
-  /**
-   * Set training program as a "global" value. Add add+remove methods for training program
-   */
-  private def exercising(tp: TrainingProgram): Behavior[Msg] = Behaviors.receiveMessage[Msg] {
-    case ExerciseFinished() =>
-      context.self ! CustomerTrainingProgram(updatedTrainingProgram(tp))
-      this
-    case _ => exercising(tp)
+  private def exercising(tp: TrainingProgram): Unit = {
+    /** TODO: handle exercise duration */
+    context.spawn(CustomerExercising(context.self, 10.seconds, tp), "exercising")
+    context.spawn(BookWhileExercising(context.self, 10.seconds, tp), "book-while-exercising")
   }
 
 
-  private def requestMachineList(tp: TrainingProgram) = {
-    initializeExMachines(tp.allExercises)
-   managerRef ! MachineListOf(machineToBeExecuted(tp.allExercises.head).get, context.self)
+  private def requestMachineList(ex: Exercise): Unit = {
+    managerRef ! MachineListOf(machineToBeExecuted(ex).get, context.self)
   }
 
-  /** Method to return a map of an exercise and a set of ActorRef of the machines to be able
-   * to execute the exercise on. Firstly it is an empty set. */
-  private def initializeExMachines(exercises: Set[Exercise]): Map[Exercise, Set[ActorRef[MachineActor.Msg]]] = {
+  /* private def initializeExMachines(exercises: Set[Exercise]): Map[Exercise, Set[ActorRef[MachineActor.Msg]]] = {
     val initMachinesRef = (m: Map[Exercise, Set[ActorRef[MachineActor.Msg]]], ex: Exercise) =>  m + (ex -> Set.empty[ActorRef[MachineActor.Msg]])
     exercises.foldLeft (Map.empty[Exercise, Set[ActorRef[MachineActor.Msg]]]) (initMachinesRef)
-  }
+  } */
 
 
   private def machineToBeExecuted(ex: Exercise): Option[MachineType] = {
     if (ex != null)  Option.apply(ex.executionParameters.typeParams) else Option.empty
   }
 
+  private def loggingAllowed(): Boolean = !logged
+
   /**
    * TODO: handle empty set or no exercises left
    */
   private def updatedTrainingProgram(tp: TrainingProgram): TrainingProgram =
     tp.removeExercise(tp.allExercises.head)
+
+  private def parameters(tp: TrainingProgram): Parameters[SafePropertyVal] = tp.allExercises.head.executionParameters
+
+}
+
+
+object MachineBooker {
+  trait Msg
+  case class BookMachine(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
+  final case class OnBookingResponse(machine: ActorRef[MachineActor.Msg], isBooked: Boolean) extends Msg
+  private case class BookedAndFinished() extends Msg
+
+  def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
+    Behaviors.receiveMessage[Msg] {
+      /* case BookMachine(machines) =>
+         implicit val timeout: Timeout = 3 seconds
+
+         /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
+         context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
+           case Success(OnBookingResponse(_, true)) => BookedAndFinished()
+           case Success(OnBookingResponse(_, false)) => BookMachine(machines.tail)
+           case Failure(_) => BookMachine(machines.tail)
+         }
+         Behaviors.same */
+
+
+      case BookedAndFinished() => Behaviors.stopped[Msg]
+    }
+  }
+
 }
 

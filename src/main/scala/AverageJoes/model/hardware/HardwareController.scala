@@ -35,8 +35,8 @@ object HardwareController {
       msg match {
         case m: Msg.CreatePhysicalMachine =>
           if (childPM.keySet.exists(_._1 == m.machineID)) //ToDo: machine label deve essere univoco
-            println("machineID already exists") //ToDo: inserire nel log
-          else { //TODO: probabilmente la PM va creata contestualmente per gestire la presenza del codice univoco, rivedere la questione del machineactorref (la pm può entrare nel behaviour "ref waiting")
+          println("machineID already exists") //ToDo: inserire nel log
+            else { //TODO: probabilmente la PM va creata contestualmente per gestire la presenza del codice univoco, rivedere la questione del machineactorref (la pm può entrare nel behaviour "ref waiting")
             val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(m.machineID, m.phMachineType, m.machineLabel), m.machineID)
             childPM += (((m.machineID, m.phMachineType), pm))
             server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, pm)
