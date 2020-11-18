@@ -150,7 +150,6 @@ object MachineBooker {
         Behaviors.same
 
       case BookedAndFinished() => Behaviors.stopped[Msg]
-
     }
   }
 }
