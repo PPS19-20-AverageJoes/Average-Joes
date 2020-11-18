@@ -2,12 +2,11 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
-import AverageJoes.controller.GymController.Msg.MachinesToBookmark
-import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.PhysicalMachine.MachineLabel
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.customer.CustomerGroup.CustomerLogin
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -65,7 +64,7 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       this
 
     case MachineListOf(machineType, customer) =>
-      controllerRef ! MachinesToBookmark(machineType, customer)
+      //controllerRef ! MachinesToBookmark(machineType, customer)
       this
 
   }

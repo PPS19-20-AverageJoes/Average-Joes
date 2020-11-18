@@ -27,8 +27,8 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
   }
 
-   class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
-                             actorRef: ActorRef[Device.Msg])
+  class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
+                        actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
     var panel: Option[GridPanel] = Option.empty
     var machine: Option[UserGui] = Option.empty
@@ -48,9 +48,9 @@ object ViewToolActor {
     }
   }
 
-   class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
-                                       override val machineID: String,
-                                      actorRef: ActorRef[PhysicalMachine.Msg])
+  class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
+                                 override val machineID: String,
+                                 actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
      var panel: Option[MachineView] = Option.empty
      var machine: Option[MachineGUI] = Option.empty
@@ -81,4 +81,3 @@ object ViewToolActor {
       Behaviors.setup(context => new ViewDeviceActor(context, machineID, actorRef))
   }
 }
-

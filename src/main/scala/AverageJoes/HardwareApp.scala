@@ -36,7 +36,7 @@ object HardwareApp extends App{
                 case Some(l) => w ! Device.Msg.NearDevice(l)
                 case None => ;
               }
-              //server ! GymController.Msg.BookmarkMachines(PhysicalMachine.MachineType.legPress, w)
+            //server ! GymController.Msg.BookmarkMachines(PhysicalMachine.MachineType.legPress, w)
             case None => println("! Wristband not found!");
           }
 
