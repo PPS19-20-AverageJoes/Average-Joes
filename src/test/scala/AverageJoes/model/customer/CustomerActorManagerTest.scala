@@ -1,7 +1,6 @@
 package AverageJoes.model.customer
 
 import AverageJoes.controller.GymController
-import AverageJoes.model.customer.CustomerManager.{RequestCustomerCreation, RequestCustomerList}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.Device.Wristband
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
