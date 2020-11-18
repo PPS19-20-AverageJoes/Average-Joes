@@ -47,7 +47,7 @@ object GymController {
 
         case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.replyTo); Behaviors.same
 
-        //case m: Msg.CustomerRegistered => childUserActor += ((m.customerID, m.customer)); Behaviors.same
+        case m: Msg.CustomerRegistered => Behaviors.same //ToDo: not used
 
         case m: Msg.PhysicalMachineWakeUp =>
           val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.replyTo, m.phMachineType), "MA_"+m.machineID)
