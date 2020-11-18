@@ -152,6 +152,7 @@ object MachineBooker {
       /* case BookMachine(machines) =>
          implicit val timeout: Timeout = 3 seconds
 
+
          /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
          context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
            case Success(OnBookingResponse(_, true)) => BookedAndFinished()
