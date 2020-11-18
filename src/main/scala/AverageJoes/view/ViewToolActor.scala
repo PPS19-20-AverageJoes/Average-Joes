@@ -28,8 +28,8 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
   }
 
-   class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
-                             actorRef: ActorRef[Device.Msg])
+  class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
+                        actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
     val panel: GridPanel = View._getUserView()
     var machine: UserGui = UserGui(actorRef: ActorRef[Device.Msg])
@@ -47,9 +47,9 @@ object ViewToolActor {
     }
   }
 
-   class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
-                                       override val machineID: String,
-                                      actorRef: ActorRef[PhysicalMachine.Msg])
+  class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
+                                 override val machineID: String,
+                                 actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
 
     var panel: MachineView = View._getMachineView()
@@ -65,7 +65,7 @@ object ViewToolActor {
 
     override def updateViewEntity(msg: String): Unit = {
       SwingUtilities.invokeAndWait(()=>{
-         machine.update(msg)
+        machine.update(msg)
       })
     }
   }
@@ -80,4 +80,3 @@ object ViewToolActor {
       Behaviors.setup(context => new ViewDeviceActor(context, machineID, actorRef))
   }
 }
-

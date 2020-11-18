@@ -41,7 +41,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
 
   override def onMessageLogged(msg: Msg): Behavior[Msg] = {
-      idle()
+    idle()
   }
 
   private def idle(): Behavior[Msg] = {
@@ -53,7 +53,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
       case Msg.BookingRequest(replyTo, customerID) =>
         bookedCustomer = Option.apply(customerID)
         //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType,true)
-       bookedStatus()
+        bookedStatus()
     }
   }
 
@@ -75,8 +75,8 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         }
       case BookingTimeoutException() => idle()
       case Msg.BookingRequest (replyTo, customerID) =>
-      //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
-      Behaviors.same
+        //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
+        Behaviors.same
     }
   }
 
@@ -103,7 +103,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     Behaviors.receiveMessage{
       case Msg.UserLogIn(customerID, machineLabel) =>
         if(bookedCustomer.get.equals(customerID))
-        controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
+          controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
