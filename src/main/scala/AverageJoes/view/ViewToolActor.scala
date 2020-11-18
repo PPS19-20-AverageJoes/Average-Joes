@@ -1,12 +1,11 @@
 package AverageJoes.view
 
-import AverageJoes.model.hardware
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import javax.swing.SwingUtilities
 
-import scala.swing.GridPanel
+import scala.swing.{GridPanel, Swing}
 
 
 sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
@@ -31,19 +30,21 @@ object ViewToolActor {
   class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
                         actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
-    val panel: GridPanel = View._getUserView()
-    var machine: UserGui = UserGui(actorRef: ActorRef[Device.Msg])
+    var panel: Option[GridPanel] = Option.empty
+    var machine: Option[UserGui] = Option.empty
 
     def createViewEntity(): Unit = {
-      SwingUtilities.invokeLater(() => {
-        panel.contents += machine
-      })
+      scala.swing.Swing.onEDT{
+        panel = Option.apply(View._getUserView())
+        machine = Option.apply(UserGui(actorRef: ActorRef[Device.Msg]))
+        panel.get.contents += machine.get
+      }
     }
 
     override def updateViewEntity(msg: String): Unit = {
-      SwingUtilities.invokeAndWait(()=>{
-        machine.update(msg)
-      })
+      scala.swing.Swing.onEDT{
+        machine.get.update(msg)
+      }
     }
   }
 
@@ -51,22 +52,22 @@ object ViewToolActor {
                                  override val machineID: String,
                                  actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
+     var panel: Option[MachineView] = Option.empty
+     var machine: Option[MachineGUI] = Option.empty
 
-    var panel: MachineView = View._getMachineView()
-    var machine: MachineGUI = MachineGUI()
-
-    def createViewEntity(): Unit = {
-      SwingUtilities.invokeLater(() => {
-        panel.contents += machine
-        panel.addEntry(machineID, actorRef)
-      })
-
+     def createViewEntity(): Unit = {
+      scala.swing.Swing.onEDT{
+        panel = Option.apply(View._getMachineView())
+        machine = Option.apply(MachineGUI())
+        panel.get.contents += machine.get
+        panel.get.addEntry(machineID, actorRef)
+      }
     }
 
     override def updateViewEntity(msg: String): Unit = {
-      SwingUtilities.invokeAndWait(()=>{
-        machine.update(msg)
-      })
+      scala.swing.Swing.onEDT{
+         machine.get.update(msg)
+      }
     }
   }
 
