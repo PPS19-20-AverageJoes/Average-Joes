@@ -158,7 +158,6 @@ object MachineBooker {
 
 
       case BookedAndFinished() => Behaviors.stopped[Msg]
-
     }
   }
 
