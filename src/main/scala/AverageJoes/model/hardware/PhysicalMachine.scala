@@ -14,23 +14,24 @@ import scala.collection.mutable.ListBuffer
 
 
 
-sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with LogOnMessage[PhysicalMachine.Msg]{
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] {//with LogOnMessage[PhysicalMachine.Msg]{
   import PhysicalMachine._
   val machineID: String
   val machineLabel: MachineLabel //To show on device
   val machineType: MachineTypes.MachineType
+  val logName: String
 
-  override val logName: String = "PM %s: %s".format(machineType, machineID)
-
-  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
+  override def onMessage(msg: Msg): Behavior[Msg] = {
+    context.log.info(msg.toString)
     msg match{
       case m: Msg.MachineActorStarted => operative(m.refMA)
+      case m: Msg.Rfid => println(logName, "err rfid"); Behaviors.same
     }
   }
 
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
-    Behaviors.receiveMessage {
-      case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
+    Behaviors.receiveMessagePartial {
+      case m: Msg.Rfid => println("rfid"); ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
       case m: Msg.Display => display(m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
@@ -38,10 +39,11 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
 
   private case object TimerKey
   private def inExercise(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
+    println(logName, "inExercise")
     timers.startSingleTimer(TimerKey, ExerciseEnds(), machineParameters.duration)
     var heartBeats = new ListBuffer[Int]()
 
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessagePartial {
       case m: HeartRate =>
         heartBeats += m.heartRate
         Behaviors.same
@@ -57,7 +59,6 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
     }
   }
 
-  import org.scalactic.anyvals.NonZeroInt.apply
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
     val max = heartBeats.max
     val min = heartBeats.min
@@ -117,12 +118,14 @@ object PhysicalMachine {
     abstract class PhysicalMachineImpl(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine {
 
-      override val loggingContext: ActorContext[Msg] = this.context
+      //override val loggingContext: ActorContext[Msg] = this.context
+      override val logName: String = "PM "+machineID//"PM %s: %s".format(machineType, machineID)
 
       private val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
 
       override def display(s: String): Unit = {
         val _display: String = machineID + " " + s
+        machineGui ! ViewToolActor.Msg.UpdateViewObject(s)
       }
 
       override def configure(machineParameters: MachineParameters): Unit = {
