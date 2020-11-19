@@ -39,7 +39,7 @@ object HardwareTest {//extends App {
           println("---------- START TEST ----------")
           HardwareController.getChildDevice("Wristband1") match {
             case Some(w) =>
-              println("Wristband found", w)
+              //println("Wristband found", w)
               HardwareController.getChildPmByName("LegPress1") match {
                 case Some(l) => w ! Device.Msg.NearDevice(l)
                 case None => ;

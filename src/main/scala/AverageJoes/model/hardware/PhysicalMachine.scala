@@ -20,14 +20,14 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   val logName: String = PhysicalMachine.logName+"_"+machineID
   override def onMessage(msg: Msg): Behavior[Msg] = {
     Behaviors.receiveMessagePartial {
-      case m: Msg.MachineActorStarted => m.refMA ! MachineActor.Msg.GoIdle() ;operative(m.refMA)
+      case m: Msg.MachineActorStarted => m.refMA ! MachineActor.Msg.GoIdle(machineID) ;operative(m.refMA)
     }
   }
 
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"operative")
     Behaviors.receiveMessagePartial {
-      case m: Msg.Rfid => println("rfid to ", ma); ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
+      case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
       case m: Msg.Display => display(m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
