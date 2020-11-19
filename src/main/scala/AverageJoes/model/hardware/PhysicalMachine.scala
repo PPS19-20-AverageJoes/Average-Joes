@@ -14,24 +14,27 @@ import scala.collection.mutable.ListBuffer
 
 
 
-sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] {//with LogOnMessage[PhysicalMachine.Msg]{
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with LogOnMessage[PhysicalMachine.Msg]{
   import PhysicalMachine._
   val machineID: String
   val machineLabel: MachineLabel //To show on device
   val machineType: MachineTypes.MachineType
   val logName: String
 
-  override def onMessage(msg: Msg): Behavior[Msg] = {
-    context.log.info(msg.toString)
-    msg match{
+  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
+    Behaviors.receiveMessagePartial {
       case m: Msg.MachineActorStarted => operative(m.refMA)
-      case m: Msg.Rfid => println(logName, "err rfid"); Behaviors.same
     }
   }
 
+  /*override def onMessage(msg: Msg): Behavior[Msg] = {
+
+  }*/
+
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
+    println("being operative")
     Behaviors.receiveMessagePartial {
-      case m: Msg.Rfid => println("rfid"); ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
+      case m: Msg.Rfid => println("rfid to ", ma); ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
       case m: Msg.Display => display(m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
@@ -118,7 +121,7 @@ object PhysicalMachine {
     abstract class PhysicalMachineImpl(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine {
 
-      //override val loggingContext: ActorContext[Msg] = this.context
+      override val loggingContext: ActorContext[Msg] = this.context
       override val logName: String = "PM "+machineID//"PM %s: %s".format(machineType, machineID)
 
       private val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
