@@ -1,6 +1,6 @@
 package AverageJoes.view
 
-import AverageJoes.HardwareApp
+import AverageJoes.HardwareTest
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.ActorRef
 
@@ -21,7 +21,7 @@ object View extends SimpleSwingApplication {
             add(userPanel, BorderPanel.Position.West)
         }
 
-        HardwareApp.start()
+        HardwareTest.start()
     }
 
     def _getMachineView(): MachineView = machinePanel

@@ -1,6 +1,6 @@
 package AverageJoes.controller
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
+import AverageJoes.common.{LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes}
 import AverageJoes.model.customer.{CustomerActor, CustomerManager}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
@@ -17,7 +17,8 @@ object GymController {
 
   private var childMachineActor = mutable.Map.empty[(String, MachineTypes.MachineType), ActorRef[MachineActor.Msg]] //Child Machines
 
-  sealed trait Msg extends LoggableMsg
+  val logName = "Gym controller"
+  sealed trait Msg extends LoggableMsgTo { override def To: String = logName }
   object Msg{
     //From Device
     final case class DeviceInGym(customerID: String, replyTo: ActorRef[Device.Msg]) extends Msg //Device enter in Gym
@@ -30,18 +31,16 @@ object GymController {
     final case class MachinesToBookmark(phMachineType: MachineTypes.MachineType, replyTo: ActorRef[CustomerActor.Msg]) extends Msg
 
 
-    final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
-    final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
-    final case class UserLogInStatus(status: Boolean) extends Msg
+    //final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
+    //final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
+    //final case class UserLogInStatus(status: Boolean) extends Msg
   }
 
-  private class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with LogOnMessage[Msg]{
-    override val logName = "Gym controller"
-    override val loggingContext: ActorContext[Msg] = this.context
+  private class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) {
 
     val customerManager: ActorRef[CustomerManager.Msg] = context.spawn(CustomerManager(), "CustomerManager")
 
-    override def onMessageLogged(msg: Msg): Behavior[Msg] = {
+    override def onMessage(msg: Msg): Behavior[Msg] = {
       msg match {
         case m: Msg.DeviceInGym => customerManager ! CustomerManager.RequestCustomerCreation(m.customerID, context.self, m.replyTo); Behaviors.same
 
