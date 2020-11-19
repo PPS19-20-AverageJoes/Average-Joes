@@ -2,12 +2,15 @@ package AverageJoes
 
 import AverageJoes.common.{MachineTypes, ServerSearch}
 import AverageJoes.model.hardware.HardwareController.Msg
-import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
-import AverageJoes.view.View
+import AverageJoes.model.hardware.{Device, HardwareController}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
-object HardwareApp {//extends App {
+object HardwareApp extends App{
+  HardwareTest.start()
+}
+
+object HardwareTest {//extends App {
   private val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")
 
   //start()
