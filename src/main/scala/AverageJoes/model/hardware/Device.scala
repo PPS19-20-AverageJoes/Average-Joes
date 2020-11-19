@@ -18,12 +18,12 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
-  val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
+  //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
   import Device._
-  override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
+  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
     msg match{
-      case m: Msg.CustomerLogged => deviceGui ! ViewToolActor.Msg.UpdateViewObject(m.machineLabel); inExercise(m.refPM) //display(m.machineLabel
+      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
@@ -49,7 +49,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
 
   def display (s: String): Unit
 
-  def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit //ToDo: convert rfid to machineCommunicationStrategy type rfid? Dovremmo utilizzare una funzione Currying?
+  def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit
 
 }
 
@@ -94,18 +94,20 @@ object Device {
   class Wristband(context: ActorContext[Device.Msg], override val customerID: String) extends AbstractBehavior[Device.Msg](context) with Device {
 
     //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(context, customerID,context.self) , "DevGui_"+customerID)
+    val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
     def display (s: String): Unit = {
-      println(s)
+      println(logName,"[display]",s)
+      deviceGui ! ViewToolActor.Msg.UpdateViewObject(s)
     }
 
-    def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = {ref ! PhysicalMachine.Msg.Rfid(customerID)}
+    def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = { ref ! PhysicalMachine.Msg.Rfid(customerID) }
 
-    override val logName: String = "Device Wristband"
+    override val logName: String = "Dev Wristband " + customerID
     override val loggingContext: ActorContext[Device.Msg] = this.context
   }
 
   object Wristband{
-    def apply(deviceID: String): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, deviceID))
+    def apply(customerID: String): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, customerID))
   }
 }
