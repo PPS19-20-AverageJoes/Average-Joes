@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, ServerSearch}
 import AverageJoes.controller.GymController
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewDeviceActor
@@ -12,16 +12,16 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 /**
  * AC
  */
-trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMessage[Device.Msg]{
-  val customerID: String
-
+trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
+  def customerID: String
+  val logName: String = logName +"_"+ customerID
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
   //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
   import Device._
-  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
+  override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
       case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
@@ -31,6 +31,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   private case object TimerKey
   private def inExercise(pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
+    LogManager.logBehaviourChange(logName,"inExercise")
     Behaviors.receiveMessage {
       case m: HeartRateSimulation =>
         val heartRateSim: (Int,Sign) = (m.heartRate, m.sign) match {
@@ -54,8 +55,8 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
 }
 
 object Device {
-
-  sealed trait Msg extends LoggableMsg
+  val logName: String = "Device"
+  sealed trait Msg extends LoggableMsgTo { override def To: String = "Device" }
   object Msg {
     //From GUI
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
@@ -103,8 +104,7 @@ object Device {
 
     def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = { ref ! PhysicalMachine.Msg.Rfid(customerID) }
 
-    override val logName: String = "Dev Wristband " + customerID
-    override val loggingContext: ActorContext[Device.Msg] = this.context
+    override val logName: String = "Dev_Wristband_" + customerID
   }
 
   object Wristband{
