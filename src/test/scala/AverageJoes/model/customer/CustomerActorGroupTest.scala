@@ -1,9 +1,15 @@
 package AverageJoes.model.customer
 
 import AverageJoes.controller.GymController
+import AverageJoes.controller.GymController.Msg.CustomerRegistered
+import AverageJoes.model.customer.CustomerGroup.CustomerLogin
+import AverageJoes.model.customer.CustomerManager.RequestCustomerCreation
 import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.Device.Msg.CustomerLogged
 import AverageJoes.model.machine.MachineActor
-import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestProbe}
+import akka.actor.typed.ActorRef
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
@@ -12,16 +18,15 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
 
-  val gymProbe = createTestProbe[GymController.Msg]()
-  val machineProbe = createTestProbe[MachineActor.Msg]()
-  val deviceProbe = createTestProbe[Device.Msg]()
+  val deviceProbe: TestProbe[Device.Msg] = createTestProbe[Device.Msg]()
+  val gymProbe: TestProbe[GymController.Msg] = createTestProbe[GymController.Msg]()
+  val machineProbe: TestProbe[MachineActor.Msg] = createTestProbe[MachineActor.Msg]()
 
+  val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
 
-
-  val managerActor = spawn(CustomerManager())
 
   "Customer group" should {
-/*
+
     "create one customer" in {
       val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
 
@@ -49,38 +54,20 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       assert(registered1 !== registered3)
     }
 
-    "review logging request and notify machine and device" in {
+    "review logging request" in {
       /* No customer registered */
       val groupActor = spawn(CustomerGroup("group", managerActor))
-
-      groupActor ! CustomerLogin("customer-no", machineProbe.ref, deviceProbe.ref)
+      groupActor ! CustomerLogin("customer-no","machine-label", machineProbe.ref, deviceProbe.ref)
 
       val negativeRespMachine = machineProbe.receiveMessage()
 
       assert(negativeRespMachine.isInstanceOf[CustomerLogging])
 
       negativeRespMachine match {
-        case CustomerLogging("customer-no", isLogged) => assert(isLogged === false)
+        case CustomerLogging("customer-no", _, isLogged) => assert(isLogged === false)
         case _ => assert(false)
       }
-
-      /* Register customer-yes */
-      groupActor ! RequestCustomerCreation("customer-yes", gymProbe.ref, deviceProbe.ref)
-      groupActor ! CustomerLogin("customer-yes", machineProbe.ref, deviceProbe.ref)
-
-      val positiveRespMachine = machineProbe.receiveMessage()
-
-      assert(positiveRespMachine.isInstanceOf[CustomerLogging])
-
-      positiveRespMachine match {
-        case CustomerLogging("customer-yes", isLogged) => assert(isLogged === true)
-        case _ => assert(false)
-      }
-
-      val deviceResp = deviceProbe.receiveMessage()
-      assert(deviceResp.isInstanceOf[CustomerLogged])
-
-    }*/
+    }
 
   }
 }

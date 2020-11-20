@@ -1,14 +1,7 @@
 package AverageJoes.model.fitness
 
-import AverageJoes.model.customer.Customer
+import AverageJoes.common.database.table.Customer
 
-/**
- * TODO: 1. create TrainingProgram storage
- *       2. handle two training programs for the same customer
- *       3. should have a start & expiry date ?
- *       4. should add exercises by calling the method from TrainingProgram or
- *          through another object (TrainingProgramsManager?) ?
- */
 
 trait TrainingProgram {
   val customer: Customer
@@ -19,10 +12,10 @@ trait TrainingProgram {
 
 object TrainingProgram {
 
-  def apply(customer: Customer): TrainingProgram = FitnessProgram(customer)
+  def apply(customer: Customer)(exSet: Set[Exercise]): TrainingProgram = FitnessProgram(customer)(exSet)
 
-  private case class FitnessProgram(customer: Customer) extends TrainingProgram {
-      var exercises: Set[Exercise] = Set()
+  private case class FitnessProgram(customer: Customer)(exSet: Set[Exercise]) extends TrainingProgram {
+      var exercises: Set[Exercise] = exSet
 
       override def allExercises: Set[Exercise] = exercises
 

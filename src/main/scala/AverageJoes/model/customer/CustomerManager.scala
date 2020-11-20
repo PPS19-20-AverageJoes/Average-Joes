@@ -5,7 +5,9 @@ import AverageJoes.controller.GymController
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
+import AverageJoes.model.customer.CustomerManager.{MachineListOf, Msg, RequestCustomerCreation, RequestCustomerList, RequestCustomerLogin}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -36,7 +38,6 @@ object CustomerManager {
 
 
 class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBehavior[CustomerManager.Msg](ctx) {
-  import CustomerManager._
 
   /**
    * TODO: to optional ref
@@ -53,19 +54,21 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       controllerRef = controller
       deviceRef = device
       customerGroup ! customerCreation
-      this
+      Behaviors.same
 
     case RequestCustomerLogin(customerId, machineLabel, machine) =>
       customerGroup ! CustomerLogin(customerId, machineLabel, machine, deviceRef)
-      this
+      Behaviors.same
 
     case customerList @ RequestCustomerList(_) =>
       customerGroup ! customerList
-      this
+      Behaviors.same
+
 
     case MachineListOf(machineType, customer) =>
-      //controllerRef ! MachinesToBookmark(machineType, customer)
-      this
+      println("Customer requesting machines list")
+      controllerRef ! MachinesToBookmark(machineType, customer)
+      Behaviors.same
 
   }
 

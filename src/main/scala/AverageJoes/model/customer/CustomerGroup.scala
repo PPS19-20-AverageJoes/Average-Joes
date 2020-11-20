@@ -2,13 +2,15 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerActor.{CustomerTrainingProgram, CustomerMachineLogin}
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, UploadCustomerTrainingProgram}
-import AverageJoes.model.fitness.TrainingProgram
+import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram, NextMachineBooking}
+import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, CustomerReady, UploadCustomerTrainingProgram}
+import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT.RunningMachine
+import AverageJoes.model.fitness.{Exercise, TrainingProgram}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.utils.DateUtils.stringToDate
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -21,6 +23,9 @@ object CustomerGroup {
   final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
+
+  final case class CustomerReady(ex:Exercise, customer:ActorRef[CustomerActor.Msg]) extends Msg
+
 }
 
 
@@ -65,6 +70,9 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       }
       this
 
+    case CustomerReady(ex, customer) =>
+      customer ! NextMachineBooking(ex)
+      this
 
     case RequestCustomerList(replyTo) =>
       //replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
@@ -72,12 +80,13 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
 
     case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
-      customer ! CustomerTrainingProgram(trainingProgramOf(customerId) )
-    this
+      customer ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
+      this
 
     case CustomerTerminated(_, _, customerId) =>
       customerIdToActor -= customerId
       this
+
   }
 
   private def isCustomerOnStorage(customerId: String): Boolean = {
@@ -87,7 +96,13 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
   private def trainingProgramOf(customerId: String): TrainingProgram = {
     /** TODO: Search for customer training program on database */
-    null
+    val c1: Customer =  Customer("customer-1", "sokol", "guri", stringToDate("20/05/2020"))
+     TrainingProgram(c1)
+        .addExercise(Exercise(RunningMachine(speed = 10.0, incline = 20.0, timer = 30)))
+       /* .addExercise(Exercise(RunningMachine(speed = 11.0, incline = 21.0, timer = 30)))
+        .addExercise(Exercise(RunningMachine(speed = 12.0, incline = 22.0, timer = 30)))
+        .addExercise(Exercise(RunningMachine(speed = 13.0, incline = 23.0, timer = 30))) */
+
   }
 
 }
