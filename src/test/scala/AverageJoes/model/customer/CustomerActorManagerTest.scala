@@ -2,7 +2,7 @@ package AverageJoes.model.customer
 
 import AverageJoes.controller.GymController
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerManager.{RequestCustomerCreation, RequestCustomerList}
+import AverageJoes.model.customer.CustomerManager.RequestCustomerCreation
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.hardware.Device.Wristband
 import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestProbe}
@@ -13,7 +13,7 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
 
   val deviceActor: ActorRef[Device.Msg] = spawn(Wristband("device-01"))
   val probe: TestProbe[GymController.Msg] = createTestProbe[GymController.Msg]()
-
+/*
   "Customer manager actor" should {
 
     "create one customer" in {
@@ -39,30 +39,5 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
     assert(registered1 == registered2)
     assert(registered2 !== registered3)
     assert(registered1 !== registered3)
-  }
-
-  /** TODO: feature to be removed */
-  /*"reply the customers list" in {
-    val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
-    managerActor ! RequestCustomerCreation("customer-1", probe.ref, deviceActor)
-    probe.receiveMessage()
-
-    managerActor ! RequestCustomerCreation("customer-2", probe.ref, deviceActor)
-    probe.receiveMessage()
-
-    managerActor ! RequestCustomerCreation("customer-3", probe.ref, deviceActor)
-    probe.receiveMessage()
-
-    managerActor ! RequestCustomerList(probe.ref)
-    val response = probe.receiveMessage()
-
-    response match {
-      case CustomersList(customers) =>
-        assert(true)
-        assert(customers.size === 3)
-      case _ => assert(false)
-    }
-
-  }
- */
+  } */
 }
