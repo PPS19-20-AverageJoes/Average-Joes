@@ -18,7 +18,8 @@ object HardwareTest {//extends App {
   def start() = {
     controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress A")
     controller ! Msg.CreatePhysicalMachine("ChestFly1", MachineTypes.CHEST_FLY, "ChestFly")
-    controller ! Msg.CreatePhysicalMachine("LegPress2", MachineTypes.LEG_PRESS, "LegPress B")
+    controller ! Msg.CreatePhysicalMachine("Cycling", MachineTypes.CYCLING, "Cycling A")
+    controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress B")
 
     controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
     controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)

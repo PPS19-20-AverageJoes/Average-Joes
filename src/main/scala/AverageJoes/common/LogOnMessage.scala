@@ -30,6 +30,10 @@ object LogManager{
   def logBehaviourChange(subject: String, behavior: String){
     log("@Behaviour %s change to %s".format(subject, behavior))
   }
+
+  def logError(error: String): Unit ={
+    log("!!!ERROR: "+error)
+  }
 }
 
 /**
