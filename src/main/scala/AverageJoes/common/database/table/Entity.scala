@@ -1,11 +1,11 @@
 package AverageJoes.common.database.table
 
 trait Entity{
-  def getId: Int
+  def getId: String
 }
 
-abstract class BasicEntity(id: Int) extends Entity {
+abstract class BasicEntity(id: String) extends Entity {
 
-  def getId: Int = id
+  def getId: String = id
 }
 
