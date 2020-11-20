@@ -2,7 +2,7 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
-import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.controller.GymController.Msg.MachinesToBookmark
@@ -26,7 +26,7 @@ object CustomerManager {
   final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
     extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg]) extends Msg
+  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, physicalMachine: ActorRef[PhysicalMachine.Msg], achine: ActorRef[MachineActor.Msg]) extends Msg
 
   final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
@@ -56,8 +56,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       customerGroup ! customerCreation
       Behaviors.same
 
-    case RequestCustomerLogin(customerId, machineLabel, machine) =>
-      customerGroup ! CustomerLogin(customerId, machineLabel, machine, deviceRef)
+    case RequestCustomerLogin(customerId, machineLabel, phMachine, machine) =>
+      customerGroup ! CustomerLogin(customerId, machineLabel, phMachine, machine, deviceRef)
       Behaviors.same
 
     case customerList @ RequestCustomerList(_) =>

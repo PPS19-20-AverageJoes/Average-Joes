@@ -1,16 +1,16 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
+import AverageJoes.common.database._
+import AverageJoes.common.database.table.Customer
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
 import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram, NextMachineBooking}
 import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, CustomerReady, UploadCustomerTrainingProgram}
-import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT.RunningMachine
 import AverageJoes.model.fitness.{Exercise, TrainingProgram}
-import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
-import AverageJoes.utils.DateUtils.stringToDate
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -20,7 +20,7 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
 
-  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
+  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, phMachine: ActorRef[PhysicalMachine.Msg], machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 
@@ -56,15 +56,15 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
             context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
           }
           else{
-            /** Do something because customerId is not present on storage */
+            /** TODO: Do something because customerId is not present on storage */
           }
       }
       this
 
-    case CustomerLogin(customerId, machineLabel, machine, device) =>
+    case CustomerLogin(customerId, machineLabel, phMachine, machine, device) =>
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
-          customerActor ! CustomerMachineLogin(machineLabel, machine, device)
+          customerActor ! CustomerMachineLogin(machineLabel, phMachine, machine, device)
         case None =>
           machine ! CustomerLogging(customerId, null, isLogged = false)
       }
@@ -72,10 +72,6 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
     case CustomerReady(ex, customer) =>
       customer ! NextMachineBooking(ex)
-      this
-
-    case RequestCustomerList(replyTo) =>
-      //replyTo ! GymController.Msg.CustomerList(customerIdToActor.values.toSet)
       this
 
 
@@ -89,20 +85,26 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
   }
 
-  private def isCustomerOnStorage(customerId: String): Boolean = {
-    /** TODO: Search for customer on database */
-    true
+  private def isCustomerOnStorage(customerId: String): Boolean = Customer.customerStorage.get(customerId).isDefined
+
+  private def customerOf(customerId: String): Customer = {
+    import  AverageJoes.common.database.Customer
+
+    if ( !isCustomerOnStorage(customerId) ) throw  NoCustomerFoundException()
+    else Customer.customerStorage.get(customerId).get
   }
+
 
   private def trainingProgramOf(customerId: String): TrainingProgram = {
-    /** TODO: Search for customer training program on database */
-    val c1: Customer =  Customer("customer-1", "sokol", "guri", stringToDate("20/05/2020"))
-     TrainingProgram(c1)
-        .addExercise(Exercise(RunningMachine(speed = 10.0, incline = 20.0, timer = 30)))
-       /* .addExercise(Exercise(RunningMachine(speed = 11.0, incline = 21.0, timer = 30)))
-        .addExercise(Exercise(RunningMachine(speed = 12.0, incline = 22.0, timer = 30)))
-        .addExercise(Exercise(RunningMachine(speed = 13.0, incline = 23.0, timer = 30))) */
+    import AverageJoes.model.fitness.ImplicitWorkoutConverters._
 
+    val workoutSet = Workout.workoutStorage.getWorkoutForCustomer(customerId).map(w => Exercise(w))
+
+    if (workoutSet.isEmpty) throw new NoExercisesFoundException
+    else TrainingProgram(customerOf(customerId)) (Workout.workoutStorage.getWorkoutForCustomer(customerId).map(w => Exercise(w)).toSet)
   }
-
 }
+
+
+case class NoExercisesFoundException() extends NoSuchElementException
+case class NoCustomerFoundException() extends NoSuchElementException
