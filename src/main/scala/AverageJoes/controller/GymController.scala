@@ -45,7 +45,7 @@ object GymController {
           m.replyTo ! Device.Msg.GoIdle()
           Behaviors.same
 
-        case m: Msg.UserLogin => customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.replyTo, m.pm); Behaviors.same
+        case m: Msg.UserLogin =>  customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.replyTo, m.pm); Behaviors.same
 
         case m: Msg.CustomerRegistered => Behaviors.same //ToDo: not used
 
@@ -57,7 +57,8 @@ object GymController {
 
         case m: Msg.MachinesToBookmark =>
           //m.replyTo ! CustomerManager.MachineList(getChildrenMachinesByType(m.phMachineType).toSet)
-          m.replyTo ! CustomerManager.MachineList(childMachineActor.filterKeys(k => k._2 == m.phMachineType).values.toSet)
+          m.replyTo ! CustomerActor.MachineList(childMachineActor.filterKeys(k => k._2 == m.phMachineType).values.toSet)
+          //Before was CustomerManager
           Behaviors.same
 
         case m: GymController.Msg => LogManager.log(logName+" Not Managed Message: "+m); Behaviors.same

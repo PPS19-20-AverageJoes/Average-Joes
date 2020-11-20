@@ -1,13 +1,14 @@
 package AverageJoes.model.customer
 
-import AverageJoes.common.LoggableMsg
-import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
+
+import AverageJoes.common.{LogManager, LoggableMsg}
+import AverageJoes.model.customer.CustomerManager.MachineListOf
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
+import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.utils.ExerciseUtils.ExerciseParameters.DURATION
@@ -19,6 +20,7 @@ import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegDuration
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+import akka.util.Timeout
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -35,7 +37,7 @@ object CustomerActor {
   final case class NextMachineBooking(ex: Exercise) extends Msg
   final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
   final case class TrainingCompleted() extends Msg
-
+  final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
 
   final case object Passivate extends Msg
 }
@@ -46,62 +48,67 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   val managerRef: ActorRef[CustomerManager.Msg] = manager
   var exercisesWithMachines: Map[Exercise, Option[Set[ActorRef[MachineActor.Msg]]]] = Map.empty
   var logged: Boolean = false
-  var trainingProgram: Option[TrainingProgram] = None
+  //var trainingProgram: Option[TrainingProgram] = None
 
-  override def onMessage(msg: Msg): Behavior[Msg] = initialize()
-
-  private def initialize(): Behavior[Msg] = Behaviors.receiveMessage[Msg] {
-
-    case CustomerTrainingProgram(tp, group) =>
-      trainingProgram = Option.apply(tp)
-      group ! CustomerReady(trainingProgram.get.allExercises.head, context.self)
-      active()
+  override def onMessage(msg: Msg): Behavior[Msg] = {
+    LogManager.logBehaviourChange("CustomerActor_"+customerId,"OnMessage")
+    msg match{
+      case CustomerTrainingProgram(tp, group) =>
+        println("!!!!!!!!!!!!!!!!!!!!! CUSTOMER TRAINING PROGRAM RECEIVED")
+        group ! CustomerReady(tp.allExercises.head, context.self)
+        active(tp)
+      case _ => println("************************"+msg); this
+    }
   }
 
-  private def active(): Behavior[Msg] = Behaviors.receiveMessage[Msg] {
 
-    case NextMachineBooking(ex) =>
-      requestMachineList(ex)
-      this
+  private def active(trainingProgram: TrainingProgram): Behavior[Msg] = {
+    LogManager.logBehaviourChange("CustomerActor_"+customerId,"active")
+    Behaviors.receiveMessagePartial[Msg] {
 
-    case MachineList(machines) =>
-      booking(machines)
-      this
+      case NextMachineBooking(ex) =>
+        requestMachineList(ex)
+        Behaviors.same
 
-    case CustomerMachineLogin(machineLabel, phMachine, machine, device) =>
-      if(loggingAllowed()) {
-        logged = true
-        machine ! CustomerLogging(customerId,trainingProgram.get.allExercises.head.parameters, isLogged = true)
-        device ! CustomerLogged(phMachine, machineLabel)
-        context.self ! ExerciseStarted(trainingProgram.get)
-      }
-      else machine ! CustomerLogging(customerId, null, isLogged = false)
-      this
+      case MachineList(machines) =>
+        booking(machines)
+        Behaviors.same
 
-
-    case ExerciseStarted(tp) =>
-      exercising(tp)
-      this
+      case CustomerMachineLogin(machineLabel, phMachine, machine, device) =>
+        if(loggingAllowed()) {
+          logged = true
+          machine ! CustomerLogging(customerId,trainingProgram.allExercises.head.parameters, isLogged = true)
+          device ! CustomerLogged(phMachine, machineLabel)
+          context.self ! ExerciseStarted(trainingProgram)
+        }
+        else machine ! CustomerLogging(customerId, null, isLogged = false)
+        Behaviors.same
 
 
-    case ExerciseCompleted(tp) =>
-      logged = false
-      context.self ! UpdateTrainingProgram(updatedTrainingProgram(tp))
-      this
+      case ExerciseStarted(tp) =>
+        exercising(tp)
+        Behaviors.same
 
 
-    case UpdateTrainingProgram(tp) =>
-      if(tp.allExercises.isEmpty) TrainingCompleted()
-      trainingProgram = Option.apply(tp)
-      this
+      case ExerciseCompleted(tp) =>
+        logged = false
+        context.self ! UpdateTrainingProgram(updatedTrainingProgram(tp))
+        //Todo send exercise finished message to device
+        Behaviors.same
 
 
-    case TrainingCompleted() =>
-      Behaviors.stopped
+      case UpdateTrainingProgram(tp) =>
+        if(tp.allExercises.isEmpty) TrainingCompleted()
+       active(tp)
 
 
-    case Passivate =>
-      Behaviors.stopped
+      /*case TrainingCompleted() =>
+        Behaviors.stopped*/
+
+
+      /*case Passivate =>
+        Behaviors.stopped*/
+    }
   }
 
 
@@ -128,7 +135,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
 
   private def machineToBeExecuted(ex: Exercise): Option[MachineType] = {
-    if (ex != null)  Option.apply(ex.executionParameters.typeParams) else Option.empty
+    if (ex != null)  Option.apply(ex.parameters.machineType) else Option.empty
   }
 
   private def loggingAllowed(): Boolean = !logged
@@ -141,10 +148,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
   private def parameters(tp: TrainingProgram): Parameters[SafePropertyVal] = tp.allExercises.head.executionParameters
 
-  private def exDuration(tp: TrainingProgram): NonNegDuration = tp.allExercises.head.executionParameters.valueOf(DURATION).get match {
-      case duration @ NonNegDuration(_) => duration
-      case _ => throw new IllegalDurationValue
-    }
+  private def exDuration(tp: TrainingProgram): NonNegDuration = tp.allExercises.head.parameters.duration
 
 }
 
@@ -157,16 +161,16 @@ object MachineBooker {
 
   def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
     Behaviors.receiveMessage[Msg] {
-      /* case BookMachine(machines) =>
+       case BookMachine(machines) =>
          implicit val timeout: Timeout = 3 seconds
 
          /** TODO: machine actor should reply to MachineBooker and keep track of CustomerActor */
-         context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customer, customerId) ) {
+         context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customerId) ) {
            case Success(OnBookingResponse(_, true)) => BookedAndFinished()
            case Success(OnBookingResponse(_, false)) => BookMachine(machines.tail)
            case Failure(_) => BookMachine(machines.tail)
          }
-         Behaviors.same */
+         Behaviors.same
 
 
       case BookedAndFinished() => Behaviors.stopped[Msg]
