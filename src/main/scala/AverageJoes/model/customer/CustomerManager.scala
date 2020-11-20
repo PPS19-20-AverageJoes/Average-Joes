@@ -2,10 +2,12 @@ package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
-import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
+import AverageJoes.model.customer.CustomerManager.{MachineListOf, Msg, RequestCustomerCreation, RequestCustomerList, RequestCustomerLogin}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -24,7 +26,8 @@ object CustomerManager {
   final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
     extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg]) extends Msg
+  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg])
+    extends Msg
 
   final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
@@ -36,7 +39,6 @@ object CustomerManager {
 
 
 class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBehavior[CustomerManager.Msg](ctx) {
-  import CustomerManager._
 
   /**
    * TODO: to optional ref
@@ -53,19 +55,21 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       controllerRef = controller
       deviceRef = device
       customerGroup ! customerCreation
-      this
+      Behaviors.same
 
-    case RequestCustomerLogin(customerId, machineLabel, machine) =>
-      customerGroup ! CustomerLogin(customerId, machineLabel, machine, deviceRef)
-      this
+    case RequestCustomerLogin(customerId, machineLabel, machine, phMachine) =>
+      customerGroup ! CustomerLogin(customerId, machineLabel, machine, phMachine, deviceRef)
+      Behaviors.same
 
     case customerList @ RequestCustomerList(_) =>
       customerGroup ! customerList
-      this
+      Behaviors.same
+
 
     case MachineListOf(machineType, customer) =>
-      //controllerRef ! MachinesToBookmark(machineType, customer)
-      this
+      println("Customer requesting machines list")
+      controllerRef ! MachinesToBookmark(machineType, customer)
+      Behaviors.same
 
   }
 
