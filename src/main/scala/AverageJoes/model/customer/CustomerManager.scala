@@ -26,7 +26,8 @@ object CustomerManager {
   final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
     extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, physicalMachine: ActorRef[PhysicalMachine.Msg], achine: ActorRef[MachineActor.Msg]) extends Msg
+  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg])
+    extends Msg
 
   final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
@@ -56,8 +57,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       customerGroup ! customerCreation
       Behaviors.same
 
-    case RequestCustomerLogin(customerId, machineLabel, phMachine, machine) =>
-      customerGroup ! CustomerLogin(customerId, machineLabel, phMachine, machine, deviceRef)
+    case RequestCustomerLogin(customerId, machineLabel, machine, phMachine) =>
+      customerGroup ! CustomerLogin(customerId, machineLabel, machine, phMachine, deviceRef)
       Behaviors.same
 
     case customerList @ RequestCustomerList(_) =>

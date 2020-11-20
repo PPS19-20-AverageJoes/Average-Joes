@@ -2,22 +2,31 @@ package AverageJoes
 
 import AverageJoes.common.{MachineTypes, ServerSearch}
 import AverageJoes.model.hardware.HardwareController.Msg
-import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
+import AverageJoes.model.hardware.{Device, HardwareController}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
 object HardwareApp extends App{
+  HardwareTest.start()
+}
+
+object HardwareTest {//extends App {
   private val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")
 
-  controller ! Msg.CreatePhysicalMachine("LegPress1",MachineTypes.LEG_PRESS,"LegPress A")
-  controller ! Msg.CreatePhysicalMachine("ChestFly1",MachineTypes.CHEST_FLY,"ChestFly")
-  controller ! Msg.CreatePhysicalMachine("LegPress2",MachineTypes.LEG_PRESS,"LegPress B")
+  //start()
 
-  controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
-  controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
+  def start() = {
+    controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress A")
+    controller ! Msg.CreatePhysicalMachine("ChestFly1", MachineTypes.CHEST_FLY, "ChestFly")
+    controller ! Msg.CreatePhysicalMachine("Cycling", MachineTypes.CYCLING, "Cycling A")
+    controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress B")
 
-  private val test: ActorSystem[HwControllerTestMsg] = ActorSystem(HwControllerTest(controller), "GymHardware")
-  test ! StartTest()
+    controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
+    controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
+
+    val test: ActorSystem[HwControllerTestMsg] = ActorSystem(HwControllerTest(controller), "GymHardware")
+    test ! StartTest()
+  }
 
   trait HwControllerTestMsg
   case class StartTest() extends HwControllerTestMsg
@@ -31,7 +40,7 @@ object HardwareApp extends App{
           println("---------- START TEST ----------")
           HardwareController.getChildDevice("Wristband1") match {
             case Some(w) =>
-              println("Wristband found", w)
+              //println("Wristband found", w)
               HardwareController.getChildPmByName("LegPress1") match {
                 case Some(l) => w ! Device.Msg.NearDevice(l)
                 case None => ;

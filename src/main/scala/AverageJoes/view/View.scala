@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.HardwareTest
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.ActorRef
 
@@ -11,7 +12,7 @@ object View extends SimpleSwingApplication {
     private val userPanel: UserView = UserView()
 
     def top: Frame = new MainFrame {
-        title = "AverageJos"
+        title = "AverageJoe's"
 
         preferredSize = new Dimension(1200, 600)
 
@@ -19,6 +20,8 @@ object View extends SimpleSwingApplication {
             add(machinePanel, BorderPanel.Position.Center)
             add(userPanel, BorderPanel.Position.West)
         }
+
+        HardwareTest.start()
     }
 
     def _getMachineView(): MachineView = machinePanel

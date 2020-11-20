@@ -12,7 +12,7 @@ class TrainingProgramTest extends AnyFlatSpec with Matchers {
 
 
   val trainingProgram1: TrainingProgram = TrainingProgram(customer1) (Set.empty[Exercise])
-/*
+
   "Customers" should "have an instantiated training program" in {
     assert(trainingProgram1 != null)
     assert(customer1 === trainingProgram1.customer)
@@ -54,5 +54,5 @@ class TrainingProgramTest extends AnyFlatSpec with Matchers {
     assertThrows[NoExercisesFound](trainingProgram2.removeExercise(Exercise(RunningMachineParameters(10, 10, 11))))
   }
 
-*/
+
 }

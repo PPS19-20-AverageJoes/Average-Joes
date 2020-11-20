@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, ServerSearch}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, NonLoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewDeviceActor
@@ -12,18 +12,26 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 /**
  * AC
  */
-trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMessage[Device.Msg]{
-  val customerID: String
+trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
+  def customerID: String
+  val logName: String = logName +"_"+ customerID
 
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
-  val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
+  //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
   import Device._
-  override def onMessageLogged(msg: Device.Msg): Behavior[Device.Msg] = {
+  override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
-      case m: Msg.CustomerLogged => deviceGui ! ViewToolActor.Msg.UpdateViewObject(m.machineLabel); inExercise(m.refPM) //display(m.machineLabel
+      case Msg.GoIdle() => idle()
+    }
+  }
+
+  private def idle(): Behavior[Msg] ={
+    LogManager.logBehaviourChange(logName,"init")
+    Behaviors.receiveMessagePartial {
+      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
@@ -31,7 +39,8 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
   private case object TimerKey
   private def inExercise(pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
-    Behaviors.receiveMessage {
+    LogManager.logBehaviourChange(logName,"inExercise")
+    Behaviors.receiveMessagePartial {
       case m: HeartRateSimulation =>
         val heartRateSim: (Int,Sign) = (m.heartRate, m.sign) match {
           case (hr, s: Pos) if hr < maxHeartRate => (hr + 3, s)
@@ -43,20 +52,23 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch with LogOnMe
         pm ! PhysicalMachine.Msg.HeartRate(heartRateSim._1)
         timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
         Behaviors.same
+
+      case Msg.CustomerLogOut() => idle()
     }
   }
 
 
   def display (s: String): Unit
 
-  def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit //ToDo: convert rfid to machineCommunicationStrategy type rfid? Dovremmo utilizzare una funzione Currying?
+  def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit
 
 }
 
 object Device {
-
-  sealed trait Msg extends LoggableMsg
+  private val logName: String = "Device"
+  sealed trait Msg extends LoggableMsgTo { override def To: String = "Device" }
   object Msg {
+    final case class GoIdle() extends Msg
     //From GUI
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //From CustomerActor
@@ -65,7 +77,7 @@ object Device {
     //case class MsgDisplay(message: String) extends MsgDevice
   }
   //Self messages
-  private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg
+  private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg with NonLoggableMsg
 
   private trait Sign
   private final case class Pos() extends Sign
@@ -94,18 +106,19 @@ object Device {
   class Wristband(context: ActorContext[Device.Msg], override val customerID: String) extends AbstractBehavior[Device.Msg](context) with Device {
 
     //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(context, customerID,context.self) , "DevGui_"+customerID)
+    val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
     def display (s: String): Unit = {
-      println(s)
+      println(logName,"[display]",s)
+      deviceGui ! ViewToolActor.Msg.UpdateViewObject(s)
     }
 
-    def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = {ref ! PhysicalMachine.Msg.Rfid(customerID)}
+    def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = { ref ! PhysicalMachine.Msg.Rfid(customerID) }
 
-    override val logName: String = "Device Wristband"
-    override val loggingContext: ActorContext[Device.Msg] = this.context
+    override val logName: String = "Dev_Wristband_" + customerID
   }
 
   object Wristband{
-    def apply(deviceID: String): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, deviceID))
+    def apply(customerID: String): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, customerID))
   }
 }

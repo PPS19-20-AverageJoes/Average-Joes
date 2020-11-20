@@ -34,7 +34,7 @@ class CustomerActorTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   val manager: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
   val group: ActorRef[CustomerGroup.Msg] = spawn(CustomerGroup("group", manager))
 
-/*
+
   "Customer actor" should {
 
     "receive it's training program when instantiated" in {
@@ -79,5 +79,5 @@ class CustomerActorTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       customerProbe.expectMessage(5.seconds, ExerciseCompleted(tp))
 
     }
-  } */
+  }
 }

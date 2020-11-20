@@ -72,7 +72,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
       if(loggingAllowed()) {
         logged = true
         machine ! CustomerLogging(customerId,trainingProgram.get.allExercises.head.parameters, isLogged = true)
-        device ! CustomerLogged(phMachine, machine, machineLabel)
+        device ! CustomerLogged(phMachine, machineLabel)
         context.self ! ExerciseStarted(trainingProgram.get)
       }
       else machine ! CustomerLogging(customerId, null, isLogged = false)

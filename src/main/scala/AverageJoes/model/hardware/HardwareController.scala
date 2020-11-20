@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes, ServerSearch}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, ServerSearch}
 import AverageJoes.controller.GymController
 import AverageJoes.model.machine
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -15,28 +15,24 @@ object HardwareController {
   private var childD = mutable.Map.empty[String, ActorRef[Device.Msg]] //Child Devices
   private var childPM = mutable.Map.empty[(String, MachineTypes.MachineType), ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
 
-  sealed trait Msg extends LoggableMsg
+  private val logName = "HW controller"
 
+  sealed trait Msg extends LoggableMsgTo{ override def To: String = logName }
   object Msg {
-
     //final case class PMActorStarted(machineID: String, phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
     final case class CreatePhysicalMachine(machineID: String, phMachineType: MachineTypes.MachineType, machineLabel: String) extends Msg
-
     final case class CreateDevice(deviceID: String, deviceType: Device.DeviceType.Type) extends Msg
-
     //final case class MachineActorStarted(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machineLabel: String, refMA: ActorRef[MachineActor.Msg]) extends Msg
   }
 
-  class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch with LogOnMessage[Msg] {
-    override val logName = "HW controller"
-    override val loggingContext: ActorContext[Msg] = this.context
+  class HardwareController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) with ServerSearch {
 
-    override def onMessageLogged(msg: Msg): Behavior[Msg] = {
+    override def onMessage(msg: Msg): Behavior[Msg] = {
       msg match {
         case m: Msg.CreatePhysicalMachine =>
-          if (childPM.keySet.exists(_._1 == m.machineID)) //ToDo: machine label deve essere univoco
-          println("machineID already exists") //ToDo: inserire nel log
-            else { //TODO: probabilmente la PM va creata contestualmente per gestire la presenza del codice univoco, rivedere la questione del machineactorref (la pm può entrare nel behaviour "ref waiting")
+          if (childPM.keySet.exists(_._1 == m.machineID))
+          LogManager.logError("machineID "+m.machineID+" already exists")
+            else {
             val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(m.machineID, m.phMachineType, m.machineLabel), m.machineID)
             childPM += (((m.machineID, m.phMachineType), pm))
             server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, pm)

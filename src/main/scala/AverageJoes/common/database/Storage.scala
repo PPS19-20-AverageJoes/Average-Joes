@@ -6,13 +6,13 @@ trait Storage[E] {
   def add(e: E): List[E]
   def remove(e: E): List[E]
   def contains(e: E): Boolean
-  def get(id: Int): Option[E]
+  def get(id: String): Option[E]
   def getAll: List[E]
   def getCount: Int
 }
 
 trait StorageWorkout[E] extends Storage[E]{
-  def getWorkoutForCustomer(id: Int): List[E]
+  def getWorkoutForCustomer(id: String): List[E]
 }
 
 class GymStorage[E<:Entity]() extends Storage[E] {
@@ -25,7 +25,7 @@ class GymStorage[E<:Entity]() extends Storage[E] {
 
   def contains(e: E): Boolean = items contains e
 
-  def get(id: Int): Option[E] = items find (_.getId == id)
+  def get(id: String): Option[E] = items find (_.getId.equals(id))
 
   def getAll: List[E] = items
 
@@ -35,6 +35,6 @@ class GymStorage[E<:Entity]() extends Storage[E] {
 case class DuplicateEntityException(existingE: String) extends RuntimeException
 
 class GymStorageWorkout[E <: Workout] extends GymStorage[E] with StorageWorkout[E]{
-  def getWorkoutForCustomer(id: Int): List[E] = { items.filter(_.customerID == id)}
+  def getWorkoutForCustomer(id: String): List[E] = { items.filter(_.customerID.equals(id))}
 }
 

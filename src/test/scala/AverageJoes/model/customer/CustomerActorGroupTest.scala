@@ -21,9 +21,10 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
 
   val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
 
-/*
-  "Customer group" should {
 
+  "Customer group" should {
+    /*
+    /** TODO: GymController doesn't user CustomerRegistered */
     "create one customer" in {
       val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
 
@@ -50,11 +51,11 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       assert(registered2 !== registered3)
       assert(registered1 !== registered3)
     }
-
+*/
     "review logging request" in {
       /* No customer registered */
       val groupActor = spawn(CustomerGroup("group", managerActor))
-      groupActor ! CustomerLogin("customer-no","machine-label", physicalMachineProbe.ref, machineProbe.ref, deviceProbe.ref)
+      groupActor ! CustomerLogin("customer-no","machine-label", machineProbe.ref,  physicalMachineProbe.ref, deviceProbe.ref)
 
       val negativeRespMachine = machineProbe.receiveMessage()
 
@@ -66,5 +67,5 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
       }
     }
 
-  } */
+  }
 }

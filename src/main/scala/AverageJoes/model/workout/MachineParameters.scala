@@ -1,23 +1,23 @@
 package AverageJoes.model.workout
 
 import AverageJoes.common.MachineTypes._
-import AverageJoes.utils.SafePropertyValue.NonNegative.{NonNegInt, toInt}
+import AverageJoes.utils.SafePropertyValue.NonNegative.{NonNegDuration, NonNegInt, toInt}
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-sealed trait ExerciseMetrics { def duration: FiniteDuration }
+sealed trait ExerciseMetrics { def duration: NonNegDuration }
 sealed trait MachineParameters extends ExerciseMetrics{ val machineType: MachineType }
 
 sealed trait ExerciseMetricsBySet extends ExerciseMetrics {
   val sets: NonNegInt
   val rep: NonNegInt
   val secForSet: NonNegInt
-  override def duration: FiniteDuration = (sets * rep * secForSet) seconds
+  override def duration: NonNegDuration = (sets * rep * secForSet) seconds
 }
 
 sealed trait ExerciseMetricsByTime extends ExerciseMetrics {
   val minutes: NonNegInt
-  override def duration: FiniteDuration = (minutes * 60) seconds
+  override def duration: NonNegDuration = (minutes * 60) seconds
 }
 
 trait MachineParametersBySet extends MachineParameters with ExerciseMetricsBySet

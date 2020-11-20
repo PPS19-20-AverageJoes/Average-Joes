@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogOnMessage, LoggableMsg, MachineTypes}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgFromTo, MachineTypes}
 import AverageJoes.model.hardware.PhysicalMachine.Msg.HeartRate
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime}
@@ -9,39 +9,38 @@ import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-
 import scala.collection.mutable.ListBuffer
 
-
-
-sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with LogOnMessage[PhysicalMachine.Msg]{
+sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   import PhysicalMachine._
-  val machineID: String
+  def machineID: String
   val machineLabel: MachineLabel //To show on device
   val machineType: MachineTypes.MachineType
 
-  override val logName: String = "PM %s: %s".format(machineType, machineID)
-
-  override def onMessageLogged(msg: Msg): Behavior[Msg] = {
-    msg match{
-      case m: Msg.MachineActorStarted => operative(m.refMA)
+  private val logName: String = PhysicalMachine.logName+"_"+machineID //ToDo: mettere private anche nelle altre classi
+  override def onMessage(msg: Msg): Behavior[Msg] = {
+    Behaviors.receiveMessagePartial {
+      case m: Msg.MachineActorStarted => m.refMA ! MachineActor.Msg.GoIdle(machineID) ;operative(m.refMA)
     }
   }
 
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
-    Behaviors.receiveMessage {
+    LogManager.logBehaviourChange(logName,"operative")
+    Behaviors.receiveMessagePartial {
       case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
       case m: Msg.Display => display(m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
+
   }
 
   private case object TimerKey
   private def inExercise(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
+    LogManager.logBehaviourChange(logName,"inExercise")
     timers.startSingleTimer(TimerKey, ExerciseEnds(), machineParameters.duration)
     var heartBeats = new ListBuffer[Int]()
 
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessagePartial {
       case m: HeartRate =>
         heartBeats += m.heartRate
         Behaviors.same
@@ -57,8 +56,8 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
     }
   }
 
-  import org.scalactic.anyvals.NonZeroInt.apply
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
+    LogManager.logBehaviourChange(logName,"exerciseEnds")
     val max = heartBeats.max
     val min = heartBeats.min
     val avg: Int = heartBeats.sum[Int] / (heartBeats.count(_ => true) match { case c: Int if c > 0 => c; case _ => 1})
@@ -75,18 +74,19 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg] with 
 }
 
 object PhysicalMachine {
-  sealed trait Msg extends LoggableMsg
+  val logName: String = "PM"
+  sealed trait Msg extends LoggableMsgFromTo
   object Msg{
     //From MachineActor
-    final case class MachineActorStarted(machineID: String, refMA: ActorRef[MachineActor.Msg]) extends Msg
-    final case class Display(message: String) extends Msg
-    final case class ConfigMachine(customerID: String, machineParameters: MachineParameters) extends Msg
+    final case class MachineActorStarted(machineID: String, refMA: ActorRef[MachineActor.Msg]) extends Msg { override def From: String = "MA"; override def To: String = logName }
+    final case class Display(message: String) extends Msg { override def From: String = "MA"; override def To: String = logName }
+    final case class ConfigMachine(customerID: String, machineParameters: MachineParameters) extends Msg { override def From: String = "MA"; override def To: String = logName }
     //From Device
-    final case class Rfid(customerID: String) extends Msg //Rfid fired
-    final case class HeartRate(heartRate: Int) extends Msg
+    final case class Rfid(customerID: String) extends Msg { override def From: String = "Device"; override def To: String = logName }
+    final case class HeartRate(heartRate: Int) extends Msg { override def From: String = "Device"; override def To: String = logName }
   }
   //Self messages
-  private final case class ExerciseEnds() extends Msg
+  private final case class ExerciseEnds() extends Msg { override def From: String = "PM"; override def To: String = "PM" }
 
   type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
@@ -117,12 +117,11 @@ object PhysicalMachine {
     abstract class PhysicalMachineImpl(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine {
 
-      override val loggingContext: ActorContext[Msg] = this.context
-
       private val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
 
       override def display(s: String): Unit = {
         val _display: String = machineID + " " + s
+        machineGui ! ViewToolActor.Msg.UpdateViewObject(s)
       }
 
       override def configure(machineParameters: MachineParameters): Unit = {
