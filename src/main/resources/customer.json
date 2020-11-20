@@ -1,5 +1,5 @@
 [
-  {"cf":"BNCMRA70A20H501B","name":"Maria","surname":"Rossi","birthday":"2020-09-09","id":1},
-  {"cf":"BNCMYA70A20H501B","name":"Samuele","surname":"Bianchi","birthday":"2020-11-23","id":2}
+  {"cf":"BNCMRA70A20H501B","name":"Maria","surname":"Rossi","birthday":"2020-09-09","id":"1"},
+  {"cf":"BNCMYA70A20H501B","name":"Samuele","surname":"Bianchi","birthday":"2020-11-23","id":"2"}
 ]
 

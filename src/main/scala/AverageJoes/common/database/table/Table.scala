@@ -5,18 +5,18 @@ trait Customer extends Entity {
   val name: String
   val surname: String
   val birthday: String
-  val id: Int
+  val id: String
 }
 
 //class Customer (name: String, age:Int) extends BaseEntity
-class CustomerImpl(val cf:String, val name: String, val surname:String,
-                   val birthday: String,  val id: Int) extends BasicEntity(id) with Customer {
+case class CustomerImpl(val cf:String, val name: String, val surname:String,
+                   val birthday: String,  val id: String) extends BasicEntity(id) with Customer {
 
 }
 
 
 trait Workout extends Entity{
-  val customerID: Int
+  val customerID: String
   val sets: Int
   val timer:Int
   val repetitions: Int
@@ -24,16 +24,16 @@ trait Workout extends Entity{
   val speed: Int
   val weight: Int
   val typeMachine: String
-  val order: Int
-  val id: Int
+  val secForSet: Int
+  val id: String
 
-  def getCustomerID: Int = customerID
+  def getCustomerID: String = customerID
 }
 
-class WorkoutImpl(val customerID: Int, val sets: Int, val timer: Int,
+case class WorkoutImpl(val customerID: String, val sets: Int, val timer: Int,
                   val repetitions: Int, val incline: Int, val speed: Int,
-                  val weight: Int, val typeMachine: String, val order: Int,
-                  val id: Int) extends BasicEntity(id) with Workout {
+                  val weight: Int, val typeMachine: String, val secForSet: Int,
+                  val id: String) extends BasicEntity(id) with Workout {
 
-  override def getCustomerID: Int = customerID
+  override def getCustomerID: String = customerID
 }
