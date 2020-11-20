@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, MachineTypes}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerManager
 import AverageJoes.model.hardware.PhysicalMachine
@@ -41,19 +41,16 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   var bookedCustomer: Option[String] = Option.empty
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
 
-  override def onMessage(msg: Msg): Behavior[Msg] = {
-    println("enter OnMessage")
-    Behaviors.receiveMessagePartial {
-      case m: Msg.GoIdle => idle(m.machineID)
-    }
+  override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+       case Msg.GoIdle(machineID) => idle();
   }
 
-  private def idle(machineID: String): Behavior[Msg] = {
+  private def idle(): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"idle")
     Behaviors.receiveMessagePartial {
-      case Msg.UserLogIn(customerID, machineLabel) =>
+      case Msg.UserLogIn(customerID,machineLabel) =>
         println(controller)
-        controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
+        controller ! GymController.Msg.UserLogin(customerID, machineLabel, physicalMachine, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
@@ -72,15 +69,15 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   private def connecting(): Behavior[Msg] = Behaviors.withTimers[Msg] {timers =>
     timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(3000, "millis"))
     LogManager.logBehaviourChange(logName,"connecting")
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessagePartial{
       case Msg.CustomerLogging (customerID, machineParameters, isLogged) =>
         if (! isLogged) {
-          idle ("")
+          idle()
         } else {
           //physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, machineParameters)
           updateAndLogOut ()
         }
-      case BookingTimeoutException() => idle("")
+      case BookingTimeoutException() => idle()
       case Msg.BookingRequest (replyTo, customerID) =>
         //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
         Behaviors.same
@@ -93,7 +90,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   //spawn sotto attore che scrive su disco
   private def updateAndLogOut(): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"updateAndLogOut")
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessagePartial{
       case Msg.BookingRequest(replyTo, customerID) =>
         //replyTo ! CustomerManager.BookingConfirmation(customerID, machineType, false)
         Behaviors.same
@@ -101,17 +98,17 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
       case Msg.UserMachineWorkout(customerID, parameters) =>
         val child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"")
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
-        idle("")
+        idle()
 
     }
   }
   //verificare che i custumer id coincida con quello bookato
   private def bookedStatus(bookedCustomer: String): Behavior[Msg]= {
     LogManager.logBehaviourChange(logName,"bookedStatus")
-    Behaviors.receiveMessage{
+    Behaviors.receiveMessagePartial{
       case Msg.UserLogIn(customerID, machineLabel) =>
         if(bookedCustomer.equals(customerID))
-          controller ! GymController.Msg.UserLogin(customerID, machineLabel, context.self)
+          controller ! GymController.Msg.UserLogin(customerID, machineLabel, physicalMachine,context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
