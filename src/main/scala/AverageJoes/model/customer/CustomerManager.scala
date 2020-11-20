@@ -33,7 +33,7 @@ object CustomerManager {
 
   final case class MachineListOf(machineType: MachineType, customer: ActorRef[CustomerActor.Msg]) extends Msg
 
-  final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg with CustomerActor.Msg
+
 
 }
 
@@ -51,7 +51,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-    case customerCreation @ RequestCustomerCreation(_, controller, device) =>
+    case customerCreation @ RequestCustomerCreation(customerId, controller, device) =>
+      print("!!!!!!!!!!!!!!!!!!!!!!!!!"+ customerId+"\n")
       controllerRef = controller
       deviceRef = device
       customerGroup ! customerCreation
@@ -67,7 +68,7 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
 
 
     case MachineListOf(machineType, customer) =>
-      println("Customer requesting machines list")
+      println("!!!!!!!!!!!!!!!!!!Customer requesting machines list")
       controllerRef ! MachinesToBookmark(machineType, customer)
       Behaviors.same
 

@@ -44,16 +44,16 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
         case Some(customerActor) =>
           controller ! CustomerRegistered(customerId, customerActor)
-          context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
+          //customerActor ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
 
         case None =>
           if(isCustomerOnStorage(customerId)) {
             val customerActor = context.spawn(CustomerActor(manager, customerId), s"customer-$customerId")
-            context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
+            //context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
             customerIdToActor += customerId -> customerActor
 
             controller !  CustomerRegistered(customerId, customerActor)
-            context.self ! UploadCustomerTrainingProgram(customerId, customerActor)
+            customerActor ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
           }
           else{
             /** TODO: Do something because customerId is not present on storage */
@@ -75,9 +75,9 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       this
 
 
-    case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
+    /*case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
       customer ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
-      this
+      this*/
 
     case CustomerTerminated(_, _, customerId) =>
       customerIdToActor -= customerId
