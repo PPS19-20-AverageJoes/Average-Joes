@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, ServerSearch}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, NonLoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewDeviceActor
@@ -15,6 +15,7 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   def customerID: String
   val logName: String = logName +"_"+ customerID
+
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
@@ -23,6 +24,13 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   import Device._
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
+      case Msg.GoIdle() => idle()
+    }
+  }
+
+  private def idle(): Behavior[Msg] ={
+    LogManager.logBehaviourChange(logName,"init")
+    Behaviors.receiveMessagePartial {
       case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
@@ -32,7 +40,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   private def inExercise(pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
     LogManager.logBehaviourChange(logName,"inExercise")
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessagePartial {
       case m: HeartRateSimulation =>
         val heartRateSim: (Int,Sign) = (m.heartRate, m.sign) match {
           case (hr, s: Pos) if hr < maxHeartRate => (hr + 3, s)
@@ -44,6 +52,8 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
         pm ! PhysicalMachine.Msg.HeartRate(heartRateSim._1)
         timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
         Behaviors.same
+
+      case Msg.CustomerLogOut() => idle()
     }
   }
 
@@ -55,9 +65,10 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
 }
 
 object Device {
-  val logName: String = "Device"
+  private val logName: String = "Device"
   sealed trait Msg extends LoggableMsgTo { override def To: String = "Device" }
   object Msg {
+    final case class GoIdle() extends Msg
     //From GUI
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //From CustomerActor
@@ -66,7 +77,7 @@ object Device {
     //case class MsgDisplay(message: String) extends MsgDevice
   }
   //Self messages
-  private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg
+  private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg with NonLoggableMsg
 
   private trait Sign
   private final case class Pos() extends Sign
