@@ -4,17 +4,21 @@ import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.{MachineList, MachineListOf}
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
-import AverageJoes.common.MachineTypes.MachineType
-import AverageJoes.model.hardware.Device
+import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.utils.ExerciseUtils.ExerciseParameters.DURATION
+import AverageJoes.model.customer.CustomerGroup.CustomerReady
+import AverageJoes.model.fitness.BookWhileExercising.BookTiming
+import AverageJoes.model.fitness.CustomerExercising.ExerciseTiming
+import AverageJoes.model.hardware.Device.Msg.CustomerLogged
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
+import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegDuration
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.util.Timeout
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -24,13 +28,14 @@ object CustomerActor {
   def apply(manager: ActorRef[CustomerManager.Msg], customerId: String): Behavior[Msg] = Behaviors.setup(context => new CustomerActor(context, manager, customerId))
 
   trait Msg extends LoggableMsg
-  final case class CustomerTrainingProgram(tp: TrainingProgram) extends Msg
-  final case class CustomerMachineLogin(machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
+  final case class CustomerTrainingProgram(tp: TrainingProgram, group: ActorRef[CustomerGroup.Msg]) extends Msg
+  final case class CustomerMachineLogin(machineLabel: MachineLabel, phMachine: ActorRef[PhysicalMachine.Msg], machine: ActorRef[MachineActor.Msg], device: ActorRef[Device.Msg]) extends Msg
   final case class ExerciseStarted(trainingProgram: TrainingProgram) extends Msg
   final case class ExerciseCompleted(tp: TrainingProgram) extends Msg
   final case class NextMachineBooking(ex: Exercise) extends Msg
   final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
   final case class TrainingCompleted() extends Msg
+
 
   final case object Passivate extends Msg
 }
@@ -43,38 +48,40 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   var logged: Boolean = false
   var trainingProgram: Option[TrainingProgram] = None
 
-  override def onMessage(msg: Msg): Behavior[Msg] = waiting()
+  override def onMessage(msg: Msg): Behavior[Msg] = initialize()
 
-  private def waiting(): Behavior[Msg] = Behaviors.receiveMessage[Msg]{
+  private def initialize(): Behavior[Msg] = Behaviors.receiveMessage[Msg] {
 
-    case CustomerTrainingProgram(tp) =>
+    case CustomerTrainingProgram(tp, group) =>
       trainingProgram = Option.apply(tp)
-      context.self ! NextMachineBooking(trainingProgram.get.allExercises.head)
-      Behaviors.same
+      group ! CustomerReady(trainingProgram.get.allExercises.head, context.self)
+      active()
+  }
+
+  private def active(): Behavior[Msg] = Behaviors.receiveMessage[Msg] {
 
     case NextMachineBooking(ex) =>
       requestMachineList(ex)
-      Behaviors.same
+      this
 
     case MachineList(machines) =>
       booking(machines)
-      Behaviors.same
+      this
 
-    case CustomerMachineLogin(machineLabel, machine, device) =>
+    case CustomerMachineLogin(machineLabel, phMachine, machine, device) =>
       if(loggingAllowed()) {
         logged = true
-        /** TODO: machine actor should expect Parameters, and not MachineParameters */
-        //machine ! CustomerLogging(customerId, parameters(trainingProgram.get), isLogged = true)
-        //device ! CustomerLogged(machineLabel, machine)
+        machine ! CustomerLogging(customerId,trainingProgram.get.allExercises.head.parameters, isLogged = true)
+        device ! CustomerLogged(phMachine, machineLabel)
         context.self ! ExerciseStarted(trainingProgram.get)
       }
-      else  machine ! CustomerLogging(customerId, null, isLogged = false)
-      Behaviors.same
+      else machine ! CustomerLogging(customerId, null, isLogged = false)
+      this
 
 
     case ExerciseStarted(tp) =>
       exercising(tp)
-      Behaviors.same
+      this
 
 
     case ExerciseCompleted(tp) =>
@@ -86,7 +93,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     case UpdateTrainingProgram(tp) =>
       if(tp.allExercises.isEmpty) TrainingCompleted()
       trainingProgram = Option.apply(tp)
-      Behaviors.same
+      this
 
 
     case TrainingCompleted() =>
@@ -98,7 +105,6 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
   }
 
 
-
   private def booking(machines: Set[ActorRef[MachineActor.Msg]]): Unit = {
     val machineBooker = context.spawn(MachineBooker(context.self, customerId), "machine-booker")
     machineBooker ! BookMachine(machines)
@@ -106,8 +112,8 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
   private def exercising(tp: TrainingProgram): Unit = {
     /** TODO: handle exercise duration */
-    context.spawn(CustomerExercising(context.self, 10.seconds, tp), "exercising")
-    context.spawn(BookWhileExercising(context.self, 10.seconds, tp), "book-while-exercising")
+    context.spawn(CustomerExercising(context.self, exDuration(tp), tp), "exercising") ! ExerciseTiming
+    context.spawn(BookWhileExercising(context.self, exDuration(tp), tp), "book-while-exercising") ! BookTiming
   }
 
 
@@ -134,6 +140,11 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     tp.removeExercise(tp.allExercises.head)
 
   private def parameters(tp: TrainingProgram): Parameters[SafePropertyVal] = tp.allExercises.head.executionParameters
+
+  private def exDuration(tp: TrainingProgram): NonNegDuration = tp.allExercises.head.executionParameters.valueOf(DURATION).get match {
+      case duration @ NonNegDuration(_) => duration
+      case _ => throw new IllegalDurationValue
+    }
 
 }
 
@@ -164,3 +175,5 @@ object MachineBooker {
 
 }
 
+
+case class IllegalDurationValue() extends IllegalArgumentException

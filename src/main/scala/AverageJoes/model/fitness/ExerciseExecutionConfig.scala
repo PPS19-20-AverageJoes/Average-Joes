@@ -1,7 +1,7 @@
 package AverageJoes.model.fitness
 
 
-import AverageJoes.model.fitness.MachineExecution.MachineEquipment
+import AverageJoes.model.workout.MachineParameters
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
 object ExerciseExecutionConfig {
@@ -42,31 +42,36 @@ object ExerciseExecutionConfig {
   object ParameterExtractor {
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 
-    trait Extractor[E <: MachineEquipment] {
+    trait Extractor[E <: MachineParameters] {
       def extract(e: E): Parameters[SafePropertyVal]
     }
 
-    def extractParameters[E <: MachineEquipment](e: E)(implicit extractor: Extractor[E]): Parameters[SafePropertyVal] = extractor.extract(e)
+    def extractParameters[E <: MachineParameters](e: E)(implicit extractor: Extractor[E]): Parameters[SafePropertyVal] = extractor.extract(e)
   }
 
 
   object ImplicitParameterExtractors {
     import AverageJoes.utils.ExerciseUtils.ExerciseParameters._
-    import AverageJoes.model.fitness.MachineExecution.MACHINE_EQUIPMENT._
+    import AverageJoes.model.workout._
     import AverageJoes.common.MachineTypes._
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.ExerciseParameters
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor.Extractor
 
-    implicit val machineExecutionParamExtractor: Extractor[MachineEquipment] = {
+    implicit val machineExecutionParamExtractor: Extractor[MachineParameters] = {
 
-      case LiftMachine(wight, sets) => ExerciseParameters[SafePropertyVal](LIFTING, List.empty[(ExerciseParameter, SafePropertyVal)])
+      case liftMachine @ LiftMachineParameters(wight, sets, rep, secForSet) => ExerciseParameters[SafePropertyVal](LIFTING, List.empty[(ExerciseParameter, SafePropertyVal)])
           .addValueOf((SETS, sets))
           .addValueOf((WIGHT, wight))
+          .addValueOf((REPETITIONS, rep))
+          .addValueOf(SET_DURATION, secForSet)
+          .addValueOf((DURATION, liftMachine.duration))
 
-      case RunningMachine(incline, speed, timer) => ExerciseParameters[SafePropertyVal](RUNNING, List.empty[(ExerciseParameter, SafePropertyVal)])
+      case runningMachine @ RunningMachineParameters(incline, speed, time) => ExerciseParameters[SafePropertyVal](RUNNING, List.empty[(ExerciseParameter, SafePropertyVal)])
           .addValueOf((SPEED, speed))
-          .addValueOf((TIMER, timer))
+          .addValueOf((TIMER, time))
           .addValueOf((INCLINE, incline))
+          .addValueOf((DURATION, runningMachine.duration))
+
 
       /** other machines */
     }

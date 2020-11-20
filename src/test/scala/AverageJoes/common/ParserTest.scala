@@ -9,7 +9,6 @@ class ParserTest extends AnyFlatSpec with Matchers {
 
   "Storage" should "not be empty" in {
     val storage = Customer.customerStorage
-
     assert(storage.getCount > 0)
   }
 
@@ -20,7 +19,7 @@ class ParserTest extends AnyFlatSpec with Matchers {
 
   "Workout list for user" should "not be empty" in {
     val storage = Workout.workoutStorage
-    assert(storage.getWorkoutForCustomer(1).nonEmpty)
+    assert(storage.getWorkoutForCustomer("1").nonEmpty)
   }
 }
 
