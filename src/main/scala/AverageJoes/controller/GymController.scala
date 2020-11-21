@@ -2,6 +2,7 @@ package AverageJoes.controller
 
 import AverageJoes.common.{LogManager, LoggableMsgTo, MachineTypes}
 import AverageJoes.model.customer.{CustomerActor, CustomerManager}
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.{hardware, machine}
 import AverageJoes.model.machine.MachineActor
@@ -24,7 +25,7 @@ object GymController {
     //From MachineActor
     final case class UserLogin(customerID: String, machineLabel: PhysicalMachine.MachineLabel, pm: ActorRef[PhysicalMachine.Msg], replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
     //From HardwareController
-    final case class PhysicalMachineWakeUp(machineID: String, phMachineType: MachineTypes.MachineType, replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg //Login to the controller
+    final case class PhysicalMachineWakeUp(machineID: String, machineLabel: MachineLabel, phMachineType: MachineTypes.MachineType, replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg //Login to the controller
     //From CustomerActor & Co
     final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
     final case class MachinesToBookmark(phMachineType: MachineTypes.MachineType, replyTo: ActorRef[CustomerActor.Msg]) extends Msg
@@ -50,7 +51,7 @@ object GymController {
         case m: Msg.CustomerRegistered => Behaviors.same //ToDo: not used
 
         case m: Msg.PhysicalMachineWakeUp =>
-          val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.replyTo, m.phMachineType), "MA_"+m.machineID)
+          val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.replyTo, m.machineLabel), "MA_"+m.machineID)
           childMachineActor += (((m.machineID, m.phMachineType), machine))
           m.replyTo ! PhysicalMachine.Msg.MachineActorStarted(m.machineID, machine)
           Behaviors.same

@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
 object HardwareApp extends App{
-  HardwareTest.start()
+  HardwareTest.start(true)
 }
 
 object HardwareTest {//extends App {
@@ -15,17 +15,17 @@ object HardwareTest {//extends App {
 
   //start()
 
-  def start() = {
+  def start(autostart: Boolean) = {
     controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress A")
-    controller ! Msg.CreatePhysicalMachine("ChestFly1", MachineTypes.CHEST_FLY, "ChestFly")
     controller ! Msg.CreatePhysicalMachine("Cycling", MachineTypes.CYCLING, "Cycling A")
-    controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress B")
+    controller ! Msg.CreatePhysicalMachine("ChestFly1", MachineTypes.CHEST_FLY, "ChestFly")
+    //controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress B")
 
-    controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband)
-    controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband)
+    controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband, "Wristband1")
+    controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband, "Wristband2")
 
     val test: ActorSystem[HwControllerTestMsg] = ActorSystem(HwControllerTest(controller), "GymHardware")
-    test ! StartTest()
+    if(autostart) test ! StartTest()
   }
 
   trait HwControllerTestMsg

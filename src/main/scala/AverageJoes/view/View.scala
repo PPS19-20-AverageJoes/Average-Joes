@@ -1,6 +1,7 @@
 package AverageJoes.view
 
 import AverageJoes.HardwareTest
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.ActorRef
 
@@ -20,8 +21,8 @@ object View extends SimpleSwingApplication {
             add(machinePanel, BorderPanel.Position.Center)
             add(userPanel, BorderPanel.Position.West)
         }
-
-        HardwareTest.start()
+        Thread.sleep(1000)
+        HardwareTest.start(false)
     }
 
     def _getMachineView(): MachineView = machinePanel
@@ -44,9 +45,9 @@ case class MachineView() extends GridPanel(3,3){
     def _getMapValue(key:String): Option[ActorRef[PhysicalMachine.Msg]] = map.get(key)
 }
 
-case class UserGui(deviceActor: ActorRef[Device.Msg]) extends GridPanel(2,1){
+case class UserGui(deviceActor: ActorRef[Device.Msg], deviceLabel: String) extends GridPanel(2,1){
     preferredSize = new Dimension(300, 600)
-    val button:Button = new Button("Customer Info")
+    val button:Button = new Button(deviceLabel)
     var text:TextArea = new TextArea()
     var physicalActor: Option[ActorRef[PhysicalMachine.Msg]] = None
     contents += button
@@ -60,6 +61,7 @@ case class UserGui(deviceActor: ActorRef[Device.Msg]) extends GridPanel(2,1){
             if(machineChoice.get != None){
                 physicalActor = View._getMachineView()._getMapValue(machineChoice.get.asInstanceOf[String])
                 /*Send physical machine path to device*/
+                println("!!!!!!!!!!!!!"+"deviceActor: %s, physicalm: %s".format(deviceActor,physicalActor))
                 deviceActor ! Device.Msg.NearDevice(physicalActor.get)
             }
     }
@@ -69,8 +71,8 @@ case class UserGui(deviceActor: ActorRef[Device.Msg]) extends GridPanel(2,1){
     }
 }
 
-case class MachineGUI() extends GridPanel(2,1){
-    val button:Button = new Button("Machine Info")
+case class MachineGUI(machineLabel: MachineLabel) extends GridPanel(2,1){
+    val button:Button = new Button(machineLabel)
     var text:TextArea = new TextArea()
     contents += button
     contents += text

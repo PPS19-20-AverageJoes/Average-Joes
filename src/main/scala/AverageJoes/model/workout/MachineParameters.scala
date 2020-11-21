@@ -12,12 +12,12 @@ sealed trait ExerciseMetricsBySet extends ExerciseMetrics {
   val sets: NonNegInt
   val rep: NonNegInt
   val secForSet: NonNegInt
-  override def duration: NonNegDuration = (sets * rep * secForSet) seconds
+  override def duration: NonNegDuration = 20 seconds//(sets * rep * secForSet) seconds //ToDo: ripristinare
 }
 
 sealed trait ExerciseMetricsByTime extends ExerciseMetrics {
   val minutes: NonNegInt
-  override def duration: NonNegDuration = (minutes * 60) seconds //20 sec to test
+  override def duration: NonNegDuration = 20 seconds//(minutes * 60) seconds //20 sec to test //ToDo: ripristinare
 }
 
 trait MachineParametersBySet extends MachineParameters with ExerciseMetricsBySet

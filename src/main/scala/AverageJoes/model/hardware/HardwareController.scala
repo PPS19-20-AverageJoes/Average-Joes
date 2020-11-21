@@ -1,8 +1,7 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, ServerSearch}
+import AverageJoes.common.{LogManager, LoggableMsgTo, MachineTypes, ServerSearch}
 import AverageJoes.controller.GymController
-import AverageJoes.model.machine
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
@@ -21,7 +20,7 @@ object HardwareController {
   object Msg {
     //final case class PMActorStarted(machineID: String, phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
     final case class CreatePhysicalMachine(machineID: String, phMachineType: MachineTypes.MachineType, machineLabel: String) extends Msg
-    final case class CreateDevice(deviceID: String, deviceType: Device.DeviceType.Type) extends Msg
+    final case class CreateDevice(deviceID: String, deviceType: Device.DeviceType.Type, deviceLabel: Device.DeviceLabel) extends Msg
     //final case class MachineActorStarted(machineID: String, phMachineType: PhysicalMachine.MachineType.Type, machineLabel: String, refMA: ActorRef[MachineActor.Msg]) extends Msg
   }
 
@@ -35,7 +34,7 @@ object HardwareController {
             else {
             val pm = context.spawn[PhysicalMachine.Msg](PhysicalMachine(m.machineID, m.phMachineType, m.machineLabel), m.machineID)
             childPM += (((m.machineID, m.phMachineType), pm))
-            server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.phMachineType, pm)
+            server ! GymController.Msg.PhysicalMachineWakeUp(m.machineID, m.machineLabel, m.phMachineType, pm)
           }
           Behaviors.same
 
@@ -45,9 +44,9 @@ object HardwareController {
           m.refMA ! MachineActor.Msg.PMActorStarted(pm)
           Behaviors.same*/
 
-        case Msg.CreateDevice(deviceID, deviceType) =>
-          val device = context.spawn[Device.Msg](Device(deviceType, deviceID), deviceID)
-          childD += ((deviceID, device))
+        case m: Msg.CreateDevice =>
+          val device = context.spawn[Device.Msg](Device(m.deviceType, m.deviceID, m.deviceLabel), m.deviceID)
+          childD += ((m.deviceID, device))
           Behaviors.same
       }
     }

@@ -4,7 +4,7 @@ import AverageJoes.common.database.table.{Workout, WorkoutImpl}
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor
 import AverageJoes.model.fitness.WorkoutConverter.Converter
-import AverageJoes.model.hardware.PhysicalMachine.CyclingMachineParameters
+import AverageJoes.model.hardware.PhysicalMachine.{CyclingMachineParameters, LegPressParameters}
 import AverageJoes.model.workout.{LiftMachineParameters, MachineParameters, RunningMachineParameters}
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
@@ -39,6 +39,7 @@ object ImplicitWorkoutConverters {
             case RUNNING => RunningMachineParameters(incline,speed, timer)
             case LIFTING => LiftMachineParameters(weight, sets, repetitions, setForSec)
             case CYCLING => CyclingMachineParameters(incline, timer)
+            case LEG_PRESS => LegPressParameters(weight,incline,sets,repetitions,setForSec)
             /** TODO: other machines to be added */
         }
     }

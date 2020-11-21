@@ -9,7 +9,7 @@ class ViewTest extends ScalaTestWithActorTestKit with AnyWordSpecLike{
   "View tool" should {
     "create view physical update " in {
       val probePh = createTestProbe[PhysicalMachine.Msg]()
-      val actor = spawn[ViewToolActor.Msg](ViewPhysicalMachineActor("", probePh.ref))
+      val actor = spawn[ViewToolActor.Msg](ViewPhysicalMachineActor("m1", "m1", probePh.ref))
       actor ! ViewToolActor.Msg.UpdateViewObject("ciao")
     }
 

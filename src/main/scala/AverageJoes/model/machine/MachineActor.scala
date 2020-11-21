@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes}
+import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, NonLoggableMsg}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.{CustomerActor, CustomerManager, MachineBooker}
 import AverageJoes.model.hardware.PhysicalMachine
@@ -17,8 +17,8 @@ import scala.concurrent.duration.Duration
  * controller: controller ActorRef
  */
 object MachineActor{
-  def apply(controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg], machineType: MachineTypes.MachineType): Behavior[Msg] =
-    Behaviors.setup(context => new MachineActor(context, controller, physicalMachine, machineType))
+  def apply(controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg], machineLabel: MachineLabel): Behavior[Msg] =
+    Behaviors.setup(context => new MachineActor(context, controller, physicalMachine, machineLabel))
 
   sealed trait Msg extends LoggableMsg
 
@@ -32,11 +32,11 @@ object MachineActor{
     final case class GoIdle(machineID: String) extends Msg
   }
 
-  private final case class BookingTimeoutException() extends Msg
+  private final case class BookingTimeoutException() extends Msg with NonLoggableMsg
 }
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
-                   machineType: MachineTypes.MachineType) extends AbstractBehavior[Msg](context) {
+                   machineLabel: MachineLabel) extends AbstractBehavior[Msg](context) {
 
   var bookedCustomer: Option[String] = Option.empty
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
@@ -57,7 +57,8 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
-        replyTo ! MachineBooker.OnBookingResponse(context.self,true)
+        replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, true)
+        physicalMachine ! PhysicalMachine.Msg.Display("Booked by "+customerID)
         bookedStatus(customerID)
     }
   }
@@ -79,9 +80,11 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
           physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, machineParameters)
           updateAndLogOut ()
         }
-      case BookingTimeoutException() => idle()
+
+      case BookingTimeoutException() => physicalMachine ! PhysicalMachine.Msg.Display("Free"); idle()
+
       case Msg.BookingRequest (replyTo, customerID) =>
-        replyTo ! MachineBooker.OnBookingResponse(context.self, false)
+        replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
         Behaviors.same
     }
   }
@@ -94,7 +97,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     LogManager.logBehaviourChange(logName,"updateAndLogOut")
     Behaviors.receiveMessagePartial{
       case Msg.BookingRequest(replyTo, customerID) =>
-        replyTo ! MachineBooker.OnBookingResponse(context.self, false)
+        replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
         Behaviors.same
 
       case Msg.UserMachineWorkout(customerID, parameters) =>
@@ -102,6 +105,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
 
+      case BookingTimeoutException() => Behaviors.same
     }
   }
   //verificare che i custumer id coincida con quello bookato
@@ -114,7 +118,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
-        replyTo ! MachineBooker.OnBookingResponse(context.self, false)
+        replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
         Behaviors.same
     }
   }

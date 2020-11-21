@@ -11,7 +11,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
-  val deviceActor: ActorRef[Device.Msg] = spawn(Wristband("device-01"))
+  val deviceActor: ActorRef[Device.Msg] = spawn(Wristband("device-01", "device-01"))
   val probe: TestProbe[GymController.Msg] = createTestProbe[GymController.Msg]()
 
   /* "Customer manager actor" should {

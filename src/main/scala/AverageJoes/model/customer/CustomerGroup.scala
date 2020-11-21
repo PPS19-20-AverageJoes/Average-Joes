@@ -20,7 +20,7 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
 
-  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], phMachine: ActorRef[PhysicalMachine.Msg], device: ActorRef[Device.Msg]) extends Msg
+  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 
@@ -61,17 +61,17 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       }
       this
 
-    case CustomerLogin(customerId, machineLabel, machine, phMachine, device) =>
+    case CustomerLogin(customerId, machineLabel, machine, phMachine) =>
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
-          customerActor ! CustomerMachineLogin(machineLabel, phMachine, machine, device)
+          customerActor ! CustomerMachineLogin(machineLabel, phMachine, machine)
         case None =>
           machine ! CustomerLogging(customerId, null, isLogged = false)
       }
       this
 
     case CustomerReady(ex, customer) =>
-      customer ! NextMachineBooking(ex)
+      //customer ! NextMachineBooking(ex) //ToDo: riattivare?
       this
 
 

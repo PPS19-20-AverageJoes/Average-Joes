@@ -49,7 +49,7 @@ object BookWhileExercising {
   private case object TimerKey
 
   def apply(target: ActorRef[CustomerActor.Msg], after: FiniteDuration, tp: TrainingProgram): Behavior[Msg] = {
-    Behaviors.withTimers(timers => new BookWhileExercising(timers, target, new FiniteDuration(after.length, after.unit), tp).initializing())
+    Behaviors.withTimers(timers => new BookWhileExercising(timers, target, new FiniteDuration(after.length-10, after.unit), tp).initializing())
   }
 }
 
@@ -80,7 +80,7 @@ class BookWhileExercising(
           timers.cancel(TimerKey)
           target ! NextMachineBooking(tp.allExercises.tail.head)
         }
-        Behaviors.same
+        Behaviors.stopped
       case _ => waitUntilTimeout()
     }
   }

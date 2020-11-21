@@ -55,7 +55,7 @@ class CustomerActorGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecL
     "review logging request" in {
       /* No customer registered */
       val groupActor = spawn(CustomerGroup("group", managerActor))
-      groupActor ! CustomerLogin("customer-no","machine-label", machineProbe.ref,  physicalMachineProbe.ref, deviceProbe.ref)
+      groupActor ! CustomerLogin("customer-no","machine-label", machineProbe.ref,  physicalMachineProbe.ref)
 
       val negativeRespMachine = machineProbe.receiveMessage()
 
