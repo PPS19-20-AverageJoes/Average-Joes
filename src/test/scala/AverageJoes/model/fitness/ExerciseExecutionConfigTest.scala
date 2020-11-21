@@ -11,8 +11,8 @@ import org.scalatest.matchers.should.Matchers
 class ExerciseExecutionConfigTest extends AnyFlatSpec with Matchers {
   import AverageJoes.utils.SafePropertyValue.NonNegative._
 
-  val exerciseRunning: Exercise = Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30))
-  var params: Parameters[SafePropertyVal] = exerciseRunning.executionParameters
+  //val exerciseRunning: Exercise = Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30))
+  //var params: Parameters[SafePropertyVal] = exerciseRunning.executionParameters
 /*
   "Execution parameters of exercise" should "not be empty" in {
     assert(exerciseRunning.executionParameters !== null)

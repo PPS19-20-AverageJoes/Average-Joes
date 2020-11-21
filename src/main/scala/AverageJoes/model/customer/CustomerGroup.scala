@@ -1,13 +1,14 @@
 package AverageJoes.model.customer
 
 import AverageJoes.common.LoggableMsg
+import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.common.database._
 import AverageJoes.common.database.table.Customer
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
-import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram, NextMachineBooking}
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin, CustomerReady, UploadCustomerTrainingProgram}
+import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram}
+import AverageJoes.model.customer.CustomerGroup.{CustomerLogin}
 import AverageJoes.model.fitness.{Exercise, TrainingProgram}
-import AverageJoes.model.hardware.{Device, PhysicalMachine}
+import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
@@ -20,7 +21,7 @@ object CustomerGroup {
 
   trait Msg extends LoggableMsg
 
-  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machine: ActorRef[MachineActor.Msg], phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
+  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machineType: MachineType,  machine: ActorRef[MachineActor.Msg], phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
 
@@ -61,18 +62,18 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
       }
       this
 
-    case CustomerLogin(customerId, machineLabel, machine, phMachine) =>
+    case CustomerLogin(customerId, machineLabel,machineType,  machine, phMachine) =>
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
-          customerActor ! CustomerMachineLogin(machineLabel, phMachine, machine)
+          customerActor ! CustomerMachineLogin(machineLabel, machineType, phMachine, machine)
         case None =>
           machine ! CustomerLogging(customerId, null, isLogged = false)
       }
       this
 
-    case CustomerReady(ex, customer) =>
+    //case CustomerReady(ex, customer) =>
       //customer ! NextMachineBooking(ex) //ToDo: riattivare?
-      this
+      //this
 
 
     /*case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
@@ -98,10 +99,13 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
   private def trainingProgramOf(customerId: String): TrainingProgram = {
     import AverageJoes.model.fitness.ImplicitWorkoutConverters._
 
-    val workoutSet = Workout.workoutStorage.getWorkoutForCustomer(customerId).map(w => Exercise(w))
+    val workoutSet = Workout.workoutStorage.getWorkoutForCustomer(customerId)
+                            .map(w => Exercise(w))
+                            .sortBy(e => e.order)((x: Int, y: Int) => x.compare(y))
+                            .toSet
 
     if (workoutSet.isEmpty) throw new NoExercisesFoundException
-    else TrainingProgram(customerOf(customerId)) (Workout.workoutStorage.getWorkoutForCustomer(customerId).map(w => Exercise(w)).toSet)
+    else TrainingProgram(customerOf(customerId)) (workoutSet)
   }
 }
 
