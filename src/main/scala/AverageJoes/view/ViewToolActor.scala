@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -25,6 +26,8 @@ object ViewToolActor {
   object Msg {
     final case class CreateViewObject() extends Msg
     final case class UpdateViewObject(msg: String) extends Msg
+    final case class SetMachineParameters(list: List[(String,Int)]) extends Msg
+    final case class ExerciseCompleted() extends Msg
   }
 
   class ViewDeviceActor(override val context: ActorContext[Msg], val deviceLabel: String,
@@ -51,6 +54,7 @@ object ViewToolActor {
   class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
                                 val machineID: String,
                                 val machineLabel: MachineLabel,
+                                val machineType: MachineType,
                                 actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
      var panel: Option[MachineView] = Option.empty
@@ -59,10 +63,15 @@ object ViewToolActor {
      def createViewEntity(): Unit = {
       scala.swing.Swing.onEDT{
         panel = Option.apply(View._getMachineView())
-        machine = Option.apply(MachineGUI(machineID+" - "+machineLabel))
+        machine = Option.apply(MachineGUI(machineID+" - "+machineLabel, machineType/*, actorRef*/))
         panel.get.contents += machine.get
         panel.get.addEntry(machineID, actorRef)
       }
+    }
+
+    override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+      case m: Msg.SetMachineParameters => setMachineParameters(m.list); Behaviors.same
+      case m: Msg.ExerciseCompleted =>  exerciseCompleted(); Behaviors.same
     }
 
     override def updateViewEntity(msg: String): Unit = {
@@ -70,11 +79,25 @@ object ViewToolActor {
          machine.get.update(msg)
       }
     }
+
+
+    def setMachineParameters(list: List[(String,Int)]): Unit = {
+      scala.swing.Swing.onEDT{
+        machine.get.setParameters(list)
+      }
+    }
+
+    def exerciseCompleted(): Unit = {
+      scala.swing.Swing.onEDT{
+        machine.get.setButton(true)
+      }
+    }
+
   }
 
   object ViewPhysicalMachineActor {
-    def apply(machineID:String, machineLabel: MachineLabel, actorRef: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] =
-      Behaviors.setup(context => new ViewPhysicalMachineActor(context, machineID, machineLabel, actorRef))
+    def apply(machineID:String, machineLabel: MachineLabel, machineType: MachineType, actorRef: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] =
+      Behaviors.setup(context => new ViewPhysicalMachineActor(context, machineID, machineLabel,  machineType, actorRef))
   }
 
   object ViewDeviceActor {
