@@ -101,7 +101,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
         Behaviors.same
 
-      case Msg.UserMachineWorkout(customerID, parameters) =>
+      case Msg.UserMachineWorkout(customerID, parameters,executionValues) =>
         val child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"childMachineActor")
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
