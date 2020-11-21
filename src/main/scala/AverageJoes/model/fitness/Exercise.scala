@@ -4,8 +4,8 @@ import AverageJoes.common.database.table.{Workout, WorkoutImpl}
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor
 import AverageJoes.model.fitness.WorkoutConverter.Converter
-import AverageJoes.model.hardware.PhysicalMachine.{CyclingMachineParameters, LegPressParameters}
-import AverageJoes.model.workout.{LiftMachineParameters, MachineParameters, RunningMachineParameters}
+import AverageJoes.model.hardware.PhysicalMachine.{ChestFlyParameters, CyclingMachineParameters, LegPressParameters, LiftingMachineParameters, RunningMachineParameters}
+import AverageJoes.model.workout.MachineParameters
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
 trait Exercise {
@@ -37,14 +37,14 @@ object ImplicitWorkoutConverters {
     implicit val converter: Converter[Workout] =  {
         case WorkoutImpl(customerID, sets, timer, repetitions, incline, speed, weight, typeMachine, setForSec, id) => machineTypeOf(typeMachine) match {
             case RUNNING => RunningMachineParameters(incline,speed, timer)
-            case LIFTING => LiftMachineParameters(weight, sets, repetitions, setForSec)
+            case LIFTING => LiftingMachineParameters(weight, sets, repetitions, setForSec)
             case CYCLING => CyclingMachineParameters(incline, timer)
             case LEG_PRESS => LegPressParameters(weight,incline,sets,repetitions,setForSec)
+            case CHEST_FLY => ChestFlyParameters(weight,incline,sets,repetitions,setForSec)
             /** TODO: other machines to be added */
         }
     }
 }
-
 
 object Main extends App {
     import AverageJoes.common.MachineTypes._

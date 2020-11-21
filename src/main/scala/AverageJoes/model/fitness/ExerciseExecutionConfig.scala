@@ -1,6 +1,7 @@
 package AverageJoes.model.fitness
 
 
+import AverageJoes.model.hardware.PhysicalMachine.{LiftingMachineParameters, RunningMachineParameters}
 import AverageJoes.model.workout.MachineParameters
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
@@ -59,7 +60,7 @@ object ExerciseExecutionConfig {
 
     implicit val machineExecutionParamExtractor: Extractor[MachineParameters] = {
 
-      case liftMachine @ LiftMachineParameters(wight, sets, rep, secForSet) => ExerciseParameters[SafePropertyVal](LIFTING, List.empty[(ExerciseParameter, SafePropertyVal)])
+      case liftMachine @ LiftingMachineParameters(wight, sets, rep, secForSet) => ExerciseParameters[SafePropertyVal](LIFTING, List.empty[(ExerciseParameter, SafePropertyVal)])
           .addValueOf((SETS, sets))
           .addValueOf((WIGHT, wight))
           .addValueOf((REPETITIONS, rep))

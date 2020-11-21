@@ -3,6 +3,7 @@ package AverageJoes.model.machine
 import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, NonLoggableMsg}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.{CustomerActor, CustomerManager, MachineBooker}
+import AverageJoes.model.fitness.ExecutionValues
 import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor._
@@ -25,7 +26,7 @@ object MachineActor{
   object Msg {
     final case class UserLogIn(customerID: String, machineLabel: MachineLabel) extends Msg
     final case class UserMachineWorkoutPlan(customerID: String) extends Msg
-    final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters) extends Msg
+    final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters, executionValues: ExecutionValues) extends Msg
     final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
     final case class BookingRequest(replyTo: ActorRef[MachineBooker.Msg], customerID: String) extends Msg
     final case class CustomerLogging(customerID: String, machineParameters: MachineParameters, isLogged:Boolean) extends Msg
