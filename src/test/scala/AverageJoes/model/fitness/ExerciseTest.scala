@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 
 
 class ExerciseTest  extends AnyFlatSpec with Matchers {
-
+/*
   val exerciseRunning: Exercise = Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30))
 
   "Exercise" should "not be null" in {
@@ -29,5 +29,5 @@ class ExerciseTest  extends AnyFlatSpec with Matchers {
     assert(exerciseRunning.executionParameters !== null)
     assert(exerciseRunning.executionParameters.isInstanceOf[Parameters[SafePropertyVal]])
   }
-
+*/
 }

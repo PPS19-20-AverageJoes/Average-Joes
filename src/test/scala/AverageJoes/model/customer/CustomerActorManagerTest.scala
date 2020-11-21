@@ -10,11 +10,11 @@ import akka.actor.typed.ActorRef
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
-
+  /*
   val deviceActor: ActorRef[Device.Msg] = spawn(Wristband("device-01", "device-01"))
   val probe: TestProbe[GymController.Msg] = createTestProbe[GymController.Msg]()
 
-  /* "Customer manager actor" should {
+   "Customer manager actor" should {
     /** TODO: GymActor doesn't use customer registered */
     "create one customer" in {
       val managerActor: ActorRef[CustomerManager.Msg] = spawn(CustomerManager())
@@ -39,5 +39,10 @@ class CustomerActorManagerTest extends ScalaTestWithActorTestKit with AnyWordSpe
     assert(registered1 == registered2)
     assert(registered2 !== registered3)
     assert(registered1 !== registered3)
-  }*/
+  }
+
+
+
+ */
+
 }

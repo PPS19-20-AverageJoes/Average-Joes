@@ -13,8 +13,8 @@ object CustomerExercising {
   final case object ExerciseTiming extends Msg
   private case object ExerciseFinished extends Msg
 
-  def apply(target: ActorRef[CustomerActor.Msg], after: FiniteDuration, tp: TrainingProgram): Behavior[Msg] = {
-    Behaviors.withTimers(timers => new CustomerExercising(timers, target, after, tp).initializing())
+  def apply(target: ActorRef[CustomerActor.Msg], ex: Exercise, tp: TrainingProgram): Behavior[Msg] = {
+    Behaviors.withTimers(timers => new CustomerExercising(timers, target, ex, tp).initializing())
   }
 }
 
@@ -22,13 +22,13 @@ object CustomerExercising {
 class CustomerExercising(
                           timers: TimerScheduler[CustomerExercising.Msg],
                           target: ActorRef[CustomerActor.Msg],
-                          after: FiniteDuration,
+                          ex: Exercise,
                           tp: TrainingProgram) {
   import CustomerExercising._
 
   private def initializing(): Behavior[CustomerExercising.Msg] = {
     Behaviors.receiveMessage[CustomerExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, ExerciseFinished, after)
+      timers.startSingleTimer(TimerKey, ExerciseFinished, ex.parameters.duration)
       exerciseFinished()
     }
   }
@@ -36,7 +36,8 @@ class CustomerExercising(
   def exerciseFinished(): Behavior[Msg] = {
     Behaviors.receiveMessage[Msg] {
       case ExerciseFinished =>
-        target ! ExerciseCompleted(tp)
+        println("[CUSTOMER ACTOR]  exercise completed ")
+        target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
         Behaviors.stopped
     }
   }
@@ -48,21 +49,21 @@ object BookWhileExercising {
   private case object BookAnotherMachine extends Msg
   private case object TimerKey
 
-  def apply(target: ActorRef[CustomerActor.Msg], after: FiniteDuration, tp: TrainingProgram): Behavior[Msg] = {
-    Behaviors.withTimers(timers => new BookWhileExercising(timers, target, new FiniteDuration(after.length-10, after.unit), tp).initializing())
+  def apply(target: ActorRef[CustomerActor.Msg], ex: Exercise, tp: TrainingProgram): Behavior[Msg] = {
+    Behaviors.withTimers(timers => new BookWhileExercising(timers, target, ex, tp).initializing())
   }
 }
 
 class BookWhileExercising(
                            timers: TimerScheduler[BookWhileExercising.Msg],
                            target: ActorRef[CustomerActor.Msg],
-                           after: FiniteDuration,
+                           ex: Exercise,
                            tp: TrainingProgram) {
   import BookWhileExercising._
 
   private def initializing(): Behavior[BookWhileExercising.Msg] = {
     Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, BookAnotherMachine, after)
+      timers.startSingleTimer(TimerKey, BookAnotherMachine, ex.parameters.duration)
       waitUntilTimeout()
     }
   }
@@ -70,21 +71,21 @@ class BookWhileExercising(
   def waitUntilTimeout(): Behavior[Msg] = {
     Behaviors.receiveMessage[Msg] {
       case BookAnotherMachine =>
-        println("Training program: "+ tp.allExercises)
         if(noExercisesLeft(tp)) {
-          println("No exercises left")
+          println("[CUSTOMER ACTOR]  no exercises left")
           timers.cancel(TimerKey);
           target ! TrainingCompleted()
         }
         else {
           timers.cancel(TimerKey)
-          target ! NextMachineBooking(tp.allExercises.tail.head)
+          println("[CUSTOMER ACTOR]  notify for next machine booking")
+          target ! NextMachineBooking(ex)
         }
         Behaviors.stopped
       case _ => waitUntilTimeout()
     }
   }
 
-  private def noExercisesLeft(tp: TrainingProgram): Boolean = tp.allExercises.tail.isEmpty
+  private def noExercisesLeft(tp: TrainingProgram): Boolean = tp.allExercises.isEmpty
 }
 

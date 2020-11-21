@@ -19,7 +19,7 @@ import scala.concurrent.duration._
 
 class CustomerActorTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
-  val c1: Customer = new CustomerImpl("customer-1", "sokol", "guri", "20/05/2020", "customer-1")
+  /*val c1: Customer = new CustomerImpl("customer-1", "sokol", "guri", "20/05/2020", "customer-1")
 
   val tp: TrainingProgram =  TrainingProgram(c1) (Set(Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30)),
                                                       Exercise(RunningMachineParameters(speed = 11, incline = 21, minutes = 30))))
@@ -79,5 +79,5 @@ class CustomerActorTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       customerProbe.expectMessage(5.seconds, ExerciseCompleted(tp))
 
     }
-  }
+  } */
 }
