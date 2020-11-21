@@ -39,8 +39,8 @@ object ImplicitWorkoutConverters {
             case RUNNING => RunningMachineParameters(incline,speed, timer)
             case LIFTING => LiftingMachineParameters(weight, sets, repetitions, setForSec)
             case CYCLING => CyclingMachineParameters(incline, timer)
-            case LEG_PRESS => LegPressParameters(weight,incline,sets,repetitions,setForSec)
-            case CHEST_FLY => ChestFlyParameters(weight,incline,sets,repetitions,setForSec)
+            case LEG_PRESS => LegPressParameters(weight,sets,repetitions,setForSec)
+            case CHEST_FLY => ChestFlyParameters(weight,sets,repetitions,setForSec)
             /** TODO: other machines to be added */
         }
     }

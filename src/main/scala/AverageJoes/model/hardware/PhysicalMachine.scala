@@ -114,6 +114,8 @@ object PhysicalMachine {
         case MachineTypes.LEG_PRESS => new LegPress(context, machineID, machineLabel)
         case MachineTypes.CHEST_FLY => new ChestFly(context, machineID, machineLabel)
         case MachineTypes.CYCLING => new CyclingMachine(context, machineID, machineLabel)
+        case MachineTypes.RUNNING => new RunningMachine(context, machineID, machineLabel)
+        case MachineTypes.LIFTING => new LiftingMachine(context, machineID, machineLabel)
       }
     )
   }
@@ -151,37 +153,44 @@ object PhysicalMachine {
     }
   }
 
+  import AverageJoes.model.workout.MachineParameters._
   /***** LEG PRESS *****/
-  case class LegPressParameters(weight: NonNegInt, length: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
-    extends MachineParametersBySet { override val machineType: MachineType = LEG_PRESS }
+  case class LegPressParameters(weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
+    extends MachineParametersBySet with Weight
+  { override val machineType: MachineType = LEG_PRESS }
+
 
   private class LegPress(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
     extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){ override val machineType: MachineType = LEG_PRESS }
 
   /***** CHEST FLY *****/
-  case class ChestFlyParameters(weight: NonNegInt, height: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
-    extends  MachineParametersBySet { override val machineType: MachineType = CHEST_FLY }
+  case class ChestFlyParameters(weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
+    extends  MachineParametersBySet with Weight
+  { override val machineType: MachineType = CHEST_FLY }
 
   private class ChestFly(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
     extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){ override val machineType: MachineType = CHEST_FLY }
 
   /***** CYCLING MACHINE *****/
-  case class CyclingMachineParameters(resistance: NonNegInt, override val minutes: NonNegInt)
-    extends MachineParametersByTime { override val machineType: MachineType = CYCLING }
+  case class CyclingMachineParameters(override val incline: NonNegInt, override val minutes: NonNegInt)
+    extends MachineParametersByTime with Incline
+  { override val machineType: MachineType = CYCLING }
 
   private class CyclingMachine(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
     extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){ override val machineType: MachineType = CYCLING }
 
   /***** RUNNING MACHINE *****/
   case class RunningMachineParameters(incline: NonNegInt, speed: NonNegInt, override val minutes: NonNegInt)
-    extends MachineParametersByTime { override val machineType: MachineType = RUNNING }
+    extends MachineParametersByTime with Incline with Speed
+  { override val machineType: MachineType = RUNNING }
 
   private class RunningMachine(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
     extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){ override val machineType: MachineType = RUNNING }
 
   /***** LIFTING MACHINE *****/
   case class LiftingMachineParameters(weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
-    extends MachineParametersBySet { override val machineType: MachineType = LIFTING }
+    extends MachineParametersBySet with Weight
+  { override val machineType: MachineType = LIFTING }
 
   private class LiftingMachine(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
     extends PhysicalMachineImpl.PhysicalMachineImpl(context, machineID, machineLabel){ override val machineType: MachineType = LIFTING }
