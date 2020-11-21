@@ -13,9 +13,6 @@ import scala.swing.{GridPanel, Swing}
 sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
   createViewEntity()
 
-  override def onMessage(msg: ViewToolActor.Msg): Behavior[ViewToolActor.Msg] = msg match {
-    case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
-  }
   def createViewEntity()
   def updateViewEntity(mg: String)
 }
@@ -35,6 +32,10 @@ object ViewToolActor {
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
     var panel: Option[GridPanel] = Option.empty
     var machine: Option[UserGui] = Option.empty
+
+    override def onMessage(msg: ViewToolActor.Msg): Behavior[ViewToolActor.Msg] = msg match {
+      case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
+    }
 
     def createViewEntity(): Unit = {
       scala.swing.Swing.onEDT{
@@ -70,6 +71,7 @@ object ViewToolActor {
     }
 
     override def onMessage(msg: Msg): Behavior[Msg] = msg match {
+      case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
       case m: Msg.SetMachineParameters => setMachineParameters(m.list); Behaviors.same
       case m: Msg.ExerciseCompleted =>  exerciseCompleted(); Behaviors.same
     }

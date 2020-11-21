@@ -23,7 +23,7 @@ object GymController {
     //From Device
     final case class DeviceInGym(customerID: String, replyTo: ActorRef[Device.Msg]) extends Msg //Device enter in Gym
     //From MachineActor
-    final case class UserLogin(customerID: String, machineLabel: PhysicalMachine.MachineLabel, pm: ActorRef[PhysicalMachine.Msg], replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
+    final case class UserLogin(customerID: String, machineLabel: PhysicalMachine.MachineLabel, phMachineType: MachineTypes.MachineType, pm: ActorRef[PhysicalMachine.Msg], replyTo:ActorRef[MachineActor.Msg]) extends Msg //User logged
     //From HardwareController
     final case class PhysicalMachineWakeUp(machineID: String, machineLabel: MachineLabel, phMachineType: MachineTypes.MachineType, replyTo: ActorRef[PhysicalMachine.Msg]) extends Msg //Login to the controller
     //From CustomerActor & Co
@@ -46,7 +46,7 @@ object GymController {
           m.replyTo ! Device.Msg.GoIdle()
           Behaviors.same
 
-        case m: Msg.UserLogin =>  customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.replyTo, m.pm); Behaviors.same
+        case m: Msg.UserLogin =>  customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.phMachineType, m.replyTo, m.pm); Behaviors.same
 
         case m: Msg.CustomerRegistered => Behaviors.same //ToDo: not used
 
@@ -62,7 +62,7 @@ object GymController {
           //Before was CustomerManager
           Behaviors.same
 
-        case m: GymController.Msg => LogManager.log(logName+" Not Managed Message: "+m); Behaviors.same
+        //case m: GymController.Msg => LogManager.log(logName+" Not Managed Message: "+m); Behaviors.same
       }
     }
   }
