@@ -22,7 +22,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
   private val logName: String = PhysicalMachine.logName+"_"+machineID //ToDo: mettere private anche nelle altre classi
 
-  val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID, machineLabel, context.self) , "M_GUI_"+machineID)
+  val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID, machineLabel, machineType, context.self) , "M_GUI_"+machineID)
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"onMessage")
@@ -101,6 +101,8 @@ object PhysicalMachine {
     //From Device
     final case class Rfid(customerID: String) extends Msg { override def From: String = "Device"; override def To: String = logName }
     final case class HeartRate(heartRate: Int) extends Msg with NonLoggableMsg { override def From: String = "Device"; override def To: String = logName }
+    //From View
+    final case class StartExercise(list: List[(String,Int)]) extends Msg { override def From: String = "View"; override def To: String = logName }
   }
   //Self messages
   private final case class ExerciseEnds() extends Msg with NonLoggableMsg { override def From: String = "PM"; override def To: String = "PM" }
