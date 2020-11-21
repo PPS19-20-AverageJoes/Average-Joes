@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -9,7 +10,6 @@ import scala.swing.{GridPanel, Swing}
 
 
 sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
-  val machineID: String
   createViewEntity()
 
   override def onMessage(msg: ViewToolActor.Msg): Behavior[ViewToolActor.Msg] = msg match {
@@ -27,7 +27,7 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
   }
 
-  class ViewDeviceActor(override val context: ActorContext[Msg], override val machineID: String,
+  class ViewDeviceActor(override val context: ActorContext[Msg], val deviceLabel: String,
                         actorRef: ActorRef[Device.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor  {
     var panel: Option[GridPanel] = Option.empty
@@ -36,7 +36,7 @@ object ViewToolActor {
     def createViewEntity(): Unit = {
       scala.swing.Swing.onEDT{
         panel = Option.apply(View._getUserView())
-        machine = Option.apply(UserGui(actorRef: ActorRef[Device.Msg]))
+        machine = Option.apply(UserGui(actorRef: ActorRef[Device.Msg], deviceLabel))
         panel.get.contents += machine.get
       }
     }
@@ -49,8 +49,9 @@ object ViewToolActor {
   }
 
   class ViewPhysicalMachineActor(override val context: ActorContext[Msg],
-                                 override val machineID: String,
-                                 actorRef: ActorRef[PhysicalMachine.Msg])
+                                val machineID: String,
+                                val machineLabel: MachineLabel,
+                                actorRef: ActorRef[PhysicalMachine.Msg])
     extends AbstractBehavior[Msg](context) with ViewToolActor {
      var panel: Option[MachineView] = Option.empty
      var machine: Option[MachineGUI] = Option.empty
@@ -58,7 +59,7 @@ object ViewToolActor {
      def createViewEntity(): Unit = {
       scala.swing.Swing.onEDT{
         panel = Option.apply(View._getMachineView())
-        machine = Option.apply(MachineGUI())
+        machine = Option.apply(MachineGUI(machineID+" - "+machineLabel))
         panel.get.contents += machine.get
         panel.get.addEntry(machineID, actorRef)
       }
@@ -72,12 +73,12 @@ object ViewToolActor {
   }
 
   object ViewPhysicalMachineActor {
-    def apply(machineID:String, actorRef: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] =
-      Behaviors.setup(context => new ViewPhysicalMachineActor(context, machineID, actorRef))
+    def apply(machineID:String, machineLabel: MachineLabel, actorRef: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] =
+      Behaviors.setup(context => new ViewPhysicalMachineActor(context, machineID, machineLabel, actorRef))
   }
 
   object ViewDeviceActor {
-    def apply(machineID:String, actorRef: ActorRef[Device.Msg]): Behavior[Msg] =
-      Behaviors.setup(context => new ViewDeviceActor(context, machineID, actorRef))
+    def apply(deviceLabel:String, actorRef: ActorRef[Device.Msg]): Behavior[Msg] =
+      Behaviors.setup(context => new ViewDeviceActor(context, deviceLabel, actorRef))
   }
 }

@@ -1,6 +1,6 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgFromTo, MachineTypes}
+import AverageJoes.common.{LogManager, LoggableMsgFromTo, MachineTypes, NonLoggableMsg}
 import AverageJoes.model.hardware.PhysicalMachine.Msg.HeartRate
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime}
@@ -9,6 +9,7 @@ import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+
 import scala.collection.mutable.ListBuffer
 
 sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
@@ -18,10 +19,16 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   val machineType: MachineTypes.MachineType
 
   private val logName: String = PhysicalMachine.logName+"_"+machineID //ToDo: mettere private anche nelle altre classi
+
+  val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID, machineLabel, context.self) , "M_GUI_"+machineID)
+
   override def onMessage(msg: Msg): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"onMessage")
     Behaviors.receiveMessagePartial {
-      case m: Msg.MachineActorStarted => m.refMA ! MachineActor.Msg.GoIdle(machineID) ;operative(m.refMA)
+      case m: Msg.MachineActorStarted =>
+        m.refMA ! MachineActor.Msg.GoIdle(machineID)
+        display(machineLabel+" OnLine")
+        operative(m.refMA)
     }
   }
 
@@ -29,8 +36,8 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     LogManager.logBehaviourChange(logName,"operative")
     Behaviors.receiveMessagePartial {
       case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel); Behaviors.same
-      case m: Msg.Display => display(m.message); Behaviors.same
-      case m: Msg.ConfigMachine => configure(m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
+      case m: Msg.Display => display(machineLabel + " " + m.message); Behaviors.same
+      case m: Msg.ConfigMachine => configure(m.customerID, m.machineParameters); inExercise(ma, m.customerID, m.machineParameters)
     }
 
   }
@@ -44,6 +51,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     Behaviors.receiveMessagePartial {
       case m: HeartRate =>
         heartBeats += m.heartRate
+        display(customerID+" HR: " + m.heartRate)
         Behaviors.same
 
       case ExerciseEnds() => exerciseEnds(ma, customerID, machineParameters, heartBeats)
@@ -64,13 +72,14 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     val avg: Int = heartBeats.sum[Int] / (heartBeats.count(_ => true) match { case c: Int if c > 0 => c; case _ => 1})
 
     ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters)
-    println(max, min, avg) //ToDo: struttura dati
+    println(max, min, avg) //ToDo: struttura dati + inserire datastamp
 
+    display(machineLabel+" Free")
     operative(ma)
   }
 
   def display (s: String)
-  def configure (machineParameters: MachineParameters)
+  def configure (customerID: String, machineParameters: MachineParameters)
   def formatConfiguration(machineParameters: MachineParameters): String
 }
 
@@ -84,10 +93,10 @@ object PhysicalMachine {
     final case class ConfigMachine(customerID: String, machineParameters: MachineParameters) extends Msg { override def From: String = "MA"; override def To: String = logName }
     //From Device
     final case class Rfid(customerID: String) extends Msg { override def From: String = "Device"; override def To: String = logName }
-    final case class HeartRate(heartRate: Int) extends Msg { override def From: String = "Device"; override def To: String = logName }
+    final case class HeartRate(heartRate: Int) extends Msg with NonLoggableMsg { override def From: String = "Device"; override def To: String = logName }
   }
   //Self messages
-  private final case class ExerciseEnds() extends Msg { override def From: String = "PM"; override def To: String = "PM" }
+  private final case class ExerciseEnds() extends Msg with NonLoggableMsg { override def From: String = "PM"; override def To: String = "PM" }
 
   type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
@@ -102,32 +111,19 @@ object PhysicalMachine {
     )
   }
 
-  //ToDO: Obsolete?
-  private trait DefaultSimulatedPhysicalBehavior extends PhysicalMachine {
-    override def display(s: String): Unit = {
-      val _display: String = machineID + " " + s
-    }
-
-    override def configure(machineParameters: MachineParameters): Unit = {
-      if(machineParameters.machineType != machineType) throw new IllegalArgumentException
-      else formatConfiguration(machineParameters)
-    }
-  }
-
   object PhysicalMachineImpl{
     abstract class PhysicalMachineImpl(context: ActorContext[Msg], override val machineID: String, override val machineLabel: String)
       extends AbstractBehavior[Msg](context) with PhysicalMachine {
 
-      private val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID,context.self) , "M_GUI_"+machineID)
-
       override def display(s: String): Unit = {
-        val _display: String = machineID + " " + s
         machineGui ! ViewToolActor.Msg.UpdateViewObject(s)
       }
+
       //Commented for test
-      override def configure(machineParameters: MachineParameters): Unit = {
-        if(machineParameters.machineType != machineType) throw new IllegalArgumentException
-        else formatConfiguration(machineParameters)
+      override def configure(customerID: String, machineParameters: MachineParameters): Unit = {
+        display(customerID)
+        /*if(machineParameters.machineType != machineType) throw new IllegalArgumentException
+        else formatConfiguration(machineParameters)*/
       }
 
       override def formatConfiguration(machineParameters: MachineParameters): String = {

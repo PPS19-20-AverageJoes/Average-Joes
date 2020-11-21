@@ -1,7 +1,8 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, NonLoggableMsg, ServerSearch}
+import AverageJoes.common.{LogManager, LoggableMsgTo, NonLoggableMsg, ServerSearch}
 import AverageJoes.controller.GymController
+import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewDeviceActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -13,31 +14,33 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
  * AC
  */
 trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
+  import Device._
   def customerID: String
+  val deviceLabel: DeviceLabel //To show on device
   val logName: String = logName +"_"+ customerID
 
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
   //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
+  val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(deviceLabel,context.self) , "D_GUI_"+customerID)
 
-  import Device._
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
-      case Msg.GoIdle() => idle()
+      case Msg.GoIdle() => display(deviceLabel+" OnLine"); idle()
     }
   }
 
   private def idle(): Behavior[Msg] ={
     LogManager.logBehaviourChange(logName,"init")
     Behaviors.receiveMessagePartial {
-      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.refPM)
+      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.machineLabel, m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
     }
   }
 
   private case object TimerKey
-  private def inExercise(pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
+  private def inExercise(machineLabel: MachineLabel, pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
     LogManager.logBehaviourChange(logName,"inExercise")
     Behaviors.receiveMessagePartial {
@@ -50,10 +53,16 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
           case hr => hr
         }
         pm ! PhysicalMachine.Msg.HeartRate(heartRateSim._1)
+        display(machineLabel + " HR: " + heartRateSim._1)
         timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
         Behaviors.same
 
-      case Msg.CustomerLogOut() => idle()
+      case m: Msg.CustomerLogOut=>
+        m.machineLabel match {
+          case some: Some[MachineLabel] => display("Booking "+some.get)
+          case _ => display(deviceLabel+" OnLine")
+        }
+        idle()
     }
   }
 
@@ -73,11 +82,13 @@ object Device {
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //From CustomerActor
     final case class CustomerLogged(refPM: ActorRef[PhysicalMachine.Msg], machineLabel: PhysicalMachine.MachineLabel) extends Msg
-    final case class CustomerLogOut() extends Msg
+    final case class CustomerLogOut(machineLabel: Option[MachineLabel]) extends Msg
     //case class MsgDisplay(message: String) extends MsgDevice
   }
   //Self messages
   private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg with NonLoggableMsg
+
+  type DeviceLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
   private trait Sign
   private final case class Pos() extends Sign
@@ -93,9 +104,9 @@ object Device {
   }
 
   import DeviceType._
-  def apply(phMachineType: Type, deviceID: String): Behavior[Msg] = {
+  def apply(phMachineType: Type, deviceID: String, deviceLabel: DeviceLabel): Behavior[Msg] = {
     phMachineType match{
-      case DeviceType.wristband => Wristband(deviceID)
+      case DeviceType.wristband => Wristband(deviceID, deviceLabel)
     }
   }
 
@@ -103,13 +114,11 @@ object Device {
    * AC
    * @param customerID: ID of the device. In real devices, is stored on config files
    */
-  class Wristband(context: ActorContext[Device.Msg], override val customerID: String) extends AbstractBehavior[Device.Msg](context) with Device {
+  class Wristband(context: ActorContext[Device.Msg], override val customerID: String, override val deviceLabel: DeviceLabel) extends AbstractBehavior[Device.Msg](context) with Device {
 
-    //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(context, customerID,context.self) , "DevGui_"+customerID)
-    val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
+    //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
 
     def display (s: String): Unit = {
-      println(logName,"[display]",s)
       deviceGui ! ViewToolActor.Msg.UpdateViewObject(s)
     }
 
@@ -119,6 +128,6 @@ object Device {
   }
 
   object Wristband{
-    def apply(customerID: String): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, customerID))
+    def apply(customerID: String, deviceLabel: DeviceLabel): Behavior[Device.Msg] = Behaviors.setup(context => new Wristband(context, customerID, deviceLabel))
   }
 }

@@ -17,7 +17,7 @@ class MachineTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     val probePh = createTestProbe[PhysicalMachine.Msg]()
     val probeMA = createTestProbe[MachineActor.Msg]()
     "notify booking " in {
-      val actor = spawn(MachineActor(probeGym.ref,probePh.ref,MachineTypes.CHEST_FLY))
+      val actor = spawn(MachineActor(probeGym.ref,probePh.ref," "))
       actor ! MachineActor.Msg.GoIdle("1")
       val register = probeMA.receiveMessage()
       actor ! MachineActor.Msg.UserLogIn("34","12")

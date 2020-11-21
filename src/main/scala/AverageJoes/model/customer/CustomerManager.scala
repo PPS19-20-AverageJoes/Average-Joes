@@ -44,7 +44,7 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
    * TODO: to optional ref
    */
   var controllerRef: ActorRef[GymController.Msg] = _
-  var deviceRef: ActorRef[Device.Msg] = _
+  //var deviceRef: ActorRef[Device.Msg] = _
   val groupId = "customers"
   val customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId, context.self), "group-"+groupId)
 
@@ -54,12 +54,12 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
     case customerCreation @ RequestCustomerCreation(customerId, controller, device) =>
       print("!!!!!!!!!!!!!!!!!!!!!!!!!"+ customerId+"\n")
       controllerRef = controller
-      deviceRef = device
+      //deviceRef = device
       customerGroup ! customerCreation
       Behaviors.same
 
     case RequestCustomerLogin(customerId, machineLabel, machine, phMachine) =>
-      customerGroup ! CustomerLogin(customerId, machineLabel, machine, phMachine, deviceRef)
+      customerGroup ! CustomerLogin(customerId, machineLabel, machine, phMachine)
       Behaviors.same
 
     case customerList @ RequestCustomerList(_) =>

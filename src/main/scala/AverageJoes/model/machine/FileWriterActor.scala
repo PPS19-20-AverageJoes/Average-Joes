@@ -22,7 +22,7 @@ class FileWriterActor(context: ActorContext[FileWriterActor.Msg])
     case WriteOnFile(customerID, parameters) =>
       val path = "src/main/resources/workoutData.json"
       FileParser.encoding(path, WriteOnFile(customerID, parameters))
-      this
+      Behaviors.stopped
   }
 
 }

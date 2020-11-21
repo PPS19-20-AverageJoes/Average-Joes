@@ -1,5 +1,7 @@
 [
 {"customerID":"Wristband1","sets":0,"timer":32,"repetitions":0,"incline":7,"speed":0,"weight":0,"typeMachine":"CYCLING","secForSet":0,"id":"1"},
+  {"customerID":"Wristband1","sets":1,"timer":0,"repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"3"},
+
 {"customerID":"Wristband2","sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"2"}
 ]
 
