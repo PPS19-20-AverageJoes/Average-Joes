@@ -7,7 +7,7 @@ import org.scalatest.matchers.should.Matchers
 import AverageJoes.utils.DateUtils._
 import AverageJoes.utils.SafePropertyValue.NonNegative._ /** Using implicit NonNegDouble and NonNegInt */
 class TrainingProgramTest extends AnyFlatSpec with Matchers {
-
+/*
   val customer1: Customer = new CustomerImpl("GEUS", "sokol", "guri", "27/08/1998", "1234")
 
 
@@ -53,6 +53,6 @@ class TrainingProgramTest extends AnyFlatSpec with Matchers {
     assert(trainingProgram2.allExercises.isEmpty)
     assertThrows[NoExercisesFound](trainingProgram2.removeExercise(Exercise(RunningMachineParameters(10, 10, 11))))
   }
-
+*/
 
 }
