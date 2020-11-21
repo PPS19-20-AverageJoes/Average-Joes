@@ -1,7 +1,7 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.common.database.table.{Customer, CustomerImpl}
-import AverageJoes.model.workout.{LiftMachineParameters, RunningMachineParameters}
+import AverageJoes.model.hardware.PhysicalMachine.{LiftingMachineParameters, RunningMachineParameters}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import AverageJoes.utils.DateUtils._
@@ -28,9 +28,9 @@ class TrainingProgramTest extends AnyFlatSpec with Matchers {
     assert(trainingProgram1.allExercises.size == 1)
     assert(trainingProgram1.allExercises == Set(Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30))))
 
-    trainingProgram1.addExercise(Exercise((LiftMachineParameters(10, 11,10,10))))
+    trainingProgram1.addExercise(Exercise((LiftingMachineParameters(10, 11,10,10))))
     assert(trainingProgram1.allExercises.size == 2)
-    assert(trainingProgram1.allExercises == Set(Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30)), Exercise(LiftMachineParameters(10, 11,10,10))))
+    assert(trainingProgram1.allExercises == Set(Exercise(RunningMachineParameters(speed = 10, incline = 20, minutes = 30)), Exercise(LiftingMachineParameters(10, 11,10,10))))
   }
 
   it should "remove exercises" in {

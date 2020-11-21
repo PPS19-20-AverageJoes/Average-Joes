@@ -1,8 +1,8 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
-import AverageJoes.model.workout.RunningMachineParameters
-import AverageJoes.utils.ExerciseUtils.ExerciseParameters._
+import AverageJoes.model.hardware.PhysicalMachine.RunningMachineParameters
+
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

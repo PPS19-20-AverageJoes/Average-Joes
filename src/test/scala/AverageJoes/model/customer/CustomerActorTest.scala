@@ -9,7 +9,7 @@ import AverageJoes.model.fitness.CustomerExercising.ExerciseTiming
 import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.hardware.Device
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout.RunningMachineParameters
+import AverageJoes.model.hardware.PhysicalMachine.RunningMachineParameters
 import org.scalatest.wordspec.AnyWordSpecLike
 import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestProbe}
 import akka.actor.typed.ActorRef
