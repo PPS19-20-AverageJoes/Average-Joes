@@ -19,6 +19,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
   private val logName: String = PhysicalMachine.logName+"_"+machineID //ToDo: mettere private anche nelle altre classi
   override def onMessage(msg: Msg): Behavior[Msg] = {
+    LogManager.logBehaviourChange(logName,"onMessage")
     Behaviors.receiveMessagePartial {
       case m: Msg.MachineActorStarted => m.refMA ! MachineActor.Msg.GoIdle(machineID) ;operative(m.refMA)
     }
@@ -123,7 +124,7 @@ object PhysicalMachine {
         val _display: String = machineID + " " + s
         machineGui ! ViewToolActor.Msg.UpdateViewObject(s)
       }
-
+      //Commented for test
       override def configure(machineParameters: MachineParameters): Unit = {
         if(machineParameters.machineType != machineType) throw new IllegalArgumentException
         else formatConfiguration(machineParameters)
