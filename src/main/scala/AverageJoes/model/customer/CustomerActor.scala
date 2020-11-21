@@ -27,7 +27,8 @@ import scala.util.{Failure, Success}
 
 
 object CustomerActor {
-  def apply(manager: ActorRef[CustomerManager.Msg], customerId: String): Behavior[Msg] = Behaviors.setup(context => new CustomerActor(context, manager, customerId))
+  def apply(manager: ActorRef[CustomerManager.Msg], customerId: String, device: ActorRef[Device.Msg]): Behavior[Msg] =
+    Behaviors.setup(context => new CustomerActor(context, manager, customerId, device))
 
   trait Msg extends LoggableMsg
   final case class CustomerTrainingProgram(tp: TrainingProgram, group: ActorRef[CustomerGroup.Msg]) extends Msg
@@ -42,7 +43,8 @@ object CustomerActor {
   final case object Passivate extends Msg
 }
 
-class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[CustomerManager.Msg], customerId: String) extends AbstractBehavior[CustomerActor.Msg](ctx) {
+class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[CustomerManager.Msg], customerId: String, device: ActorRef[Device.Msg])
+  extends AbstractBehavior[CustomerActor.Msg](ctx) {
   import CustomerActor._
 
   val managerRef: ActorRef[CustomerManager.Msg] = manager
@@ -92,8 +94,9 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
       case ExerciseCompleted(tp) =>
         logged = false
+        /** TODO: Exercise finished in Device */
+        device ! ExerciseFinished()
         context.self ! UpdateTrainingProgram(updatedTrainingProgram(tp))
-        //Todo send exercise finished message to device
         Behaviors.same
 
 

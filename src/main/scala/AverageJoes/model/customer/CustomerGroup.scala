@@ -39,7 +39,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-    case RequestCustomerCreation(customerId, controller, _) =>
+    case RequestCustomerCreation(customerId, controller, device) =>
       customerIdToActor.get(customerId) match {
 
         case Some(customerActor) =>
@@ -48,7 +48,7 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
         case None =>
           if(isCustomerOnStorage(customerId)) {
-            val customerActor = context.spawn(CustomerActor(manager, customerId), s"customer-$customerId")
+            val customerActor = context.spawn(CustomerActor(manager, customerId, device), s"customer-$customerId")
             //context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
             customerIdToActor += customerId -> customerActor
 
