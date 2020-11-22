@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 
 class StorageTest extends AnyFlatSpec with Matchers {
 
- /* val e1 = new UselessEntity("e1")
+  val e1 = new UselessEntity("e1")
   val e2 = new UselessEntity("e2")
 
   private var storage: Storage[UselessEntity] = emptyStorage()
@@ -44,6 +44,6 @@ class StorageTest extends AnyFlatSpec with Matchers {
   }
 
 
-  def emptyStorage() = new GymStorage[UselessEntity]()*/
+  def emptyStorage() = new GymStorage[UselessEntity]()
 
 }
