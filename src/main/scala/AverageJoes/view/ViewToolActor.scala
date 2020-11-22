@@ -91,6 +91,7 @@ object ViewToolActor {
     /** TODO: text field to be clean when exercise completed */
     def exerciseCompleted(): Unit = {
       scala.swing.Swing.onEDT{
+        machine.get.clearFields()
         machine.get.setButton(true)
       }
     }
