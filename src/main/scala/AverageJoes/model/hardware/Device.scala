@@ -34,8 +34,16 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   private def idle(): Behavior[Msg] ={
     LogManager.logBehaviourChange(logName,"init")
     Behaviors.receiveMessagePartial {
-      case m: Msg.CustomerLogged => display(m.machineLabel); inExercise(m.machineLabel, m.refPM)
+      case m: Msg.CustomerLogged => display(m.machineLabel); waitingForStart(m.machineLabel, m.refPM) //inExercise(m.machineLabel, m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
+      case HeartRateSimulation(_,_) => Behaviors.same
+    }
+  }
+
+  private def waitingForStart(machineLabel: MachineLabel, pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] ={
+    LogManager.logBehaviourChange(logName,"waitingForStart")
+    Behaviors.receiveMessagePartial {
+      case Msg.StartExercise() => inExercise(machineLabel, pm)
     }
   }
 
@@ -78,6 +86,7 @@ object Device {
   sealed trait Msg extends LoggableMsgTo { override def To: String = "Device" }
   object Msg {
     final case class GoIdle() extends Msg
+    final case class StartExercise() extends Msg
     //From GUI
     final case class NearDevice(refPM: ActorRef[PhysicalMachine.Msg]) extends Msg
     //From CustomerActor

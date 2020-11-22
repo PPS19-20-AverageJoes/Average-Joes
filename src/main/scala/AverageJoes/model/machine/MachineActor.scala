@@ -24,13 +24,14 @@ object MachineActor{
   sealed trait Msg extends LoggableMsg
 
   object Msg {
-    final case class UserLogIn(customerID: String, machineLabel: MachineLabel) extends Msg
+    final case class UserLogIn(customerID: String, machineLabel: MachineLabel, machineType: MachineTypes.MachineType) extends Msg
     final case class UserMachineWorkoutPlan(customerID: String) extends Msg
     final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters, executionValues: ExecutionValues) extends Msg
     final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
     final case class BookingRequest(replyTo: ActorRef[MachineBooker.Msg], customerID: String) extends Msg
     final case class CustomerLogging(customerID: String, machineParameters: MachineParameters, isLogged:Boolean) extends Msg
     final case class GoIdle(machineID: String) extends Msg
+    final case class StartExercise(customerID: String) extends Msg
   }
 
   private final case class BookingTimeoutException() extends Msg with NonLoggableMsg
@@ -52,9 +53,9 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   private def idle(): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"idle")
     Behaviors.receiveMessagePartial {
-      case Msg.UserLogIn(customerID,machineLabel) =>
+      case Msg.UserLogIn(customerID,machineLabel,machineType) =>
         println(controller)
-        controller ! GymController.Msg.UserLogin(customerID, machineLabel, physicalMachine, context.self)
+        controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
@@ -106,6 +107,8 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
 
+      case Msg.StartExercise(customerID) => Behaviors.same //ToDo: mandare messaggio a CustomerActor, che lo manderà al device
+
       case BookingTimeoutException() => Behaviors.same
     }
   }
@@ -113,9 +116,9 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   private def bookedStatus(bookedCustomer: String): Behavior[Msg]= {
     LogManager.logBehaviourChange(logName,"bookedStatus")
     Behaviors.receiveMessagePartial{
-      case Msg.UserLogIn(customerID, machineLabel) =>
+      case Msg.UserLogIn(customerID, machineLabel, machineType) =>
         if(bookedCustomer.equals(customerID))
-          controller ! GymController.Msg.UserLogin(customerID, machineLabel, physicalMachine,context.self)
+          controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine,context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
