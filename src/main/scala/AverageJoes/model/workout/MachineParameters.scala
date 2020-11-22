@@ -4,6 +4,7 @@ import MachineTypes._
 import AverageJoes.utils.SafePropertyValue.NonNegative.{NonNegDuration, NonNegInt, toInt}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
 
 /***** Exercise Metrics *****/
 
@@ -158,7 +159,7 @@ object MachineParameters{
 
 }
 
-object Test extends App(){
+object Test extends App(){ //ToDo: test
   import AverageJoes.model.hardware.PhysicalMachine._
 
   val lpp = LegPressParameters(50,1,10,2)

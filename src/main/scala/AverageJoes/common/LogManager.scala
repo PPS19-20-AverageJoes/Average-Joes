@@ -20,15 +20,15 @@ trait NonLoggableMsg extends LoggableMsg {
 }
 
 object LogManager{
-  def log(s: String) = {
+  def log(s: String) {
     println(s)
   }
 
-  def logBehaviourChange(subject: String, behavior: String){
+  def logBehaviourChange(subject: String, behavior: String) {
     log("@Behaviour %s change to %s".format(subject, behavior))
   }
 
-  def logError(error: String): Unit ={
+  def logError(error: String) {
     log("!!!ERROR: "+error)
   }
 }
