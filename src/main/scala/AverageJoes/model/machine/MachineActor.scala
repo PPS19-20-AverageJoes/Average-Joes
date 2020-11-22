@@ -15,7 +15,7 @@ import AverageJoes.model.workout.{MachineParameters, MachineTypes}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
  * Machine actor class
@@ -35,7 +35,8 @@ object MachineActor{
     final case class BookingRequest(replyTo: ActorRef[MachineBooker.Msg], customerID: String) extends Msg
     final case class CustomerLogging(customerID: String, customer: ActorRef[CustomerActor.Msg], ex:Option[Exercise], isLogged:Boolean) extends Msg
     final case class GoIdle(machineID: String) extends Msg
-    final case class StartExercise() extends Msg
+
+    final case class StartExercise(duration: FiniteDuration) extends Msg
   }
 
   private final case class BookingTimeoutException() extends Msg with NonLoggableMsg
@@ -55,7 +56,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   }
 
   private def idle(): Behavior[Msg] = {
-    LogManager.logBehaviourChange(logName,"idle")
+    LogManager.logBehaviourChange(logName,"----------"+machineLabel+"idle")
     Behaviors.receiveMessagePartial {
       case Msg.UserLogIn(customerID,machineLabel,machineType) =>
         println(controller)
@@ -76,7 +77,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
    */
   private case object TimerKey
   private def connecting(): Behavior[Msg] = Behaviors.withTimers[Msg] {timers =>
-    timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(3000, "millis"))
+    timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(3, "sec"))
     LogManager.logBehaviourChange(logName,"connecting")
     Behaviors.receiveMessagePartial{
       case Msg.CustomerLogging(customerID, customer, ex, isLogged) =>
@@ -87,7 +88,11 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
           updateAndLogOut(customer, ex)
         }
 
-      case BookingTimeoutException() => physicalMachine ! PhysicalMachine.Msg.Display("Free"); idle()
+      case BookingTimeoutException() => {
+        println("[MACHINE ACTOR] " + machineLabel + " DIDN'T RECEIVE THE LOGGING MESSAGE IN TIME")
+        physicalMachine ! PhysicalMachine.Msg.Display("Free");
+        idle()
+        }
 
       case Msg.BookingRequest (replyTo, customerID) =>
         replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
@@ -99,7 +104,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   //spawn sotto attore che scrive su disco
   //deaddevice() --> idle => chiedo i parametri
   //spawn sotto attore che scrive su disco
-  private def updateAndLogOut(customer: ActorRef[CustomerActor.Msg], ex:Option[Exercise]): Behavior[Msg] = {
+  private def updateAndLogOut(customer: ActorRef[CustomerActor.Msg], ex: Option[Exercise]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"updateAndLogOut")
     Behaviors.receiveMessagePartial{
       case Msg.BookingRequest(replyTo, customerID) =>
@@ -111,27 +116,38 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         child ! FileWriterActor.WriteOnFile(customerID,parameters, executionValues, date)
         idle()
 
-      case Msg.StartExercise() =>
-        customer ! CustomerActor.StartExercising(ex)
+      case Msg.StartExercise(duration) =>
+        customer ! CustomerActor.StartExercising((ex, duration))
         Behaviors.same //ToDo: mandare messaggio a CustomerActor, che lo manderà al device
 
       case BookingTimeoutException() => Behaviors.same
     }
   }
-  //verificare che i custumer id coincida con quello bookato
-  private def bookedStatus(bookedCustomer: String): Behavior[Msg]= {
-    LogManager.logBehaviourChange(logName,"bookedStatus")
-    Behaviors.receiveMessagePartial{
-      case Msg.UserLogIn(customerID, machineLabel, machineType) =>
-        if(bookedCustomer.equals(customerID))
-          controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine, context.self)
-        connecting()
 
-      case Msg.BookingRequest(replyTo, customerID) =>
-        replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
-        Behaviors.same
+  //verificare che i custumer id coincida con quello bookato
+  private def bookedStatus(bookedCustomer: String): Behavior[Msg]=
+    Behaviors.withTimers[Msg] { timers => timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(30, "sec"))
+
+      LogManager.logBehaviourChange("MACHINE ACTOR", "bookedStatus")
+
+      Behaviors.receiveMessagePartial {
+        case BookingTimeoutException() => {
+          println("[MACHINE ACTOR] " + machineLabel + " DIDN'T RECEIVE THE LOGGING MESSAGE IN TIME")
+          physicalMachine ! PhysicalMachine.Msg.Display("Free");
+          idle()
+        }
+
+        case Msg.UserLogIn(customerID, machineLabel, machineType) =>
+          if (bookedCustomer.equals(customerID))
+            controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine, context.self)
+          connecting()
+
+        case Msg.BookingRequest(replyTo, customerID) =>
+          replyTo ! MachineBooker.OnBookingResponse(context.self, machineLabel, false)
+          Behaviors.same
+      }
     }
-  }
+
 
   val logName: String = "Machine Actor"
 

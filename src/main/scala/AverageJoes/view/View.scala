@@ -119,7 +119,7 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType, acto
             try {
                 if(getParameters != Nil){
                     actorRef ! PhysicalMachine.Msg.StartExercise(getParameters)
-                    setButton(false)
+                    setButton(true)
                 }
             } catch {
                 case _: NumberFormatException =>

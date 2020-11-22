@@ -14,5 +14,6 @@
 
   {"customerID":"Wristband4","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"11"},
   {"customerID":"Wristband4","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"12"}
+
 ]
 

@@ -3,6 +3,7 @@ package AverageJoes.view
 import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
+import AverageJoes.view.ViewToolActor.Msg.ClearViewConfiguration
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import javax.swing.SwingUtilities
@@ -25,6 +26,9 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
     final case class SetMachineParameters(list: List[(String,Int)]) extends Msg
     final case class ExerciseCompleted() extends Msg
+
+    final case class ClearViewConfiguration() extends Msg
+
   }
 
   class ViewDeviceActor(override val context: ActorContext[Msg], val deviceLabel: String,
@@ -74,6 +78,7 @@ object ViewToolActor {
       case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
       case m: Msg.SetMachineParameters => setMachineParameters(m.list); Behaviors.same
       case m: Msg.ExerciseCompleted =>  exerciseCompleted(); Behaviors.same
+      case m: ClearViewConfiguration => exerciseCompleted(); Behaviors.same
     }
 
     override def updateViewEntity(msg: String): Unit = {
