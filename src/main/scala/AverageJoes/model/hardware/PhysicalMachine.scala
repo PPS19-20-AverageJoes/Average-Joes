@@ -48,21 +48,21 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
       case m: Msg.ConfigMachine =>
         val machineParameters = m.exercise match{
           case Some(t) => t.parameters
-          case _ => MachineTypes.getEmptyConfiguration(machineType)
+          case _ => MachineParameters.getEmptyConfiguration(machineType)
         }
         configure(m.customerID, machineParameters);
-        waitingForStart(ma, m.customerID, machineParameters)
+        waitingForStart(ma, m.customerID)
 
       case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
     }
   }
 
-  private def waitingForStart(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = {
+  private def waitingForStart(ma: ActorRef[MachineActor.Msg], customerID: String): Behavior[Msg] = {
     Behaviors.receiveMessagePartial {
       case m: Msg.StartExercise => {
-        // ToDo: machineParameters dalla view: m.list
-        ma ! MachineActor.Msg.StartExercise(machineParameters.duration)
-        inExercise(ma, customerID, machineParameters)
+        val newMachineParameters = MachineParameters.inoculateParametersFromList[String,Int](machineType, m.list, t => (t._1,t._2))
+        ma ! MachineActor.Msg.StartExercise(newMachineParameters.duration)
+        inExercise(ma, customerID, newMachineParameters)
       }
     }
   }
