@@ -72,7 +72,8 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
         case Some(customerActor) =>
           customerActor ! CustomerMachineLogin(machineLabel, machineType, phMachine, machine)
         case None =>
-          machine ! CustomerLogging(customerId, null, isLogged = false)
+          /** TODO be refactored */
+          machine ! CustomerLogging(customerId, null,  null, isLogged = false)
       }
       this
 

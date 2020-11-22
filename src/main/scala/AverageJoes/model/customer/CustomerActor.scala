@@ -10,7 +10,7 @@ import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLoggi
 import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.model.fitness.BookWhileExercising.BookTiming
 import AverageJoes.model.fitness.CustomerExercising.ExerciseTiming
-import AverageJoes.model.hardware.Device.Msg.{CustomerLogOut, CustomerLogged}
+import AverageJoes.model.hardware.Device.Msg.{CustomerLogOut, CustomerLogged, StartExercise}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
@@ -77,7 +77,6 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
           println("[CUSTOMER ACTOR] "+customerId+": is doing "+machineType+" and first exercise is "+ trainingProgram.allExercises.head.parameters.machineType)
 
           logged = true
-
            val toBeExecuted = exerciseToBeExecuted(machineType,trainingProgram)
             /** TODO: ActorRef[CustomerActor.Msg]  to machine */
             machine ! CustomerLogging(customerId, context.self, toBeExecuted, isLogged = true)
@@ -86,14 +85,14 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         }
         else {
           println("[CUSTOMER ACTOR] "+customerId+": refused logging request from "+ machineLabel)
-          machine ! CustomerLogging(customerId, null, isLogged = false)
+          machine ! CustomerLogging(customerId, context.self, null, isLogged = false)
         }
         Behaviors.same
 
       case StartExercising(exExecute) => {
-          exercising(exExecute, trainingProgram)
-          device !
-
+        println("---------------------------------[CUSTOMER ACTOR] "+customerId+": started exercing")
+        exercising(exExecute, trainingProgram)
+          device ! StartExercise()
           Behaviors.same
       }
 
@@ -103,7 +102,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
 
       case ExerciseCompleted(exSet) =>
-        println("[CUSTOMER ACTOR] "+customerId+": completed exercising, updated exercise set is: "+ exSet)
+        println("---------------------------------[CUSTOMER ACTOR] "+customerId+": completed exercising, updated exercise set is: "+ exSet)
         logged = false
         device ! CustomerLogOut(machineLabel)
         context.self ! UpdateTrainingProgram(exSet)
@@ -111,11 +110,13 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
 
       case UpdateTrainingProgram(tp) =>
-        println("[CUSTOMER ACTOR] "+customerId+": updated training program ---"+ tp.allExercises)
+        println("[CUSTOMER ACTOR] "+customerId+": updated training program ---")
         if(tp.allExercises.isEmpty) TrainingCompleted()
         active(tp,Option.empty)
 
-      case BookedMachine(machineLabel) => active(trainingProgram, machineLabel)
+      case BookedMachine(mLabel) => {
+        active(trainingProgram, mLabel)
+      }
 
       case TrainingCompleted() =>
         println("[CUSTOMER ACTOR] "+customerId+": TRAINING COMPLETED ---")
@@ -195,7 +196,7 @@ object MachineBooker {
          implicit val timeout: Timeout = 3 seconds
 
          context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customerId) ) {
-           case Success(OnBookingResponse(_,machineLabel, true)) => BookedAndFinished(Option(machineLabel))
+           case Success(OnBookingResponse(_, machineLabel, true)) => BookedAndFinished(Option(machineLabel))
            case Success(OnBookingResponse(_,_, false)) =>
              if(machines.tail.isEmpty) BookedAndFinished(Option.empty)
              else BookMachine(machines.tail)

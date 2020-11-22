@@ -5,6 +5,7 @@ import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineB
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
+import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
 
 object CustomerExercising {
@@ -37,7 +38,7 @@ class CustomerExercising(
     Behaviors.receiveMessage[Msg] {
       case ExerciseFinished =>
         println("[CUSTOMER ACTOR]  exercise completed ")
-        //target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
+        target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
         Behaviors.stopped
     }
   }
@@ -61,9 +62,10 @@ class BookWhileExercising(
                            tp: TrainingProgram) {
   import BookWhileExercising._
 
+  /** TODO: def a delta */
   private def initializing(): Behavior[BookWhileExercising.Msg] = {
     Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, BookAnotherMachine, ex.parameters.duration)
+      timers.startSingleTimer(TimerKey, BookAnotherMachine,new duration.FiniteDuration(ex.parameters.duration.length-10, ex.parameters.duration.unit))
       waitUntilTimeout()
     }
   }

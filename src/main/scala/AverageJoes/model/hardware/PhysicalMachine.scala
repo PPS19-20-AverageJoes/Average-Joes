@@ -32,6 +32,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
         m.refMA ! MachineActor.Msg.GoIdle(machineID)
         display(machineLabel+" OnLine")
         operative(m.refMA)
+      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
     }
   }
 
@@ -41,6 +42,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
       case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel, machineType); Behaviors.same
       case m: Msg.Display => display(machineLabel + " " + m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.customerID, m.machineParameters); waitingForStart(ma, m.customerID, m.machineParameters)//inExercise(ma, m.customerID, m.machineParameters)
+      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
     }
   }
 
@@ -48,7 +50,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     Behaviors.receiveMessagePartial {
       case m: Msg.StartExercise => {
         // ToDo: machineParameters dalla view: m.list
-        ma ! MachineActor.Msg.StartExercise(customerID)
+        ma ! MachineActor.Msg.StartExercise()
         inExercise(ma, customerID, machineParameters)
       }
     }
@@ -81,7 +83,9 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
           case _ => Behaviors.same
         }
 
-    }
+      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
+
+      }
   }
 
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
