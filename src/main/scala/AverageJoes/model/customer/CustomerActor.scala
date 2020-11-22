@@ -27,11 +27,12 @@ object CustomerActor {
   trait Msg extends LoggableMsg
   final case class CustomerTrainingProgram(tp: TrainingProgram, group: ActorRef[CustomerGroup.Msg]) extends Msg
   final case class CustomerMachineLogin(machineLabel: MachineLabel, machineType: MachineType, phMachine: ActorRef[PhysicalMachine.Msg], machine: ActorRef[MachineActor.Msg]) extends Msg
-  final case class ExerciseStarted(exExecute: Exercise, trainingProgram: TrainingProgram) extends Msg
+  //final case class ExerciseStarted(exExecute: Exercise, trainingProgram: TrainingProgram) extends Msg
   final case class ExerciseCompleted(tp: TrainingProgram) extends Msg
   final case class NextMachineBooking(ex: Exercise) extends Msg
   final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
   final case class TrainingCompleted() extends Msg
+  final case class StartExercising(exExec: Exercise) extends Msg
   final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
 
   final case class BookedMachine(machineLabel: Option[MachineLabel]) extends Msg
@@ -78,9 +79,9 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
           logged = true
 
            val toBeExecuted = exerciseToBeExecuted(machineType,trainingProgram)
-
-            machine ! CustomerLogging(customerId, toBeExecuted.parameters, isLogged = true)
-            context.self ! ExerciseStarted(toBeExecuted, trainingProgram)
+            /** TODO: ActorRef[CustomerActor.Msg]  to machine */
+            machine ! CustomerLogging(customerId, context.self, toBeExecuted, isLogged = true)
+            //context.self ! ExerciseStarted(toBeExecuted, trainingProgram)
             device ! CustomerLogged(phMachine, machineLabel)
         }
         else {
@@ -89,10 +90,16 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         }
         Behaviors.same
 
+      case StartExercising(exExecute) => {
+          exercising(exExecute, trainingProgram)
+          device !
 
-      case ExerciseStarted(exExecute, tp) =>
+          Behaviors.same
+      }
+
+      /*case ExerciseStarted(exExecute, tp) =>
         exercising(exExecute, tp)
-        Behaviors.same
+        Behaviors.same*/
 
 
       case ExerciseCompleted(exSet) =>
