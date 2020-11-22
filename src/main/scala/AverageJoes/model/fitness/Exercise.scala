@@ -35,15 +35,8 @@ object ImplicitExercise {
 
     object Converters {
         implicit val converter: Converter[Workout] = {
-            case WorkoutImpl(_, _, sets, timer, repetitions, incline, speed, weight, typeMachine, setForSec, _) => machineTypeOf(typeMachine) match {
-                case RUNNING => RunningMachineParameters(incline, speed, timer)
-                case LIFTING => LiftingMachineParameters(weight, sets, repetitions, setForSec)
-                case CYCLING => CyclingMachineParameters(incline, timer)
-                case LEG_PRESS => LegPressParameters(weight, sets, repetitions, setForSec)
-                case CHEST_FLY => ChestFlyParameters(weight, sets, repetitions, setForSec)
-
-                /** TODO: other machines to be added */
-            }
+            case WorkoutImpl(_, _, sets, timer, repetitions, incline, speed, weight, typeMachine, setForSec, _) =>
+                MachineParameters.inoculateParameters(machineTypeOf(typeMachine), sets, repetitions, setForSec, timer, weight, incline, speed)
         }
     }
 
