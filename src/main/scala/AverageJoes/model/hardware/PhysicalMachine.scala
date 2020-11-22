@@ -4,7 +4,7 @@ import AverageJoes.common.{LogManager, LoggableMsgFromTo, NonLoggableMsg}
 import AverageJoes.model.fitness.{ExecutionValues, Exercise}
 import AverageJoes.model.hardware.PhysicalMachine.Msg.HeartRate
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout.{ExerciseMetricsByTime, ExerciseParameters, MachineParameters, MachineParametersBySet, MachineParametersByTime, MachineTypes}
+import AverageJoes.model.workout.{MachineParameters, MachineParametersBySet, MachineParametersByTime, MachineTypes}
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
@@ -14,8 +14,6 @@ import akka.actor.typed.{ActorRef, Behavior}
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import java.util.Date
-
-import AverageJoes.view.ViewToolActor.Msg.ClearViewConfiguration
 
 sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   import PhysicalMachine._
@@ -50,7 +48,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
           case Some(t) => t.parameters
           case _ => MachineParameters.getEmptyConfiguration(machineType)
         }
-        configure(m.customerID, machineParameters);
+        configure(m.customerID, machineParameters)
         waitingForStart(ma, m.customerID)
 
       case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
@@ -59,14 +57,14 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
   private def waitingForStart(ma: ActorRef[MachineActor.Msg], customerID: String): Behavior[Msg] = {
     Behaviors.receiveMessagePartial {
-      case m: Msg.StartExercise => {
+      case m: Msg.StartExercise =>
         val newMachineParameters = m.list match {
-          case m: List[(String,Int)] if m.isEmpty => MachineParameters.getEmptyConfiguration(machineType)
+          case Nil => MachineParameters.getEmptyConfiguration(machineType)
           case _ => MachineParameters.inoculateParametersFromList[String,Int](machineType, m.list, t => (t._1,t._2))
         }
         ma ! MachineActor.Msg.StartExercise(newMachineParameters.duration)
         inExercise(ma, customerID, newMachineParameters)
-      }
+
     }
   }
 
@@ -161,7 +159,6 @@ object PhysicalMachine {
         machineGui ! ViewToolActor.Msg.UpdateViewObject(s)
       }
 
-      //Commented for test
       override def configure(customerID: String, machineParameters: MachineParameters): Unit = {
         if(machineParameters.machineType != machineType) throw new IllegalArgumentException
         else {
@@ -176,32 +173,9 @@ object PhysicalMachine {
         rnd > 90
       }
 
-      import AverageJoes.model.workout.MachineParameters._
-      import AverageJoes.model.workout.ExerciseMetricsBySet
       def formatConfiguration(machineParameters: MachineParameters): List[(String,Int)] = {
         MachineParameters.extractParameters[String,Int](machineParameters)((ep,v) => {(ep.toString,v.toInt)})
-        /*
-        var list: ListBuffer[(String,Int)] = new ListBuffer[(String,Int)]()
-        machineParameters match{
-          case p: LegPressParameters =>
-            list += ((ExerciseParameters.REPETITIONS.toString, p.rep))
-            list += ((ExerciseParameters.SETS.toString, p.sets))
-            list += ((ExerciseParameters.SET_DURATION.toString, p.secForSet))
-            list += ((ExerciseParameters.WEIGHT.toString, p.weight))
-          case p: CyclingMachineParameters =>
-            list += ((ExerciseParameters.INCLINE.toString, p.incline))
-            list += ((ExerciseParameters.TIMER.toString, p.minutes))
-          case p: ChestFlyParameters =>
-            list += ((ExerciseParameters.REPETITIONS.toString, p.rep))
-            list += ((ExerciseParameters.SETS.toString, p.sets))
-            list += ((ExerciseParameters.SET_DURATION.toString, p.secForSet))
-            list += ((ExerciseParameters.WEIGHT.toString, p.weight))
-        }
-
-        list.toList
-        */
       }
-
 
     }
   }

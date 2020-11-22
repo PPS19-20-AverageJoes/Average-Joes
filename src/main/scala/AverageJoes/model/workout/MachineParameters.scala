@@ -130,36 +130,17 @@ object MachineParameters{
   def inoculateParametersFromList[ExType, ValType](machineType: MachineType, list: List[(ExType, ValType)], f: ((ExType, ValType)) => (ExerciseParameter, NonNegInt)): MachineParameters = {
     val lst: List[(ExerciseParameter,NonNegInt)] = list.map(t => f(t))
 
+    val func: ExerciseParameter => NonNegInt = ex=>lst.filter(e => e._1 == ex) match { case Nil => 0 case t => t.head._2 }
+
     inoculateParameters(
       machineType,
-      sets = lst.filter(e => e._1 == SETS) match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      rep = lst.filter(e => e._1 == REPETITIONS)match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      secForSet = lst.filter(e => e._1 == SET_DURATION)match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      minutes = lst.filter(e => e._1 == TIMER)match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      weight = lst.filter(e => e._1 == WEIGHT)match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      incline = lst.filter(e => e._1 == INCLINE)match {
-        case Nil => 0
-        case t => t.head._2
-      },
-      speed = lst.filter(e => e._1 == SPEED)match {
-        case Nil => 0
-        case t => t.head._2
-      },
+      sets = func(SETS),
+      rep = func(REPETITIONS),
+      secForSet = func(SET_DURATION),
+      minutes = func(TIMER),
+      weight = func(WEIGHT),
+      incline = func(INCLINE),
+      speed = func(SPEED)
     )
 
   }
