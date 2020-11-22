@@ -15,6 +15,8 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import java.util.Date
 
+import AverageJoes.view.ViewToolActor.Msg.ClearViewConfiguration
+
 sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   import PhysicalMachine._
   def machineID: String
@@ -59,7 +61,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     Behaviors.receiveMessagePartial {
       case m: Msg.StartExercise => {
         // ToDo: machineParameters dalla view: m.list
-        ma ! MachineActor.Msg.StartExercise()
+        ma ! MachineActor.Msg.StartExercise(machineParameters.duration)
         inExercise(ma, customerID, machineParameters)
       }
     }

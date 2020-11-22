@@ -5,7 +5,6 @@ import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineB
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
-import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
 
 object CustomerExercising {
@@ -14,7 +13,7 @@ object CustomerExercising {
   final case object ExerciseTiming extends Msg
   private case object ExerciseFinished extends Msg
 
-  def apply(target: ActorRef[CustomerActor.Msg], ex: Exercise, tp: TrainingProgram): Behavior[Msg] = {
+  def apply(target: ActorRef[CustomerActor.Msg], ex: (Option[Exercise], FiniteDuration), tp: TrainingProgram): Behavior[Msg] = {
     Behaviors.withTimers(timers => new CustomerExercising(timers, target, ex, tp).initializing())
   }
 }
@@ -23,13 +22,13 @@ object CustomerExercising {
 class CustomerExercising(
                           timers: TimerScheduler[CustomerExercising.Msg],
                           target: ActorRef[CustomerActor.Msg],
-                          ex: Exercise,
+                          ex: (Option[Exercise], FiniteDuration),
                           tp: TrainingProgram) {
   import CustomerExercising._
 
   private def initializing(): Behavior[CustomerExercising.Msg] = {
     Behaviors.receiveMessage[CustomerExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, ExerciseFinished, ex.parameters.duration)
+      timers.startSingleTimer(TimerKey, ExerciseFinished, ex._2)
       exerciseFinished()
     }
   }
@@ -38,7 +37,9 @@ class CustomerExercising(
     Behaviors.receiveMessage[Msg] {
       case ExerciseFinished =>
         println("[CUSTOMER ACTOR]  exercise completed ")
-        target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
+        if(ex._1.isDefined) target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex._1.get))
+        else target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises))
+
         Behaviors.stopped
     }
   }
@@ -65,7 +66,7 @@ class BookWhileExercising(
   /** TODO: def a delta */
   private def initializing(): Behavior[BookWhileExercising.Msg] = {
     Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, BookAnotherMachine,new duration.FiniteDuration(ex.parameters.duration.length-10, ex.parameters.duration.unit))
+      timers.startSingleTimer(TimerKey, BookAnotherMachine, new FiniteDuration(ex.parameters.duration.length-10, ex.parameters.duration.unit))
       waitUntilTimeout()
     }
   }

@@ -1,7 +1,5 @@
 package AverageJoes.model.customer
 
-import java.util
-
 import AverageJoes.common.LoggableMsg
 import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.common.database._

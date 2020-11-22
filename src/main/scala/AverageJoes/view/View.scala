@@ -119,7 +119,7 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType, acto
             try {
                 if(getParameters != Nil){
                     actorRef ! PhysicalMachine.Msg.StartExercise(getParameters)
-                    setButton(false)
+                    setButton(true)
                 }
             } catch {
                 case _: NumberFormatException =>
@@ -143,7 +143,7 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType, acto
      def getParameters: List[(String, Int)]  = {
         var tmp: Map[String, Int] = Map.empty
         map foreach(x => {
-            if(x._2.text != "" || x._2.text.length > 3){
+            if(x._2.text != "" && x._2.text.length < 4 && x._2.text.toInt != 0){
                 tmp += (x._1 -> x._2.text.toInt)
             } else {
                 throw new NumberFormatException

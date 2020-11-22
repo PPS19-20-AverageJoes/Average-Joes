@@ -51,7 +51,7 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-    case customerCreation @ RequestCustomerCreation(customerId, controller, device) =>
+    case customerCreation @ RequestCustomerCreation(_, controller,_) =>
       controllerRef = controller
       //deviceRef = device
       customerGroup ! customerCreation

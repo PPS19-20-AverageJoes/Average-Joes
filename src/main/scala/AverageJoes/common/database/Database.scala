@@ -1,6 +1,6 @@
 package AverageJoes.common.database
 
-import AverageJoes.common.database.table.{CustomerImpl, Workout, WorkoutImpl}
+import AverageJoes.common.database.table.{CustomerImpl, WorkoutImpl}
 import AverageJoes.utils.FileParser
 
 
