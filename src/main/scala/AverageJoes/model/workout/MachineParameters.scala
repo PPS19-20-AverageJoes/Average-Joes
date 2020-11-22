@@ -1,7 +1,6 @@
 package AverageJoes.model.workout
 
-import AverageJoes.common.MachineTypes
-import AverageJoes.common.MachineTypes._
+import MachineTypes._
 import AverageJoes.model.hardware.PhysicalMachine.LegPressParameters
 import AverageJoes.utils.SafePropertyValue.NonNegative.{NonNegDuration, NonNegInt, toInt}
 
@@ -98,6 +97,10 @@ object MachineParameters{
   def extractParameterStrInt(mp: MachineParameters): List[(String,Int)] ={
     extractParameters[String,Int](mp)((ep,v) => {(ep.toString,v.toInt)})
   }
+  /*
+  def inoculateParameters[ExType,ValType](machineType: MachineType, lst: List[(ExType,ValType)])(f: (ExType,ValType) => (ExerciseParameter, NonNegInt)): MachineParameters{
+
+  }*/
 
 }
 
@@ -107,5 +110,9 @@ object Test extends App(){
   println(lpp)
   println(MachineTypes.getEmptyConfiguration(lpp.machineType))
   //lpp.machineType
+
+  val test = MachineParameters.extractParameterStd(lpp)
+  println(test)
+  println(test.map(t => t._1))
 
 }

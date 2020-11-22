@@ -1,10 +1,10 @@
 package AverageJoes.view
 
 import AverageJoes.HardwareTest
-import AverageJoes.common.{MachineTypeConverters, MachineTypes}
-import AverageJoes.common.MachineTypes.{CYCLING, MachineType}
+import AverageJoes.model.workout.MachineTypes.{CYCLING, MachineType}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
+import AverageJoes.model.workout.MachineTypeConverters
 import akka.actor.typed.ActorRef
 
 import scala.swing.event.ButtonClicked

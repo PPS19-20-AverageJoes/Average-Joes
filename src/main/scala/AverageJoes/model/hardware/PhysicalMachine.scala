@@ -1,10 +1,10 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LoggableMsgFromTo, MachineTypes, NonLoggableMsg}
-import AverageJoes.model.fitness.ExecutionValues
+import AverageJoes.common.{LogManager, LoggableMsgFromTo, NonLoggableMsg}
+import AverageJoes.model.fitness.{ExecutionValues, Exercise}
 import AverageJoes.model.hardware.PhysicalMachine.Msg.HeartRate
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout.{ExerciseMetricsByTime, ExerciseParameters, MachineParameters, MachineParametersBySet, MachineParametersByTime}
+import AverageJoes.model.workout.{ExerciseMetricsByTime, ExerciseParameters, MachineParameters, MachineParametersBySet, MachineParametersByTime, MachineTypes}
 import AverageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewPhysicalMachineActor
@@ -40,8 +40,17 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     LogManager.logBehaviourChange(logName,"operative")
     Behaviors.receiveMessagePartial {
       case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel, machineType); Behaviors.same
+
       case m: Msg.Display => display(machineLabel + " " + m.message); Behaviors.same
-      case m: Msg.ConfigMachine => configure(m.customerID, m.machineParameters); waitingForStart(ma, m.customerID, m.machineParameters)//inExercise(ma, m.customerID, m.machineParameters)
+
+      case m: Msg.ConfigMachine =>
+        val machineParameters = m.exercise match{
+          case Some(t) => t.parameters
+          case _ => MachineTypes.getEmptyConfiguration(machineType)
+        }
+        configure(m.customerID, machineParameters);
+        waitingForStart(ma, m.customerID, machineParameters)
+
       case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
     }
   }
@@ -93,7 +102,9 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
     ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters, ExecutionValues(heartBeats.max, heartBeats.min, avg))
 
+    machineGui ! ViewToolActor.Msg.ExerciseCompleted()
     display(machineLabel+" Free")
+
     operative(ma)
   }
 
@@ -110,7 +121,7 @@ object PhysicalMachine {
     //From MachineActor
     final case class MachineActorStarted(machineID: String, refMA: ActorRef[MachineActor.Msg]) extends Msg { override def From: String = "MA"; override def To: String = logName }
     final case class Display(message: String) extends Msg { override def From: String = "MA"; override def To: String = logName }
-    final case class ConfigMachine(customerID: String, machineParameters: MachineParameters) extends Msg { override def From: String = "MA"; override def To: String = logName }
+    final case class ConfigMachine(customerID: String, exercise: Option[Exercise]) extends Msg { override def From: String = "MA"; override def To: String = logName }
     //From Device
     final case class Rfid(customerID: String) extends Msg { override def From: String = "Device"; override def To: String = logName }
     final case class HeartRate(heartRate: Int) extends Msg with NonLoggableMsg { override def From: String = "Device"; override def To: String = logName }
@@ -122,7 +133,7 @@ object PhysicalMachine {
 
   type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
 
-  import AverageJoes.common.MachineTypes._
+  import AverageJoes.model.workout.MachineTypes._
   def apply(machineID: String, phMachineType: MachineType, machineLabel: MachineLabel): Behavior[Msg] = {
     Behaviors.setup(context =>{
         val machineGui = context.spawn[ViewToolActor.Msg](ViewPhysicalMachineActor(machineID, machineLabel, phMachineType, context.self) , "M_GUI_"+machineID)

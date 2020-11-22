@@ -7,7 +7,7 @@ import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.fitness.{BookWhileExercising, CustomerExercising, Exercise, TrainingProgram}
 import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.{BookingRequest, CustomerLogging}
-import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.model.fitness.BookWhileExercising.BookTiming
 import AverageJoes.model.fitness.CustomerExercising.ExerciseTiming
 import AverageJoes.model.hardware.Device.Msg.{CustomerLogOut, CustomerLogged, StartExercise}

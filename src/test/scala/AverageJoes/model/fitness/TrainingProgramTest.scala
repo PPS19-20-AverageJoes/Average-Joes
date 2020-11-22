@@ -4,7 +4,6 @@ import AverageJoes.common.database.table.{Customer, CustomerImpl}
 import AverageJoes.model.hardware.PhysicalMachine.{LiftingMachineParameters, RunningMachineParameters}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import AverageJoes.utils.DateUtils._
 import AverageJoes.utils.SafePropertyValue.NonNegative._ /** Using implicit NonNegDouble and NonNegInt */
 class TrainingProgramTest extends AnyFlatSpec with Matchers {
 /*

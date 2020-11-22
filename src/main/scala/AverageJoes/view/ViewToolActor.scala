@@ -1,6 +1,6 @@
 package AverageJoes.view
 
-import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import akka.actor.typed.{ActorRef, Behavior}

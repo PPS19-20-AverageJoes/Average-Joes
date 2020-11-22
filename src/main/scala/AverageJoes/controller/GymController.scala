@@ -1,12 +1,12 @@
 package AverageJoes.controller
 
-import AverageJoes.common.{LogManager, LoggableMsgTo, MachineTypes}
+import AverageJoes.common.{LogManager, LoggableMsgTo}
 import AverageJoes.model.customer.{CustomerActor, CustomerManager}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.{hardware, machine}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout.MachineParameters
+import AverageJoes.model.workout.{MachineParameters, MachineTypes}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 

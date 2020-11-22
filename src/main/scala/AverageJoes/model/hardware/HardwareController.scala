@@ -1,7 +1,8 @@
 package AverageJoes.model.hardware
 
-import AverageJoes.common.{LogManager, LoggableMsgTo, MachineTypes, ServerSearch}
+import AverageJoes.common.{LogManager, LoggableMsgTo, ServerSearch}
 import AverageJoes.controller.GymController
+import AverageJoes.model.workout.MachineTypes
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 

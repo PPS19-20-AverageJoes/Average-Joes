@@ -3,7 +3,7 @@ package AverageJoes.model.customer
 import java.util
 
 import AverageJoes.common.LoggableMsg
-import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.common.database._
 import AverageJoes.common.database.table.Customer
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
