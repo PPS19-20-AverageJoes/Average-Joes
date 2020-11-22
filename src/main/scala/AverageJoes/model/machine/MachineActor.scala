@@ -1,5 +1,8 @@
 package AverageJoes.model.machine
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import AverageJoes.common.{LogManager, LoggableMsg, LoggableMsgTo, NonLoggableMsg}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerActor.StartExercising
@@ -40,7 +43,7 @@ object MachineActor{
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
                    machineLabel: MachineLabel) extends AbstractBehavior[Msg](context) {
-
+  val date: String = LocalDateTime.now.format(DateTimeFormatter.ofPattern("YYYYMMdd_HHmmss"))
   var bookedCustomer: Option[String] = Option.empty
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
 
@@ -105,7 +108,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
       case Msg.UserMachineWorkout(customerID, parameters,executionValues) =>
         val child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"childMachineActor")
-        child ! FileWriterActor.WriteOnFile(customerID,parameters)
+        child ! FileWriterActor.WriteOnFile(customerID,parameters, executionValues, date)
         idle()
 
       case Msg.StartExercise() =>
@@ -121,7 +124,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     Behaviors.receiveMessagePartial{
       case Msg.UserLogIn(customerID, machineLabel, machineType) =>
         if(bookedCustomer.equals(customerID))
-          controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine,context.self)
+          controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine, context.self)
         connecting()
 
       case Msg.BookingRequest(replyTo, customerID) =>
