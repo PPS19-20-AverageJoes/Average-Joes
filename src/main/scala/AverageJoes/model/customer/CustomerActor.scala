@@ -32,7 +32,7 @@ object CustomerActor {
   final case class NextMachineBooking(ex: Exercise) extends Msg
   final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
   final case class TrainingCompleted() extends Msg
-  final case class StartExercising(exExec: Exercise) extends Msg
+  final case class StartExercising(exExec: Option[Exercise]) extends Msg
   final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
 
   final case class BookedMachine(machineLabel: Option[MachineLabel]) extends Msg
@@ -46,7 +46,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
   val managerRef: ActorRef[CustomerManager.Msg] = manager
   var exercisesWithMachines: Map[Exercise, Option[Set[ActorRef[MachineActor.Msg]]]] = Map.empty
-  var logged: Boolean = false
+  var isLogged: Boolean = false
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
@@ -72,38 +72,41 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         Behaviors.same
 
       case CustomerMachineLogin(machineLabel, machineType, phMachine, machine) =>
-        if(loggingAllowed(machineType, trainingProgram)) {
-          println("[CUSTOMER ACTOR] "+customerId+": accepted logging request from "+ machineLabel)
-          println("[CUSTOMER ACTOR] "+customerId+": is doing "+machineType+" and first exercise is "+ trainingProgram.allExercises.head.parameters.machineType)
+        if(!isLogged) {
+          isLogged = true
 
-          logged = true
-           val toBeExecuted = exerciseToBeExecuted(machineType,trainingProgram)
-            /** TODO: ActorRef[CustomerActor.Msg]  to machine */
-            machine ! CustomerLogging(customerId, context.self, toBeExecuted, isLogged = true)
-            //context.self ! ExerciseStarted(toBeExecuted, trainingProgram)
+          if (exerciseAlreadyOnProgram(machineType, trainingProgram).isDefined) {
+            println("[CUSTOMER ACTOR] " + customerId + ": accepted logging request from " + machineLabel)
+            println("[CUSTOMER ACTOR] " + customerId + ": is doing " + machineType + " and first exercise is " + trainingProgram.allExercises.head.parameters.machineType)
+
+            val toBeExecuted = exerciseToBeExecuted(machineType, trainingProgram)
+            machine ! CustomerLogging(customerId, context.self, toBeExecuted, isLogged)
             device ! CustomerLogged(phMachine, machineLabel)
+          }
+          else {
+            machine ! CustomerLogging(customerId, context.self, Option.empty[Exercise], isLogged)
+            device ! CustomerLogged(phMachine, machineLabel)
+          }
         }
+
         else {
           println("[CUSTOMER ACTOR] "+customerId+": refused logging request from "+ machineLabel)
-          machine ! CustomerLogging(customerId, context.self, null, isLogged = false)
+          machine ! CustomerLogging(customerId, context.self, Option.empty[Exercise], isLogged)
         }
         Behaviors.same
 
       case StartExercising(exExecute) => {
         println("---------------------------------[CUSTOMER ACTOR] "+customerId+": started exercing")
         exercising(exExecute, trainingProgram)
-          device ! StartExercise()
-          Behaviors.same
+        device ! StartExercise()
+        Behaviors.same
       }
 
-      /*case ExerciseStarted(exExecute, tp) =>
-        exercising(exExecute, tp)
-        Behaviors.same*/
 
 
       case ExerciseCompleted(exSet) =>
         println("---------------------------------[CUSTOMER ACTOR] "+customerId+": completed exercising, updated exercise set is: "+ exSet)
-        logged = false
+        isLogged = false
         device ! CustomerLogOut(machineLabel)
         context.self ! UpdateTrainingProgram(exSet)
         Behaviors.same
@@ -131,10 +134,10 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     machineBooker ! BookMachine(machines)
   }
 
-  private def exercising(exExec: Exercise, tp: TrainingProgram): Unit = {
+  private def exercising(exExec: Option[Exercise], tp: TrainingProgram): Unit = {
 
     println("[CUSTOMER ACTOR] "+customerId+": started exercising --- "+ exExec)
-    context.spawn(CustomerExercising(context.self, exExec, tp), "exercising") ! ExerciseTiming
+    if(exExec.isDefined) context.spawn(CustomerExercising(context.self, exExec.get, tp), "exercising") ! ExerciseTiming
 
     if(exerciseToBookMachineFor(exExec, tp).isDefined) {
       println("[CUSTOMER ACTOR] " + customerId + ": next machine to be booked is --- " + exerciseToBookMachineFor(exExec, tp), tp)
@@ -142,7 +145,6 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     }
     else
       println("[CUSTOMER ACTOR] "+customerId+": last exercise, NO MORE MACHINE TO BE BOOKED --- "+ exerciseToBookMachineFor(exExec, tp), tp)
-
   }
 
 
@@ -150,20 +152,23 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     managerRef ! MachineListOf(ex.parameters.machineType, context.self)
   }
 
-  private def exerciseToBeExecuted (mt: MachineType, tp: TrainingProgram): Exercise = {
-    val ex = exerciseAlreadyOnProgram(mt, tp).get
-    if (isOutOfOrder(ex, tp)) ex
-    else tp.allExercises.head
+  private def exerciseToBeExecuted (mt: MachineType, tp: TrainingProgram): Option[Exercise] = {
+    val ex = exerciseAlreadyOnProgram(mt, tp)
+
+    if (ex.isEmpty) Option.empty[Exercise]
+    if (isOutOfOrder(ex.get, tp)) ex
+    else Option(tp.allExercises.head)
   }
 
-  private def exerciseToBookMachineFor(ex: Exercise, tp: TrainingProgram): Option[Exercise] =
-    if(isOutOfOrder(ex, tp)) Option(tp.allExercises.head)
+  private def exerciseToBookMachineFor(ex: Option[Exercise], tp: TrainingProgram): Option[Exercise] =
+    if(ex.isEmpty) Option.empty[Exercise]
+    else if(isOutOfOrder(ex.get, tp)) Option(tp.allExercises.head)
     else if(tp.allExercises.tail.nonEmpty) Option(tp.allExercises.tail.head)
     else Option.empty[Exercise]
 
 
   /** TODO: to be refactored. Done this way only for testing purpose */
-  private def loggingAllowed(mt: MachineType, tp: TrainingProgram): Boolean = {
+  /*private def loggingAllowed(mt: MachineType, tp: TrainingProgram): Boolean = {
     if(logged) {
       println("[CUSTOMER ACTOR LOGIN NOT ALLOWED] " +customerId+" already logged"); false
     } else if(tp.allExercises.isEmpty) {
@@ -171,7 +176,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     } else if(exerciseAlreadyOnProgram(mt, tp).isEmpty) {
       println("[CUSTOMER ACTOR  LOGIN NOT ALLOWED] " +customerId+" no exercises found with this machine type"); false
     } else{true}
-  }
+  } */
 
 
   private def exerciseAlreadyOnProgram(mt: MachineType, tp: TrainingProgram): Option[Exercise] = tp.allExercises.find(e => e.parameters.machineType.equals(mt))
