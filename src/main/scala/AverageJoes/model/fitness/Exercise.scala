@@ -9,6 +9,8 @@ import AverageJoes.model.hardware.PhysicalMachine.{ChestFlyParameters, CyclingMa
 import AverageJoes.model.workout.MachineParameters
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
+import scala.collection.SortedSet
+
 trait Exercise {
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ImplicitParameterExtractors._
 
@@ -31,38 +33,49 @@ object WorkoutConverter {
 }
 
 
-object ImplicitWorkoutConverters {
+object ImplicitExercise {
     import AverageJoes.common.database.table.Workout
     import AverageJoes.common.MachineTypes._
     import AverageJoes.common.MachineTypeConverters._
 
-    implicit val converter: Converter[Workout] =  {
-        case WorkoutImpl(_, _, sets, timer, repetitions, incline, speed, weight, typeMachine, setForSec, _) => machineTypeOf(typeMachine) match {
-            case RUNNING => RunningMachineParameters(incline,speed, timer)
-            case LIFTING => LiftingMachineParameters(weight, sets, repetitions, setForSec)
-            case CYCLING => CyclingMachineParameters(incline, timer)
-            case LEG_PRESS => LegPressParameters(weight,sets,repetitions,setForSec)
-            case CHEST_FLY => ChestFlyParameters(weight,sets,repetitions,setForSec)
-            /** TODO: other machines to be added */
+    object Converters {
+        implicit val converter: Converter[Workout] = {
+            case WorkoutImpl(_, _, sets, timer, repetitions, incline, speed, weight, typeMachine, setForSec, _) => machineTypeOf(typeMachine) match {
+                case RUNNING => RunningMachineParameters(incline, speed, timer)
+                case LIFTING => LiftingMachineParameters(weight, sets, repetitions, setForSec)
+                case CYCLING => CyclingMachineParameters(incline, timer)
+                case LEG_PRESS => LegPressParameters(weight, sets, repetitions, setForSec)
+                case CHEST_FLY => ChestFlyParameters(weight, sets, repetitions, setForSec)
+
+                /** TODO: other machines to be added */
+            }
         }
+    }
+
+    object Ordering {
+        implicit val ordering: Ordering[Exercise] = (x: Exercise, y: Exercise) => x.order.compareTo(y.order)
     }
 }
 
 object Main extends App {
     import AverageJoes.utils.SafePropertyValue.NonNegative
     import AverageJoes.common.MachineTypeConverters._
-    import AverageJoes.model.fitness.ImplicitWorkoutConverters._
+    import AverageJoes.model.fitness.ImplicitExercise.Converters._
+    import AverageJoes.model.fitness.ImplicitExercise.Ordering._
 
     val c1 = CustomerImpl("sokol", "guri", "sokol", "27/08/2020", "customer1" )
 
-        import AverageJoes.model.fitness.ImplicitWorkoutConverters._
+        import AverageJoes.model.fitness.ImplicitExercise._
 
-        val workoutSet = Workout.workoutStorage.getWorkoutForCustomer("Wristband1")
-          .map(w => Exercise(w))
-          .sortBy(e => e.order)((x: Int, y: Int) => x.compare(y))
-          .toSet
+    val exList = Workout.workoutStorage.getWorkoutForCustomer("Wristband1")
+      .map(w => Exercise(w))
 
-        val tp = TrainingProgram(c1)(workoutSet)
+
+    val workoutSet: SortedSet[Exercise] = collection.SortedSet(exList: _*)
+
+
+
+    val tp = TrainingProgram(c1)(workoutSet)
        print(tp.allExercises)
 
     //print(Exercise(WorkoutImpl("123", 10,10, 10, 10, 10, 10, 10, stringOf(RUNNING), 10, "10")))
