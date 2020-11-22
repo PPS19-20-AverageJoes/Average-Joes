@@ -5,7 +5,6 @@ import AverageJoes.model.customer.CustomerActor.{ExerciseCompleted, NextMachineB
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
-import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
 
 object CustomerExercising {

@@ -13,7 +13,7 @@ class JsonParsing extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "Json parser" must {
     "to file " in {
       val path: String = "src/main/resources/workoutData.json"
-      val msg = WriteOnFile("2", CyclingMachineParameters(11,56),ExecutionValues(11,34,56),"")
+      val msg = WriteOnFile("2", CyclingMachineParameters(11,56),ExecutionValues(11,34,56))
       FileParser.encoding(path, msg)
     }
   }

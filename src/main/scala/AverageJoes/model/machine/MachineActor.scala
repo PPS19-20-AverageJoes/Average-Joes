@@ -44,7 +44,7 @@ object MachineActor{
 
 class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymController.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg],
                    machineLabel: MachineLabel) extends AbstractBehavior[Msg](context) {
-  val date: String = LocalDateTime.now.format(DateTimeFormatter.ofPattern("YYYYMMdd_HHmmss"))
+
   var bookedCustomer: Option[String] = Option.empty
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("", context.self) //TODO non ho il machine id
 
@@ -113,7 +113,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
       case Msg.UserMachineWorkout(customerID, parameters,executionValues) =>
         val child: ActorRef[FileWriterActor.Msg] = context.spawn(FileWriterActor(),"childMachineActor")
-        child ! FileWriterActor.WriteOnFile(customerID,parameters, executionValues, date)
+        child ! FileWriterActor.WriteOnFile(customerID,parameters, executionValues)
         idle()
 
       case Msg.StartExercise(duration) =>
