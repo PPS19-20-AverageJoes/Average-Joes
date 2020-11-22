@@ -1,12 +1,14 @@
 package AverageJoes.model.customer
 
+import java.util
+
 import AverageJoes.common.LoggableMsg
 import AverageJoes.common.MachineTypes.MachineType
 import AverageJoes.common.database._
 import AverageJoes.common.database.table.Customer
 import AverageJoes.controller.GymController.Msg.CustomerRegistered
 import AverageJoes.model.customer.CustomerActor.{CustomerMachineLogin, CustomerTrainingProgram}
-import AverageJoes.model.customer.CustomerGroup.{CustomerLogin}
+import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.fitness.{Exercise, TrainingProgram}
 import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
@@ -14,6 +16,9 @@ import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.machine.MachineActor.Msg.CustomerLogging
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
+
+import scala.collection.SortedSet
+
 
 
 object CustomerGroup {
@@ -97,12 +102,14 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
 
   private def trainingProgramOf(customerId: String): TrainingProgram = {
-    import AverageJoes.model.fitness.ImplicitWorkoutConverters._
+    import AverageJoes.model.fitness.ImplicitExercise.Converters._
+    import AverageJoes.model.fitness.ImplicitExercise.Ordering._
 
-    val workoutSet = Workout.workoutStorage.getWorkoutForCustomer(customerId)
-                            .map(w => Exercise(w))
-                            .sortBy(e => e.order)((x: Int, y: Int) => x.compare(y))
-                            .toSet
+
+    val workoutSet: SortedSet[Exercise] = collection.SortedSet(Workout.workoutStorage
+                  .getWorkoutForCustomer(customerId)
+                  .map(w => Exercise(w)): _*) // using implicit Ordering[Exercise]
+
 
     if (workoutSet.isEmpty) throw new NoExercisesFoundException
     else TrainingProgram(customerOf(customerId)) (workoutSet)

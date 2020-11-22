@@ -37,7 +37,7 @@ class CustomerExercising(
     Behaviors.receiveMessage[Msg] {
       case ExerciseFinished =>
         println("[CUSTOMER ACTOR]  exercise completed ")
-        target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
+        //target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex))
         Behaviors.stopped
     }
   }
