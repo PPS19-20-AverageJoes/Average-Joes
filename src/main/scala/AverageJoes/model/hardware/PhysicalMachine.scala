@@ -61,7 +61,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     Behaviors.receiveMessagePartial {
       case m: Msg.StartExercise => {
         val newMachineParameters = m.list match {
-          case List.empty => MachineParameters.getEmptyConfiguration(machineType)
+          case m: List[(String,Int)] if m.isEmpty => MachineParameters.getEmptyConfiguration(machineType)
           case _ => MachineParameters.inoculateParametersFromList[String,Int](machineType, m.list, t => (t._1,t._2))
         }
         ma ! MachineActor.Msg.StartExercise(newMachineParameters.duration)
