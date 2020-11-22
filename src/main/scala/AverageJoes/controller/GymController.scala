@@ -28,10 +28,6 @@ object GymController {
     //From CustomerActor & Co
     final case class CustomerRegistered(customerID: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
     final case class MachinesToBookmark(phMachineType: MachineTypes.MachineType, replyTo: ActorRef[CustomerActor.Msg]) extends Msg
-
-    //final case class UserMachineWorkoutPlan(userID: String, exercise: Class[_ <: MachineParameters]) extends Msg
-    //final case class UserMachineWorkoutCompleted(user: ActorRef[MachineActor.Msg], exercise: Class[_ <: MachineParameters]) extends Msg
-    //final case class UserLogInStatus(status: Boolean) extends Msg
   }
 
   private class GymController(context: ActorContext[Msg]) extends AbstractBehavior[Msg](context) {
@@ -47,7 +43,7 @@ object GymController {
 
         case m: Msg.UserLogin =>  customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.phMachineType, m.replyTo, m.pm); Behaviors.same
 
-        case m: Msg.CustomerRegistered => Behaviors.same //ToDo: not used
+        case m: Msg.CustomerRegistered => Behaviors.same //Not jet used
 
         case m: Msg.PhysicalMachineWakeUp =>
           val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.replyTo, m.machineLabel), "MA_"+m.machineID)
@@ -56,16 +52,9 @@ object GymController {
           Behaviors.same
 
         case m: Msg.MachinesToBookmark =>
-          //m.replyTo ! CustomerManager.MachineList(getChildrenMachinesByType(m.phMachineType).toSet)
           m.replyTo ! CustomerActor.MachineList(childMachineActor.filterKeys(k => k._2 == m.phMachineType).values.toSet)
-          //Before was CustomerManager
           Behaviors.same
-
-        //case m: GymController.Msg => LogManager.log(logName+" Not Managed Message: "+m); Behaviors.same
       }
     }
   }
-
-  //def getChildrenMachinesByType(pmType: MachineTypes.MachineType): Iterable[ActorRef[machine.MachineActor.Msg]] = { childMachineActor.filterKeys(k => k._2 == pmType).values }
-
 }
