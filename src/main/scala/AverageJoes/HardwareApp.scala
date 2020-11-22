@@ -19,10 +19,14 @@ object HardwareTest {//extends App {
     controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress A")
     controller ! Msg.CreatePhysicalMachine("Cycling", MachineTypes.CYCLING, "Cycling A")
     controller ! Msg.CreatePhysicalMachine("ChestFly1", MachineTypes.CHEST_FLY, "ChestFly")
-    //controller ! Msg.CreatePhysicalMachine("LegPress1", MachineTypes.LEG_PRESS, "LegPress B")
+    controller ! Msg.CreatePhysicalMachine("Lifting", MachineTypes.LIFTING, "Lifting")
+    controller ! Msg.CreatePhysicalMachine("Running1", MachineTypes.RUNNING, "Running A")
+    controller ! Msg.CreatePhysicalMachine("Running2", MachineTypes.RUNNING, "Running B")
 
     controller ! Msg.CreateDevice("Wristband1", Device.DeviceType.wristband, "Wristband1")
     controller ! Msg.CreateDevice("Wristband2", Device.DeviceType.wristband, "Wristband2")
+    controller ! Msg.CreateDevice("Wristband3", Device.DeviceType.wristband, "Wristband3")
+    controller ! Msg.CreateDevice("Wristband4", Device.DeviceType.wristband, "Wristband4")
 
     val test: ActorSystem[HwControllerTestMsg] = ActorSystem(HwControllerTest(controller), "GymHardware")
     if(autostart) test ! StartTest()

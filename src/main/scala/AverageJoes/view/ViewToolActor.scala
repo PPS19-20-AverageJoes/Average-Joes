@@ -64,7 +64,7 @@ object ViewToolActor {
      def createViewEntity(): Unit = {
       scala.swing.Swing.onEDT{
         panel = Option.apply(View._getMachineView())
-        machine = Option.apply(MachineGUI(machineID+" - "+machineLabel, machineType/*, actorRef*/))
+        machine = Option.apply(MachineGUI(machineID+" - "+machineLabel, machineType, actorRef))
         panel.get.contents += machine.get
         panel.get.addEntry(machineID, actorRef)
       }
@@ -88,7 +88,7 @@ object ViewToolActor {
         machine.get.setParameters(list)
       }
     }
-
+    /** TODO: text field to be clean when exercise completed */
     def exerciseCompleted(): Unit = {
       scala.swing.Swing.onEDT{
         machine.get.setButton(true)

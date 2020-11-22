@@ -82,7 +82,7 @@ case class UserGui(deviceActor: ActorRef[Device.Msg], deviceLabel: String) exten
     }
 }
 
-case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType/*, actorRef: ActorRef[PhysicalMachine.Msg]*/) extends GridPanel(3,1){
+case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType, actorRef: ActorRef[PhysicalMachine.Msg]) extends GridPanel(3,1){
     private val label: Label = new Label(machineLabel)
     private val start:Button = new Button("START")
     private val text:TextArea = new TextArea()
@@ -116,8 +116,8 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType/*, ac
         case ButtonClicked(start) => {
             try {
                 if(getParameters != Nil){
-                    //actorRef ! PhysicalMachine.Msg.StartExercise(getParameters)
-                    setButton(false)
+                    actorRef ! PhysicalMachine.Msg.StartExercise(getParameters)
+                    //setButton(false)
                 }
             } catch {
                 case e: NumberFormatException =>

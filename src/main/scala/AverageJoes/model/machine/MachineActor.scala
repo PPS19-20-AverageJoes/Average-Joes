@@ -2,8 +2,9 @@ package AverageJoes.model.machine
 
 import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, NonLoggableMsg}
 import AverageJoes.controller.GymController
+import AverageJoes.model.customer.CustomerActor.StartExercising
 import AverageJoes.model.customer.{CustomerActor, CustomerManager, MachineBooker}
-import AverageJoes.model.fitness.ExecutionValues
+import AverageJoes.model.fitness.{ExecutionValues, Exercise}
 import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor._
@@ -29,9 +30,9 @@ object MachineActor{
     final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters, executionValues: ExecutionValues) extends Msg
     final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
     final case class BookingRequest(replyTo: ActorRef[MachineBooker.Msg], customerID: String) extends Msg
-    final case class CustomerLogging(customerID: String, machineParameters: MachineParameters, isLogged:Boolean) extends Msg
+    final case class CustomerLogging(customerID: String, customer: ActorRef[CustomerActor.Msg], ex: Exercise, isLogged:Boolean) extends Msg
     final case class GoIdle(machineID: String) extends Msg
-    final case class StartExercise(customerID: String) extends Msg
+    final case class StartExercise() extends Msg
   }
 
   private final case class BookingTimeoutException() extends Msg with NonLoggableMsg
@@ -75,12 +76,12 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(3000, "millis"))
     LogManager.logBehaviourChange(logName,"connecting")
     Behaviors.receiveMessagePartial{
-      case Msg.CustomerLogging(customerID, machineParameters, isLogged) =>
+      case Msg.CustomerLogging(customerID, customer, ex, isLogged) =>
         if (!isLogged) {
           idle()
         } else {
-          physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, machineParameters)
-          updateAndLogOut ()
+          physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, ex.parameters)
+          updateAndLogOut(customer, ex)
         }
 
       case BookingTimeoutException() => physicalMachine ! PhysicalMachine.Msg.Display("Free"); idle()
@@ -95,7 +96,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   //spawn sotto attore che scrive su disco
   //deaddevice() --> idle => chiedo i parametri
   //spawn sotto attore che scrive su disco
-  private def updateAndLogOut(): Behavior[Msg] = {
+  private def updateAndLogOut(customer: ActorRef[CustomerActor.Msg], ex: Exercise): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"updateAndLogOut")
     Behaviors.receiveMessagePartial{
       case Msg.BookingRequest(replyTo, customerID) =>
@@ -107,7 +108,9 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         child ! FileWriterActor.WriteOnFile(customerID,parameters)
         idle()
 
-      case Msg.StartExercise(customerID) => Behaviors.same //ToDo: mandare messaggio a CustomerActor, che lo manderà al device
+      case Msg.StartExercise() =>
+        customer ! CustomerActor.StartExercising(ex)
+        Behaviors.same //ToDo: mandare messaggio a CustomerActor, che lo manderà al device
 
       case BookingTimeoutException() => Behaviors.same
     }
