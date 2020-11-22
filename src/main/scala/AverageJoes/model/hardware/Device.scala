@@ -44,6 +44,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
     LogManager.logBehaviourChange(logName,"waitingForStart")
     Behaviors.receiveMessagePartial {
       case Msg.StartExercise() => inExercise(machineLabel, pm)
+      case m: Msg.NearDevice => Behaviors.same //Ignore in this behaviour
     }
   }
 
@@ -64,6 +65,8 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
         display(machineLabel + " HR: " + heartRateSim._1)
         timers.startSingleTimer(TimerKey, HeartRateSimulation(heartRateSim._1, heartRateSim._2), heartRateSchedule)
         Behaviors.same
+
+      case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
 
       case m: Msg.CustomerLogOut=>
         m.machineLabel match {

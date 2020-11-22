@@ -76,8 +76,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
    * @return
    */
   private case object TimerKey
-  private def connecting(): Behavior[Msg] = Behaviors.withTimers[Msg] {timers =>
-    timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(3, "sec"))
+  private def connecting(): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"connecting")
     Behaviors.receiveMessagePartial{
       case Msg.CustomerLogging(customerID, customer, ex, isLogged) =>
@@ -86,12 +85,6 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         } else {
           physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, ex)
           updateAndLogOut(customer, ex)
-        }
-
-      case BookingTimeoutException() => {
-        println("[MACHINE ACTOR] " + machineLabel + " DIDN'T RECEIVE THE LOGGING MESSAGE IN TIME")
-        physicalMachine ! PhysicalMachine.Msg.Display("Free");
-        idle()
         }
 
       case Msg.BookingRequest (replyTo, customerID) =>
