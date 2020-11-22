@@ -41,7 +41,4 @@ object FileParser extends App {
     w.close()
   }
 
-  /*final case class Prova(tempo:Int, set: Int)
-  final case class Prova1(s:String, prova: Prova)*/
-
 }
