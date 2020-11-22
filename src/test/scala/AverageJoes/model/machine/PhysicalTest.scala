@@ -15,12 +15,12 @@ class PhysicalTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     val probePh = createTestProbe[PhysicalMachine.Msg]()
     val probeMA = createTestProbe[MachineActor.Msg]()
     "notify booking " in {
-      val actor = spawn(PhysicalMachine("",MachineTypes.CHEST_FLY,""))
+      /*val actor = spawn(PhysicalMachine("",MachineTypes.CHEST_FLY,""))
       actor ! Msg.MachineActorStarted("", probeMA.ref)
       val register = probeMA.receiveMessage()
       assert(register.isInstanceOf[GoIdle])
       actor ! Rfid("12")
-      val register1 = probePh.receiveMessage()
+      val register1 = probePh.receiveMessage()*/
 
     }
 
