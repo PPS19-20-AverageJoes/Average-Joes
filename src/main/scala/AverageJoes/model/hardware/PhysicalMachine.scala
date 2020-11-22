@@ -32,7 +32,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
         m.refMA ! MachineActor.Msg.GoIdle(machineID)
         display(machineLabel+" OnLine")
         operative(m.refMA)
-      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
+      case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
     }
   }
 
@@ -42,7 +42,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
       case m: Msg.Rfid => ma ! MachineActor.Msg.UserLogIn(m.customerID, machineLabel, machineType); Behaviors.same
       case m: Msg.Display => display(machineLabel + " " + m.message); Behaviors.same
       case m: Msg.ConfigMachine => configure(m.customerID, m.machineParameters); waitingForStart(ma, m.customerID, m.machineParameters)//inExercise(ma, m.customerID, m.machineParameters)
-      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
+      case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
     }
   }
 
@@ -83,9 +83,8 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
           case _ => Behaviors.same
         }
 
-      case m: Msg.StartExercise => Behaviors.same /** TODO: to be reviewed.  */
-
-      }
+      case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
+    }
   }
 
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
@@ -164,8 +163,9 @@ object PhysicalMachine {
       import AverageJoes.model.workout.MachineParameters._
       import AverageJoes.model.workout.ExerciseMetricsBySet
       def formatConfiguration(machineParameters: MachineParameters): List[(String,Int)] = {
+        MachineParameters.extractParameters[String,Int](machineParameters)((ep,v) => {(ep.toString,v.toInt)})
+        /*
         var list: ListBuffer[(String,Int)] = new ListBuffer[(String,Int)]()
-
         machineParameters match{
           case p: LegPressParameters =>
             list += ((ExerciseParameters.REPETITIONS.toString, p.rep))
@@ -181,35 +181,16 @@ object PhysicalMachine {
             list += ((ExerciseParameters.SET_DURATION.toString, p.secForSet))
             list += ((ExerciseParameters.WEIGHT.toString, p.weight))
         }
-        /*
-        case RUNNING => List(INCLINE.toString,SPEED.toString,TIMER.toString)
-        case LIFTING => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
-        case CYCLING => List(INCLINE.toString, TIMER.toString)
-        case LEG_PRESS => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
-        case CHEST_FLY => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
-*/
-        //TODO: todo
-/*
-        machineParameters match { case p: [A] < Repetitions => list += ((ExerciseParameters.REPETITIONS.toString, p.repetitions.toInt)) }
-        machineParameters match { case p: Incline => list += ((ExerciseParameters.INCLINE.toString, p.incline.toInt)) }
-        machineParameters match { case p: Speed => list += ((ExerciseParameters.SPEED.toString, p.speed.toInt)) }
-        machineParameters match { case p: Weight => list += ((ExerciseParameters.WEIGHT.toString, p.weight.toInt)) }
-        machineParameters match { case p: ExerciseMetricsByTime => list += ((ExerciseParameters.TIMER.toString, p.minutes.toInt)) }
-        machineParameters match {
-          case p: ExerciseMetricsBySet =>
-            list += ((ExerciseParameters.SETS.toString, p.sets.toInt))
-            list += ((ExerciseParameters.REPETITIONS.toString, p.rep.toInt))
-            list += ((ExerciseParameters.SET_DURATION.toString, p.secForSet.toInt))
-        }
-*/
+
         list.toList
+        */
       }
 
 
     }
   }
 
-  import AverageJoes.model.workout.MachineParameters._
+  import AverageJoes.model.workout.ExerciseParameters._
   /***** LEG PRESS *****/
   case class LegPressParameters(override val weight: NonNegInt, override val sets: NonNegInt, override val rep: NonNegInt, override val secForSet: NonNegInt)
     extends MachineParametersBySet with Weight
