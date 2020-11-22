@@ -50,7 +50,7 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
-      case CustomerTrainingProgram(tp, group) =>
+      case CustomerTrainingProgram(tp, _) =>
         println("[CUSTOMER ACTOR] "+customerId+": received training program with ---- " + tp.allExercises)
         //group ! CustomerReady(tp.allExercises.head, context.self)
         active(tp,Option.empty)
@@ -95,12 +95,12 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         }
         Behaviors.same
 
-      case StartExercising(exExecute) => {
+      case StartExercising(exExecute) =>
         println("---------------------------------[CUSTOMER ACTOR] "+customerId+": started exercing")
         exercising(exExecute, trainingProgram)
         device ! StartExercise()
         Behaviors.same
-      }
+
 
 
 
@@ -117,9 +117,9 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         if(tp.allExercises.isEmpty) TrainingCompleted()
         active(tp,Option.empty)
 
-      case BookedMachine(mLabel) => {
+      case BookedMachine(mLabel) =>
         active(trainingProgram, mLabel)
-      }
+
 
       case TrainingCompleted() =>
         println("[CUSTOMER ACTOR] "+customerId+": TRAINING COMPLETED ---")
@@ -209,10 +209,9 @@ object MachineBooker {
          implicit val timeout: Timeout = 3 seconds
 
          context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customerId) ) {
-           case Success(OnBookingResponse(_, machineLabel, true)) => {
+           case Success(OnBookingResponse(_, machineLabel, true)) =>
              println("[CUSTOMER ACTOR] " + customerId + " BOOKED  MACHINE" + machineLabel)
              BookedAndFinished(Option(machineLabel))
-           }
            case Success(OnBookingResponse(_,_, false)) =>
              if(machines.tail.isEmpty) BookedAndFinished(Option.empty)
              else BookMachine(machines.tail)
@@ -222,7 +221,7 @@ object MachineBooker {
 
 
       case BookedAndFinished(machineLabel) =>
-        customer ! CustomerActor.BookedMachine(machineLabel);
+        customer ! CustomerActor.BookedMachine(machineLabel)
         Behaviors.stopped[Msg]
     }
   }
