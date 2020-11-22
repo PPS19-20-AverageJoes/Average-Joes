@@ -1,5 +1,6 @@
 package AverageJoes.view
 
+import AverageJoes.HardwareTest
 import AverageJoes.common.{MachineTypeConverters, MachineTypes}
 import AverageJoes.common.MachineTypes.{CYCLING, MachineType}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
@@ -24,8 +25,9 @@ object View extends SimpleSwingApplication {
             add(machinePanel, BorderPanel.Position.Center)
             add(userPanel, BorderPanel.Position.West)
         }
-        //Thread.sleep(1000)
-        //HardwareTest.start(false)
+
+        Thread.sleep(1000)
+        HardwareTest.start(false)
     }
 
     def _getMachineView(): MachineView = machinePanel
@@ -33,12 +35,12 @@ object View extends SimpleSwingApplication {
 }
 
 case class UserView() extends GridPanel(10,1){
-   contents += UserGuiProva()
+   //contents += UserGuiProva()
 }
 
 case class MachineView() extends GridPanel(3,3){
     private var map:Map[String, ActorRef[PhysicalMachine.Msg]] = Map.empty
-   contents += MachineGUI(machineLabel = "label",machineType = CYCLING)
+   //contents += MachineGUI(machineLabel = "label",machineType = CYCLING)
 
     def addEntry(name:String, actorRef: ActorRef[PhysicalMachine.Msg]):Unit =
         map += (name -> actorRef)
@@ -92,6 +94,7 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType/*, ac
     }
 
     contents += new GridPanel(1,4) {
+        println("View, machineType: "+machineType)
         MachineTypeConverters.setParametersView(machineType).foreach(x => {
             val label = new Label(x){
                 preferredSize = new Dimension(100,20)

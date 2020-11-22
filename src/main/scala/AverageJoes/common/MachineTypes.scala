@@ -1,9 +1,5 @@
 package AverageJoes.common
 
-import AverageJoes.model.hardware.PhysicalMachine.CyclingMachineParameters
-import AverageJoes.model.workout.{LiftMachineParameters, RunningMachineParameters}
-
-
 object MachineTypes extends Enumeration {
   type MachineType = Value
   val RUNNING, CYCLING, LEG_PRESS, CHEST_FLY, LIFTING = Value
@@ -29,11 +25,14 @@ object MachineTypeConverters {
     case "LIFTING"   => LIFTING
   }
 
+  import AverageJoes.model.workout.MachineParameters._
+  import AverageJoes.model.workout.ExerciseParameters._
   def setParametersView(m: MachineType): List[String] = m match {
-    case RUNNING => List("incline","speed", "timer")
-    case LIFTING => List("weight", "sets", "repetitions", "setForSec")
-    case CYCLING => List("incline", "timer")
-    case LEG_PRESS => List("incline", "sets", "repetitions", "setForSec")
+    case RUNNING => List(INCLINE.toString,SPEED.toString,TIMER.toString)
+    case LIFTING => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
+    case CYCLING => List(INCLINE.toString, TIMER.toString)
+    case LEG_PRESS => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
+    case CHEST_FLY => List(WEIGHT.toString, SETS.toString, REPETITIONS.toString, SET_DURATION.toString)
   }
 
 

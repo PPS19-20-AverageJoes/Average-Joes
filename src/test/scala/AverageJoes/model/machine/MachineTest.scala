@@ -20,7 +20,7 @@ class MachineTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       val actor = spawn(MachineActor(probeGym.ref,probePh.ref," "))
       actor ! MachineActor.Msg.GoIdle("1")
       val register = probeMA.receiveMessage()
-      actor ! MachineActor.Msg.UserLogIn("34","12")
+      actor ! MachineActor.Msg.UserLogIn("34","12",MachineTypes.CHEST_FLY)
     }
 
     /*"log the user in the machine " in {
