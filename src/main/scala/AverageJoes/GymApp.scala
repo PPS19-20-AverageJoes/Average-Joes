@@ -1,7 +1,6 @@
 package AverageJoes
 
 import AverageJoes.controller.GymController
-import AverageJoes.model.customer.CustomerObjectTester
 import akka.actor.typed.ActorSystem
 
 object GymApp extends App{
@@ -19,5 +18,5 @@ val config: Config = ConfigFactory.parseFile(new Nothing("src/main/scala/Average
 
 
 
-  ActorSystem(CustomerObjectTester(), "user-actor-system")
+  //ActorSystem(CustomerObjectTester(), "user-actor-system")
 }

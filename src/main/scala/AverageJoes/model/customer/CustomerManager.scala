@@ -4,7 +4,7 @@ import AverageJoes.common.LoggableMsg
 import AverageJoes.controller.GymController
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.common.MachineTypes.MachineType
+import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.controller.GymController.Msg.MachinesToBookmark
 import AverageJoes.model.customer.CustomerGroup.CustomerLogin
 import AverageJoes.model.customer.CustomerManager.{MachineListOf, Msg, RequestCustomerCreation, RequestCustomerList, RequestCustomerLogin}

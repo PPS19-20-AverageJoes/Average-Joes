@@ -1,11 +1,11 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.MachineTypes
 import AverageJoes.controller.GymController
 import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.machine
 import AverageJoes.model.machine.MachineActor.Msg
 import AverageJoes.model.hardware.PhysicalMachine.Msg
+import AverageJoes.model.workout.MachineTypes
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.typed.{ActorRef, ActorSystem}
 import org.scalatest.wordspec.AnyWordSpecLike

@@ -2,21 +2,16 @@ package AverageJoes.model.fitness
 
 import AverageJoes.common.database.Workout
 import AverageJoes.common.database.table.{CustomerImpl, Workout, WorkoutImpl}
-import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.Parameters
-import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor
 import AverageJoes.model.fitness.WorkoutConverter.Converter
 import AverageJoes.model.hardware.PhysicalMachine.{ChestFlyParameters, CyclingMachineParameters, LegPressParameters, LiftingMachineParameters, RunningMachineParameters}
 import AverageJoes.model.workout.MachineParameters
-import AverageJoes.utils.SafePropertyValue.SafePropertyVal
+
 
 import scala.collection.SortedSet
 
 trait Exercise {
-    import AverageJoes.model.fitness.ExerciseExecutionConfig.ImplicitParameterExtractors._
-
     def order: Int
     def parameters: MachineParameters
-    def executionParameters: Parameters[SafePropertyVal] = ParameterExtractor.extractParameters(parameters)
 }
 
 object Exercise{
@@ -35,8 +30,8 @@ object WorkoutConverter {
 
 object ImplicitExercise {
     import AverageJoes.common.database.table.Workout
-    import AverageJoes.common.MachineTypes._
-    import AverageJoes.common.MachineTypeConverters._
+    import AverageJoes.model.workout.MachineTypes._
+    import AverageJoes.model.workout.MachineTypeConverters._
 
     object Converters {
         implicit val converter: Converter[Workout] = {
@@ -59,7 +54,7 @@ object ImplicitExercise {
 
 object Main extends App {
     import AverageJoes.utils.SafePropertyValue.NonNegative
-    import AverageJoes.common.MachineTypeConverters._
+    import AverageJoes.model.workout.MachineTypeConverters._
     import AverageJoes.model.fitness.ImplicitExercise.Converters._
     import AverageJoes.model.fitness.ImplicitExercise.Ordering._
 

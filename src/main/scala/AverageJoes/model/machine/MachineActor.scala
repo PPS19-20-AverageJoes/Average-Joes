@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
 
-import AverageJoes.common.{LogManager, LogOnMessage, LoggableMsg, LoggableMsgTo, MachineTypes, NonLoggableMsg}
+import AverageJoes.common.{LogManager, LoggableMsg, LoggableMsgTo, NonLoggableMsg}
 import AverageJoes.controller.GymController
 import AverageJoes.model.customer.CustomerActor.StartExercising
 import AverageJoes.model.customer.{CustomerActor, CustomerManager, MachineBooker}
@@ -8,7 +8,7 @@ import AverageJoes.model.fitness.{ExecutionValues, Exercise}
 import AverageJoes.model.hardware.PhysicalMachine
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.machine.MachineActor._
-import AverageJoes.model.workout.MachineParameters
+import AverageJoes.model.workout.{MachineParameters, MachineTypes}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 

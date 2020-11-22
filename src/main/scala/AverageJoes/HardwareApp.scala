@@ -1,8 +1,9 @@
 package AverageJoes
 
-import AverageJoes.common.{MachineTypes, ServerSearch}
+import AverageJoes.common.ServerSearch
 import AverageJoes.model.hardware.HardwareController.Msg
 import AverageJoes.model.hardware.{Device, HardwareController}
+import AverageJoes.model.workout.MachineTypes
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 

@@ -5,10 +5,12 @@ import AverageJoes.model.hardware.PhysicalMachine.{LiftingMachineParameters, Run
 import AverageJoes.model.workout.MachineParameters
 import AverageJoes.utils.SafePropertyValue.SafePropertyVal
 
+@Deprecated
 object ExerciseExecutionConfig {
   import AverageJoes.model.workout.ExerciseParameters.ExerciseParameter
-  import AverageJoes.common.MachineTypes.MachineType
+  import AverageJoes.model.workout.MachineTypes.MachineType
 
+  @Deprecated
   object ExerciseConfiguration {
 
     trait Parameters[T <: SafePropertyVal] {
@@ -18,6 +20,7 @@ object ExerciseExecutionConfig {
       def allParameters: List[(ExerciseParameter, T)]
     }
 
+    @Deprecated
     object ExerciseParameters {
 
       def apply[T<: SafePropertyVal](maType: MachineType, params: List[(ExerciseParameter, T)]): Parameters[T] = new ExerciseParametersImpl(maType, params)
@@ -54,7 +57,7 @@ object ExerciseExecutionConfig {
   object ImplicitParameterExtractors {
     import AverageJoes.model.workout.ExerciseParameters._
     import AverageJoes.model.workout._
-    import AverageJoes.common.MachineTypes._
+    import MachineTypes._
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ExerciseConfiguration.ExerciseParameters
     import AverageJoes.model.fitness.ExerciseExecutionConfig.ParameterExtractor.Extractor
 

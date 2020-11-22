@@ -1,6 +1,6 @@
 package AverageJoes.model.machine
-import AverageJoes.common.MachineTypes
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
+import AverageJoes.model.workout.MachineTypes
 import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.{ViewDeviceActor, ViewPhysicalMachineActor}
 import org.scalatest.wordspec.AnyWordSpecLike
