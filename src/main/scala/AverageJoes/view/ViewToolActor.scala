@@ -6,9 +6,7 @@ import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.view.ViewToolActor.Msg.ClearViewConfiguration
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import javax.swing.SwingUtilities
-
-import scala.swing.{GridPanel, Swing}
+import scala.swing.GridPanel
 
 
 sealed trait ViewToolActor extends AbstractBehavior[ViewToolActor.Msg] {
@@ -26,9 +24,7 @@ object ViewToolActor {
     final case class UpdateViewObject(msg: String) extends Msg
     final case class SetMachineParameters(list: List[(String,Int)]) extends Msg
     final case class ExerciseCompleted() extends Msg
-
     final case class ClearViewConfiguration() extends Msg
-
   }
 
   class ViewDeviceActor(override val context: ActorContext[Msg], val deviceLabel: String,
@@ -77,8 +73,8 @@ object ViewToolActor {
     override def onMessage(msg: Msg): Behavior[Msg] = msg match {
       case m: ViewToolActor.Msg.UpdateViewObject => updateViewEntity(m.msg); Behaviors.same
       case m: Msg.SetMachineParameters => setMachineParameters(m.list); Behaviors.same
-      case m: Msg.ExerciseCompleted =>  exerciseCompleted(); Behaviors.same
-      case m: ClearViewConfiguration => exerciseCompleted(); Behaviors.same
+      case _: Msg.ExerciseCompleted =>  exerciseCompleted(); Behaviors.same
+      case _: Msg.ClearViewConfiguration => exerciseCompleted(); Behaviors.same
     }
 
     override def updateViewEntity(msg: String): Unit = {
@@ -93,7 +89,7 @@ object ViewToolActor {
         machine.get.setParameters(list)
       }
     }
-    /** TODO: text field to be clean when exercise completed */
+
     def exerciseCompleted(): Unit = {
       scala.swing.Swing.onEDT{
         machine.get.clearFields()
