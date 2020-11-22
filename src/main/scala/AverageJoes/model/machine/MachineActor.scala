@@ -30,7 +30,7 @@ object MachineActor{
     final case class UserMachineWorkout(customerID: String, machineParameters: MachineParameters, executionValues: ExecutionValues) extends Msg
     final case class DeadDevice(customerID: String , exercise: MachineParameters) extends Msg
     final case class BookingRequest(replyTo: ActorRef[MachineBooker.Msg], customerID: String) extends Msg
-    final case class CustomerLogging(customerID: String, customer: ActorRef[CustomerActor.Msg], ex: Exercise, isLogged:Boolean) extends Msg
+    final case class CustomerLogging(customerID: String, customer: ActorRef[CustomerActor.Msg], ex:Option[Exercise], isLogged:Boolean) extends Msg
     final case class GoIdle(machineID: String) extends Msg
     final case class StartExercise() extends Msg
   }
@@ -80,7 +80,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
         if (!isLogged) {
           idle()
         } else {
-          physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, ex.parameters)
+          physicalMachine ! PhysicalMachine.Msg.ConfigMachine(customerID, ex)
           updateAndLogOut(customer, ex)
         }
 
@@ -96,7 +96,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   //spawn sotto attore che scrive su disco
   //deaddevice() --> idle => chiedo i parametri
   //spawn sotto attore che scrive su disco
-  private def updateAndLogOut(customer: ActorRef[CustomerActor.Msg], ex: Exercise): Behavior[Msg] = {
+  private def updateAndLogOut(customer: ActorRef[CustomerActor.Msg], ex:Option[Exercise]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"updateAndLogOut")
     Behaviors.receiveMessagePartial{
       case Msg.BookingRequest(replyTo, customerID) =>
