@@ -48,7 +48,7 @@ class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
         Thread.sleep(milliSleep*3)
 
         refDevice ! Device.Msg.NearDevice(refPm)
-        Thread.sleep(milliSleep*3)
+        Thread.sleep(milliSleep*4)
 
         val func: (List[(String,String)], String) => List[String] = (l,logName) => l.filter(p => p._1 == logName).map(e => e._2)
         val list = LogManager.getBehaviorList()
