@@ -134,7 +134,7 @@ object Device {
 
     def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = { ref ! PhysicalMachine.Msg.Rfid(customerID) }
 
-    override val logName: String = "Dev_Wristband_" + customerID
+    //override val logName: String = "Dev_Wristband_" + customerID
   }
 
   object Wristband{
