@@ -1,6 +1,7 @@
 package AverageJoes.view
 
 import AverageJoes.HardwareTest
+import AverageJoes.common.ServerSearch
 import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
@@ -8,8 +9,8 @@ import AverageJoes.model.workout.MachineTypeConverters
 import akka.actor.typed.ActorRef
 
 import scala.swing.event.ButtonClicked
-import scala.swing.{BorderPanel, Button, Dialog, Dimension, FlowPanel, Frame, GridPanel,
-    Label, MainFrame, SimpleSwingApplication, TextArea, TextField}
+import scala.swing.{BorderPanel, Button, Dialog, Dimension, FlowPanel, Frame, GridPanel, Label, MainFrame, SimpleSwingApplication, TextArea, TextField}
+import scala.sys.exit
 
 object View extends SimpleSwingApplication {
     private val machinePanel: MachineView = MachineView()
@@ -17,6 +18,14 @@ object View extends SimpleSwingApplication {
 
     def top: Frame = new MainFrame {
         title = "AverageJoe's"
+
+        import javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE
+        peer.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE)
+
+        override def closeOperation(): Unit = {
+            ServerSearch.closeSystem()
+            exit(0)
+        }
 
         preferredSize = new Dimension(1200, 600)
 

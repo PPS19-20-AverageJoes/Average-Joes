@@ -12,4 +12,6 @@ trait ServerSearch {
 
 object ServerSearch{
   private val serverDummy: ActorSystem[GymController.Msg] = ActorSystem(GymController(), "GymController")
+
+  def closeSystem(): Unit = serverDummy.terminate()
 }
