@@ -35,6 +35,11 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     }
   }
 
+  /**
+   * Operative state, the physical machine is connected
+   * with a proper machine actor and is ready to play,
+   * waiting for a customer solicitation
+   * */
   private def operative(ma: ActorRef[MachineActor.Msg]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"operative")
     Behaviors.receiveMessagePartial {
@@ -50,12 +55,15 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
         configure(m.customerID, machineParameters)
         waitingForStart(ma, m.customerID)
 
-      case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
-      case HeartRate(_) => Behaviors.same //Ignore in this behaviour
-      case ExerciseEnds() => Behaviors.same //Ignore in this behaviour
+      case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour (logical block)
+      case HeartRate(_) => Behaviors.same //Ignore in this behaviour (residual)
+      case ExerciseEnds() => Behaviors.same //Ignore in this behaviour (residual)
     }
   }
 
+  /**
+   * The customer is on the machine and has to push the button to start the exercise
+   * */
   private def waitingForStart(ma: ActorRef[MachineActor.Msg], customerID: String): Behavior[Msg] = {
     Behaviors.receiveMessagePartial {
       case m: Msg.StartExercise =>
@@ -70,6 +78,9 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   }
 
   private case object TimerKey
+  /**
+   * The customer is playing the machine
+   * */
   private def inExercise(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     LogManager.logBehaviourChange(logName,"inExercise")
     timers.startSingleTimer(TimerKey, ExerciseEnds(), machineParameters.duration)
@@ -100,6 +111,9 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
     }
   }
 
+  /**
+   * Not a real behaviour, but a logical step
+   * */
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"exerciseEnds")
     val list = heartBeats.toList
@@ -172,7 +186,7 @@ object PhysicalMachine {
       }
 
       override def checkDeterioration(): Boolean = {
-        val rnd : Int = new Random(new Date().getTime()).nextInt(100)
+        val rnd : Int = new Random(new Date().getTime).nextInt(100)
         rnd > 90
       }
 
