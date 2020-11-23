@@ -30,7 +30,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   }
 
   private def idle(): Behavior[Msg] ={
-    LogManager.logBehaviourChange(logName,"init")
+    LogManager.logBehaviourChange(logName,"idle")
     Behaviors.receiveMessagePartial {
       case m: Msg.CustomerLogged => display(m.machineLabel); waitingForStart(m.machineLabel, m.refPM) //inExercise(m.machineLabel, m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
