@@ -52,6 +52,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
       case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
       case HeartRate(_) => Behaviors.same //Ignore in this behaviour
+      case ExerciseEnds() => Behaviors.same //Ignore in this behaviour
     }
   }
 
