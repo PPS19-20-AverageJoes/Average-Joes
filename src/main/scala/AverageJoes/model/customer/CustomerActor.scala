@@ -194,7 +194,6 @@ object MachineBooker {
   def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
     Behaviors.receiveMessage[Msg] {
        case BookMachine(machines) =>
-         println("STARTED BOOOKING"+ customerId)
 
          implicit val timeout: Timeout = 2 seconds
 
@@ -207,8 +206,6 @@ object MachineBooker {
          Behaviors.same
 
       case BookedAndFinished(machineLabel) =>
-        println("BOOOKING finished"+ customerId)
-
         customer ! CustomerActor.BookedMachine(machineLabel)
         Behaviors.stopped[Msg]
     }
