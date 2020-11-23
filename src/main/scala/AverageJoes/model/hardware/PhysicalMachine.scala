@@ -21,7 +21,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   def machineLabel: MachineLabel //To show on device
   def machineType: MachineTypes.MachineType
 
-  private val logName: String = PhysicalMachine.logName+"_"+machineID //ToDo: mettere private anche nelle altre classi
+  private val logName: String = PhysicalMachine.logName+"_"+machineID
 
   val machineGui: ActorRef[ViewToolActor.Msg]
 
@@ -101,9 +101,12 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
 
   def exerciseEnds(ma: ActorRef[MachineActor.Msg], customerID: String, machineParameters: MachineParameters, heartBeats: ListBuffer[Int]): Behavior[Msg] = {
     LogManager.logBehaviourChange(logName,"exerciseEnds")
-    val avg: Int = heartBeats.sum[Int] / (heartBeats.count(_ => true) match { case c: Int if c > 0 => c; case _ => 1})
+    val list = heartBeats.toList
+    val max: Int = list match { case Nil => 0; case _ => heartBeats.max}
+    val min: Int = list match { case Nil => 0; case _ => heartBeats.min}
+    val avg: Int = list match { case Nil => 0; case _ => heartBeats.sum[Int] / (heartBeats.count(_ => true) match { case c: Int if c > 0 => c; case _ => 1})}
 
-    ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters, ExecutionValues(heartBeats.max, heartBeats.min, avg))
+    ma ! MachineActor.Msg.UserMachineWorkout(customerID, machineParameters, ExecutionValues(max, min, avg))
 
     machineGui ! ViewToolActor.Msg.ExerciseCompleted()
     display(machineLabel+" Free")
@@ -134,7 +137,7 @@ object PhysicalMachine {
   //Self messages
   private final case class ExerciseEnds() extends Msg with NonLoggableMsg { override def From: String = "PM"; override def To: String = "PM" }
 
-  type MachineLabel = String //ToDo: definire numero massimo caratteri (safe property value)
+  type MachineLabel = String
 
   import AverageJoes.model.workout.MachineTypes._
   def apply(machineID: String, phMachineType: MachineType, machineLabel: MachineLabel): Behavior[Msg] = {
