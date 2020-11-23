@@ -2,6 +2,10 @@ package AverageJoes.common.database
 
 import AverageJoes.common.database.table.{Entity, Workout}
 
+/**
+ * Trait offering basic CRUD and query operations on a
+ * data storage.
+ */
 trait Storage[E] {
   def add(e: E): List[E]
   def remove(e: E): List[E]

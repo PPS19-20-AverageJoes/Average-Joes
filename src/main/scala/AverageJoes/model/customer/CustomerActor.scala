@@ -1,6 +1,6 @@
 package AverageJoes.model.customer
 
-import AverageJoes.common.{LoggableMsg, LoggableMsgTo}
+import AverageJoes.common.LoggableMsg
 import AverageJoes.model.customer.CustomerManager.MachineListOf
 import AverageJoes.model.customer.MachineBooker.BookMachine
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
@@ -19,26 +19,28 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-
+/**
+ * CustomerActor is the actor that represents an customer in the gym. This actor handle customer machine authentication
+ * and keep track of his training program. In base of exercise duration it will create two sub-child actors to handle
+ * exercising session and the next smart machine to be booked.
+ */
 object CustomerActor {
   def apply(manager: ActorRef[CustomerManager.Msg], customerId: String, device: ActorRef[Device.Msg]): Behavior[Msg] =
     Behaviors.setup(context => new CustomerActor(context, manager, customerId, device))
 
   trait Msg extends LoggableMsg
+
+  final case class TrainingCompleted() extends Msg
+  final case class NextMachineBooking(ex: Exercise) extends Msg
+  final case class ExerciseCompleted(tp: TrainingProgram) extends Msg
+  final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
+  final case class BookedMachine(machineLabel: Option[MachineLabel]) extends Msg
+  final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
+  final case class StartExercising(ex: (Option[Exercise], FiniteDuration)) extends Msg
   final case class CustomerTrainingProgram(tp: TrainingProgram, group: ActorRef[CustomerGroup.Msg]) extends Msg
   final case class CustomerMachineLogin(machineLabel: MachineLabel, machineType: MachineType, phMachine: ActorRef[PhysicalMachine.Msg], machine: ActorRef[MachineActor.Msg]) extends Msg
-  //final case class ExerciseStarted(exExecute: Exercise, trainingProgram: TrainingProgram) extends Msg
-  final case class ExerciseCompleted(tp: TrainingProgram) extends Msg
-  final case class NextMachineBooking(ex: Exercise) extends Msg
-  final case class UpdateTrainingProgram(tp: TrainingProgram) extends Msg
-  final case class TrainingCompleted() extends Msg
-  final case class StartExercising(ex: (Option[Exercise], FiniteDuration)) extends Msg
-  final case class MachineList(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
-
-  final case class BookedMachine(machineLabel: Option[MachineLabel]) extends Msg
-
-  final case object Passivate extends Msg
 }
+
 
 class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[CustomerManager.Msg], customerId: String, device: ActorRef[Device.Msg])
   extends AbstractBehavior[CustomerActor.Msg](ctx) {
@@ -50,108 +52,103 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
+      /** Customer is instantiated and received his training program. Changing behaviour to active. */
       case CustomerTrainingProgram(tp, _) =>
-        println("[CUSTOMER ACTOR] "+customerId+": received training program with ---- " + tp.allExercises)
-        //group ! CustomerReady(tp.allExercises.head, context.self)
         active(tp,Option.empty)
     }
   }
 
-
   private def active(trainingProgram: TrainingProgram, machineLabel: Option[MachineLabel]): Behavior[Msg] = {
     Behaviors.receiveMessagePartial[Msg] {
 
-      case NextMachineBooking(ex) =>
-        //println("[CUSTOMER ACTOR] "+customerId+": received NextMachineBooking")
-        requestMachineList(ex)
-        Behaviors.same
-
-      case MachineList(machines) =>
-       // println("[CUSTOMER ACTOR] "+customerId+": received MachinesList --- "+ machines)
-        if(machines.nonEmpty) booking(machines)
-        Behaviors.same
-
+      /** Customer received a machine login request. It will check if:
+       * - the exercise to be executed is in the training program
+       * - if yes, check if it is out of order
+       * - otherwise, keep exercising without updating training program */
       case CustomerMachineLogin(machineLabel, machineType, phMachine, machine) =>
         if(!isLogged) {
           isLogged = true
 
           if (exerciseAlreadyOnProgram(machineType, trainingProgram).isDefined) {
-            //println("[CUSTOMER ACTOR] " + customerId + ": accepted logging request from " + machineLabel)
-            //println("[CUSTOMER ACTOR] " + customerId + ": is doing " + machineType + " and first exercise is " + trainingProgram.allExercises.head.parameters.machineType)
-
+            /** Exercise on training program */
             val toBeExecuted = exerciseToBeExecuted(machineType, trainingProgram)
             machine ! CustomerLogging(customerId, context.self, toBeExecuted, isLogged)
             device ! CustomerLogged(phMachine, machineLabel)
           }
           else {
+            /** Exercise out of training program */
             machine ! CustomerLogging(customerId, context.self, Option.empty[Exercise], isLogged)
             device ! CustomerLogged(phMachine, machineLabel)
           }
         }
 
-        else {
-          //println("[CUSTOMER ACTOR] "+customerId+": refused logging request from "+ machineLabel)
-          machine ! CustomerLogging(customerId, context.self, Option.empty[Exercise], isLogged)
-        }
+        else machine ! CustomerLogging(customerId, context.self, Option.empty[Exercise], isLogged)
+
         Behaviors.same
 
+      /** Machine actor notified customer to start exercising */
       case StartExercising(exExecute) =>
-        println("---------------------------------[CUSTOMER ACTOR] "+customerId+": started exercing")
         exercising(exExecute, trainingProgram)
         device ! StartExercise()
         Behaviors.same
 
+      /** BookWhileExercising notified timeout expired, it is time to book again */
+      case NextMachineBooking(ex) =>
+        requestMachineList(ex)
+        Behaviors.same
 
+      /** GymController sent to customer the list of available smart machines of type T */
+      case MachineList(machines) =>
+        if(machines.nonEmpty) booking(machines)
+        Behaviors.same
 
-
+      /** CustomerExercising notified customer that exercise completed, update training program */
       case ExerciseCompleted(exSet) =>
-        println("[CUSTOMER ACTOR] "+customerId+": completed exercising, updated exercise set is: "+ exSet)
         isLogged = false
         device ! CustomerLogOut(machineLabel)
         context.self ! UpdateTrainingProgram(exSet)
         Behaviors.same
 
-
+      /** Self-message to update customer training program */
       case UpdateTrainingProgram(tp) =>
-        println("[CUSTOMER ACTOR] "+customerId+": updated training program ---")
         if(tp.allExercises.isEmpty) TrainingCompleted()
         active(tp,Option.empty)
 
+      /** Updating machine label of machine that was booked from customer */
       case BookedMachine(mLabel) =>
         active(trainingProgram, mLabel)
 
-
+      /** All exercises of training program were executed */
       case TrainingCompleted() =>
-        println("[CUSTOMER ACTOR] "+customerId+": TRAINING COMPLETED ---")
         Behaviors.stopped
 
     }
   }
 
-
+  /** Instantiating a child actor to start booking */
   private def booking(machines: Set[ActorRef[MachineActor.Msg]]): Unit = {
     val machineBooker = context.spawn(MachineBooker(context.self, customerId), "machine-booker")
     machineBooker ! BookMachine(machines)
   }
 
+  /** Instantiating two child actors to:
+   * - keep track of exercise duration and notify customer
+   * - keep track of timeout for next machine to be booked and notify customer */
   private def exercising(ex: (Option[Exercise], FiniteDuration), tp: TrainingProgram): Unit = {
-
-    //println("[CUSTOMER ACTOR] "+customerId+": started exercising --- "+ ex)
     context.spawn(CustomerExercising(context.self, ex, tp), "exercising") ! ExerciseTiming
 
     if(exerciseToBookMachineFor(ex._1, tp).isDefined) {
-      //println("[CUSTOMER ACTOR] " + customerId + ": next machine to be booked is --- " + exerciseToBookMachineFor(ex._1, tp), tp)
       context.spawn(BookWhileExercising(context.self, exerciseToBookMachineFor(ex._1, tp).get, tp), "book-while-exercising") ! BookTiming
     }
-    else  println("[CUSTOMER ACTOR] "+customerId+": last exercise, NO MORE MACHINE TO BE BOOKED --- "+ exerciseToBookMachineFor(ex._1, tp), tp)
-
   }
 
+  /** Requesting my CustomerManager to as GymController for available machines of type T */
+  private def requestMachineList(ex: Exercise): Unit =  managerRef ! MachineListOf(ex.parameters.machineType, context.self)
 
-  private def requestMachineList(ex: Exercise): Unit = {
-    managerRef ! MachineListOf(ex.parameters.machineType, context.self)
-  }
-
+  /** Next exercise to be exercuted, checking if the last one was
+   * - not in training program
+   * - out of order
+   * - in order */
   private def exerciseToBeExecuted (mt: MachineType, tp: TrainingProgram): Option[Exercise] = {
     val ex = exerciseAlreadyOnProgram(mt, tp)
 
@@ -160,6 +157,10 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     else Option(tp.allExercises.head)
   }
 
+  /** Next exercise to book machine for, checking if the last one was
+   * - not in training program
+   * - out of order
+   * - in order */
   private def exerciseToBookMachineFor(ex: Option[Exercise], tp: TrainingProgram): Option[Exercise] = {
     if(ex.isEmpty && tp.allExercises.nonEmpty) {
       Option(tp.allExercises.head)
@@ -172,77 +173,46 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     }else Option.empty[Exercise]
   }
 
-  // else Option.empty[Exercise]
-
-
-  /** TODO: to be refactored. Done this way only for testing purpose */
-  /*private def loggingAllowed(mt: MachineType, tp: TrainingProgram): Boolean = {
-    if(logged) {
-      println("[CUSTOMER ACTOR LOGIN NOT ALLOWED] " +customerId+" already logged"); false
-    } else if(tp.allExercises.isEmpty) {
-      println("[CUSTOMER ACTOR  LOGIN NOT ALLOWED] " +customerId+" empty training program"); false
-    } else if(exerciseAlreadyOnProgram(mt, tp).isEmpty) {
-      println("[CUSTOMER ACTOR  LOGIN NOT ALLOWED] " +customerId+" no exercises found with this machine type"); false
-    } else{true}
-  } */
-
-
   private def exerciseAlreadyOnProgram(mt: MachineType, tp: TrainingProgram): Option[Exercise] = tp.allExercises.find(e => e.parameters.machineType.equals(mt))
 
   private def isOutOfOrder(ex: Exercise, tp: TrainingProgram): Boolean = !tp.allExercises.head.equals(ex)
-
-
 }
 
 
-
+/**
+ * MachineBooker is an child actor instantiated by CustomerActor
+ * to send BookingRequest to machines. It implement the ask pattern
+ * allowing 2 seconds to a machine to send a response, otherwise it
+ * will pass to the next one.
+ * When the machines list will be finished, will notify Customer Actor
+ * with the result.
+ */
 object MachineBooker {
   trait Msg
-  case class BookMachine(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg with LoggableMsgTo { override def To: String = "MachineBooker" }
+  case class BookMachine(machines: Set[ActorRef[MachineActor.Msg]]) extends Msg
   final case class OnBookingResponse(machine: ActorRef[MachineActor.Msg], label: MachineLabel, isBooked: Boolean) extends Msg
-  private case class BookedAndFinished(machineLabel: Option[MachineLabel]) extends Msg with LoggableMsgTo { override def To: String = "MachineBooker" }
+  private case class BookedAndFinished(machineLabel: Option[MachineLabel]) extends Msg
 
   def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
     Behaviors.receiveMessage[Msg] {
        case BookMachine(machines) =>
-         println("[CUSTOMER ACTOR] "+customerId+": started booking ---")
-         implicit val timeout: Timeout = 3 seconds
+         implicit val timeout: Timeout = 2 seconds
 
          context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customerId) ) {
-           case Success(OnBookingResponse(_, machineLabel, true)) =>
-             println("[CUSTOMER ACTOR] " + customerId + " BOOKED  MACHINE" + machineLabel)
-             BookedAndFinished(Option(machineLabel))
-           case Success(OnBookingResponse(_,_, false)) =>
-             if(machines.tail.isEmpty) BookedAndFinished(Option.empty)
-             else BookMachine(machines.tail)
            case Failure(_) => BookMachine(machines.tail)
+           case Success(OnBookingResponse(_, machineLabel, true)) => BookedAndFinished(Option(machineLabel))
+           case Success(OnBookingResponse(_,_, false)) => if(machines.tail.isEmpty) BookedAndFinished(Option.empty)
+                                                          else BookMachine(machines.tail)
          }
          Behaviors.same
-
 
       case BookedAndFinished(machineLabel) =>
         customer ! CustomerActor.BookedMachine(machineLabel)
         Behaviors.stopped[Msg]
     }
   }
-
 }
 
-/**
- *
- */
+
 case class IllegalDurationValue() extends IllegalArgumentException
 
-
-/**
-{"customerID":"Wristband2","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"5"},
-  {"customerID":"Wristband2","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"6"},
-  {"customerID":"Wristband2","order": 3,"sets":4,"timer":0, "repetitions":4,"incline":0,"speed":0,"weight":50,"typeMachine":"CHEST_FLY","secForSet":2,"id":"7"},
-
-  {"customerID":"Wristband3","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"8"},
-  {"customerID":"Wristband3","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"9"},
-  {"customerID":"Wristband3","order": 3,"sets":3,"timer":0, "repetitions":5,"incline":0,"speed":0,"weight":50,"typeMachine":"LIFTING","secForSet":2,"id":"10"},
-
-  {"customerID":"Wristband4","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"11"},
-  {"customerID":"Wristband4","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"12"}
- */

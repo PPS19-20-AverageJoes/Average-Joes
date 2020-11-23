@@ -1,6 +1,5 @@
 package AverageJoes.utils
 
-import AverageJoes.utils.SafePropertyValue.NonNegative.{NonEmptyString, NonNegDouble, NonNegDuration, NonNegInt, NonNegative}
 
 import scala.concurrent.duration.FiniteDuration
 
