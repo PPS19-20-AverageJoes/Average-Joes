@@ -14,20 +14,24 @@ import akka.actor.typed.{ActorRef, Behavior}
 
 /**
  * Customer Manager will handle the request for customer creation and will pass this request
- * to Customer Group. Other requests will be handled by Customer Manager.
+ * to Customer Group. It is the entry point to create a customer and authenticate it on
+ * a smart machine. It will keep track of group actors, in this case only one, the customer's group.
  */
-
 object CustomerManager {
   def apply(): Behavior[Msg] = Behaviors.setup(ctx => new CustomerManager(ctx))
 
   sealed trait Msg extends LoggableMsg
 
   /** Receive Messages */
-  final case class RequestCustomerCreation(customerId: String, controller: ActorRef[GymController.Msg], device: ActorRef[Device.Msg])
-    extends Msg with CustomerGroup.Msg
+  final case class RequestCustomerCreation(customerId: String,
+                                           controller: ActorRef[GymController.Msg],
+                                           device: ActorRef[Device.Msg]) extends Msg with CustomerGroup.Msg
 
-  final case class RequestCustomerLogin(customerId: String, machineLabel: MachineLabel, machineType: MachineType, machine: ActorRef[MachineActor.Msg], physicalMachine: ActorRef[PhysicalMachine.Msg])
-    extends Msg
+  final case class RequestCustomerLogin(customerId: String,
+                                        machineLabel: MachineLabel,
+                                        machineType: MachineType,
+                                        machine: ActorRef[MachineActor.Msg],
+                                        physicalMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
 
   final case class RequestCustomerList(controller: ActorRef[GymController.Msg]) extends Msg with CustomerGroup.Msg
 
@@ -40,20 +44,15 @@ object CustomerManager {
 
 class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBehavior[CustomerManager.Msg](ctx) {
 
-  /**
-   * TODO: to optional ref
-   */
-  var controllerRef: ActorRef[GymController.Msg] = _
-  //var deviceRef: ActorRef[Device.Msg] = _
+  var controller: Option[ActorRef[GymController.Msg]] = Option.empty[ActorRef[GymController.Msg]]
   val groupId = "customers"
   val customerGroup: ActorRef[CustomerGroup.Msg] = context.spawn(CustomerGroup(groupId, context.self), "group-"+groupId)
 
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
-    case customerCreation @ RequestCustomerCreation(_, controller,_) =>
-      controllerRef = controller
-      //deviceRef = device
+    case customerCreation @ RequestCustomerCreation(_, gymController, _) =>
+      controller = Option.apply(gymController)
       customerGroup ! customerCreation
       Behaviors.same
 
@@ -65,9 +64,8 @@ class CustomerManager(ctx: ActorContext[CustomerManager.Msg]) extends AbstractBe
       customerGroup ! customerList
       Behaviors.same
 
-
     case MachineListOf(machineType, customer) =>
-      controllerRef ! MachinesToBookmark(machineType, customer)
+      if(controller.isDefined) controller.get ! MachinesToBookmark(machineType, customer)
       Behaviors.same
 
   }

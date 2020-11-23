@@ -1,10 +1,13 @@
 package AverageJoes.model.fitness
 
 import AverageJoes.common.database.table.Customer
-
 import scala.collection.SortedSet
 
-
+/**
+ * Training program represents the workout program associated
+ * to a gym customer. It will keep track of the smart exercises
+ * and will offer adding and removing operations for the exercises.
+ */
 trait TrainingProgram {
   val customer: Customer
   def addExercise(ex: Exercise): TrainingProgram
@@ -24,8 +27,8 @@ object TrainingProgram {
       override def addExercise(ex: Exercise): TrainingProgram = {exercises = exercises + ex; this}
 
       override def removeExercise(ex: Exercise): TrainingProgram = {
-        if (exercises.isEmpty) throw new NoExercisesFound;
-        else  exercises = exercises - ex;
+        if (exercises.isEmpty) throw new NoExercisesFound
+        else exercises = exercises - ex;
         this
       }
   }
