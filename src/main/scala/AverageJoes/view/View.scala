@@ -97,7 +97,6 @@ case class MachineGUI(machineLabel: MachineLabel, machineType: MachineType, acto
     }
 
     contents += new GridPanel(1,4) {
-        println("View, machineType: "+machineType)
         MachineTypeConverters.setParametersView(machineType).foreach(x => {
             val label = new Label(x){
                 preferredSize = new Dimension(100,20)

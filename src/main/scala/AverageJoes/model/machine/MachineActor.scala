@@ -53,7 +53,6 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
     LogManager.logBehaviourChange(logName,"idle")
     Behaviors.receiveMessagePartial {
       case Msg.UserLogIn(customerID,machineLabel,machineType) =>
-        println(controller)
         controller ! GymController.Msg.UserLogin(customerID, machineLabel, machineType, physicalMachine, context.self)
         connecting()
 
@@ -119,7 +118,6 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
 
       Behaviors.receiveMessagePartial {
         case BookingTimeoutException() =>
-          println("[MACHINE ACTOR] " + machineLabel + " DIDN'T RECEIVE THE LOGGING MESSAGE IN TIME")
           physicalMachine ! PhysicalMachine.Msg.Display("Free")
           idle()
 

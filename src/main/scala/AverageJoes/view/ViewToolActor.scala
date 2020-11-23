@@ -3,7 +3,6 @@ package AverageJoes.view
 import AverageJoes.model.workout.MachineTypes.MachineType
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
-import AverageJoes.view.ViewToolActor.Msg.ClearViewConfiguration
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import scala.swing.GridPanel
