@@ -113,7 +113,7 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
    * Machine in booking status. Release if timer expires
    */
   private def bookedStatus(bookedCustomer: String): Behavior[Msg]= Behaviors.withTimers[Msg] {
-    timers => timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(30, "sec"))
+    timers => timers.startSingleTimer(TimerKey, BookingTimeoutException(), Duration(120, "sec"))
 
       LogManager.logBehaviourChange("MACHINE ACTOR", "bookedStatus")
 

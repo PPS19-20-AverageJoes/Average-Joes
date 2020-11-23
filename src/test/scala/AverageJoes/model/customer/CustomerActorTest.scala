@@ -58,17 +58,17 @@ class CustomerActorTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     "notify new booking during exercising" in {
       val customerProbe: TestProbe[CustomerActor.Msg] = createTestProbe[CustomerActor.Msg]()
 
-      val book = spawn(BookWhileExercising(customerProbe.ref, Exercise(1, RunningMachineParameters(10, 20, 10)), tp))
+      val book = spawn(BookWhileExercising(customerProbe.ref, (Option(Exercise(1, RunningMachineParameters(10, 20, 1))), 60 seconds), tp))
       book ! BookTiming
-      customerProbe.expectMessage(11.seconds, NextMachineBooking(Exercise(1, RunningMachineParameters(10, 20, 10))))
+      customerProbe.expectMessage(32.seconds, NextMachineBooking(Exercise(1, RunningMachineParameters(10, 20, 1))))
     }
 
     "receive training completed for empty exercise set and exercise out-of-training-program" in {
       val customerProbe: TestProbe[CustomerActor.Msg] = createTestProbe[CustomerActor.Msg]()
       val tpWithOneExercise = TrainingProgram(c1)(SortedSet())
 
-      spawn(BookWhileExercising(customerProbe.ref, Exercise(1, RunningMachineParameters(10, 20, 10)), tpWithOneExercise)) ! BookTiming
-      customerProbe.expectMessage(11.seconds, TrainingCompleted())
+      spawn(BookWhileExercising(customerProbe.ref, (Option(Exercise(1, RunningMachineParameters(10, 20, 1))), 60 seconds), tpWithOneExercise)) ! BookTiming
+      customerProbe.expectMessage(32.seconds, TrainingCompleted())
     }
   }
 

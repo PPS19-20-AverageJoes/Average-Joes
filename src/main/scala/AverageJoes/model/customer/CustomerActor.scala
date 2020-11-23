@@ -115,12 +115,10 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
         active(tp,Option.empty)
 
       /** Updating machine label of machine that was booked from customer */
-      case BookedMachine(mLabel) =>
-        active(trainingProgram, mLabel)
+      case BookedMachine(mLabel) =>   active(trainingProgram, mLabel)
 
       /** All exercises of training program were executed */
-      case TrainingCompleted() =>
-        Behaviors.stopped
+      case TrainingCompleted() =>  Behaviors.stopped
 
     }
   }
@@ -138,14 +136,14 @@ class CustomerActor(ctx: ActorContext[CustomerActor.Msg], manager: ActorRef[Cust
     context.spawn(CustomerExercising(context.self, ex, tp), "exercising") ! ExerciseTiming
 
     if(exerciseToBookMachineFor(ex._1, tp).isDefined) {
-      context.spawn(BookWhileExercising(context.self, exerciseToBookMachineFor(ex._1, tp).get, tp), "book-while-exercising") ! BookTiming
+      context.spawn(BookWhileExercising(context.self, (exerciseToBookMachineFor(ex._1, tp), ex._2), tp), "book-while-exercising") ! BookTiming
     }
   }
 
   /** Requesting my CustomerManager to as GymController for available machines of type T */
   private def requestMachineList(ex: Exercise): Unit =  managerRef ! MachineListOf(ex.parameters.machineType, context.self)
 
-  /** Next exercise to be exercuted, checking if the last one was
+  /** Next exercise to be executed, checking if the last one was
    * - not in training program
    * - out of order
    * - in order */
@@ -196,6 +194,8 @@ object MachineBooker {
   def apply(customer: ActorRef[CustomerActor.Msg], customerId: String): Behavior[Msg] = Behaviors.setup[Msg] { context =>
     Behaviors.receiveMessage[Msg] {
        case BookMachine(machines) =>
+         println("STARTED BOOOKING"+ customerId)
+
          implicit val timeout: Timeout = 2 seconds
 
          context.ask(machines.head, (booker: ActorRef[MachineBooker.Msg]) => BookingRequest(booker, customerId) ) {
@@ -207,6 +207,8 @@ object MachineBooker {
          Behaviors.same
 
       case BookedAndFinished(machineLabel) =>
+        println("BOOOKING finished"+ customerId)
+
         customer ! CustomerActor.BookedMachine(machineLabel)
         Behaviors.stopped[Msg]
     }
