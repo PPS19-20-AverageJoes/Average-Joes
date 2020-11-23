@@ -1,18 +1,17 @@
 package AverageJoes.controller
 
-import AverageJoes.common.{LogManager, ServerSearch}
-import AverageJoes.model.customer.CustomerActor
+import AverageJoes.common.LogManager
 import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
 import AverageJoes.model.hardware.HardwareController.Msg
 import AverageJoes.model.hardware.PhysicalMachine.LegPressParameters
-import AverageJoes.model.machine.MachineActor
 import AverageJoes.model.workout.{MachineParameters, MachineTypes}
-import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestInbox}
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
+import akka.actor.typed.ActorSystem
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   val milliSleep: Long = 2000
+
 
   "Gym controller" must{
     val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")

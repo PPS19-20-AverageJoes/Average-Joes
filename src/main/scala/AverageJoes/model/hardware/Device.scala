@@ -29,15 +29,22 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
     }
   }
 
+  /**
+   * Idle state, the device is ready to connect
+   * with a physical machine
+   * */
   private def idle(): Behavior[Msg] ={
     LogManager.logBehaviourChange(logName,"idle")
     Behaviors.receiveMessagePartial {
       case m: Msg.CustomerLogged => display(m.machineLabel); waitingForStart(m.machineLabel, m.refPM) //inExercise(m.machineLabel, m.refPM)
       case m: Msg.NearDevice => rfid(m.refPM); Behaviors.same
-      case HeartRateSimulation(_,_) => Behaviors.same
+      case HeartRateSimulation(_,_) => Behaviors.same //Ignore in this behaviour (residual)
     }
   }
 
+  /**
+   * The customer is on the machine and has to push the button to start the exercise
+   * */
   private def waitingForStart(machineLabel: MachineLabel, pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] ={
     LogManager.logBehaviourChange(logName,"waitingForStart")
     Behaviors.receiveMessagePartial {
@@ -47,6 +54,9 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   }
 
   private case object TimerKey
+  /**
+   * The customer is playing the machine
+   * */
   private def inExercise(machineLabel: MachineLabel, pm: ActorRef[PhysicalMachine.Msg]): Behavior[Msg] = Behaviors.withTimers[Msg]{ timers =>
     timers.startSingleTimer(TimerKey, HeartRateSimulation(minHeartRate, Pos()), heartRateSchedule)
     LogManager.logBehaviourChange(logName,"inExercise")
