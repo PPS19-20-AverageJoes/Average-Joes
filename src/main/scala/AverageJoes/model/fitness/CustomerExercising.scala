@@ -7,6 +7,11 @@ import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
 
 import scala.concurrent.duration.FiniteDuration
 
+/**
+ *  CustomerExercising is an actor to keep track of the exercise duration
+ *  and notify the customer whe exercise is completed.
+ *  If the exercise was in training program, it will update the training program.
+ */
 object CustomerExercising {
   trait Msg
   private case object TimerKey
@@ -19,15 +24,14 @@ object CustomerExercising {
 }
 
 
-class CustomerExercising(
-                          timers: TimerScheduler[CustomerExercising.Msg],
-                          target: ActorRef[CustomerActor.Msg],
-                          ex: (Option[Exercise], FiniteDuration),
-                          tp: TrainingProgram) {
+class CustomerExercising(timers: TimerScheduler[CustomerExercising.Msg],
+                         target: ActorRef[CustomerActor.Msg],
+                         ex: (Option[Exercise], FiniteDuration),
+                         tp: TrainingProgram) {
   import CustomerExercising._
 
   private def initializing(): Behavior[CustomerExercising.Msg] = {
-    Behaviors.receiveMessage[CustomerExercising.Msg] { message =>
+    Behaviors.receiveMessage[CustomerExercising.Msg] { _ =>
       timers.startSingleTimer(TimerKey, ExerciseFinished, ex._2)
       exerciseFinished()
     }
@@ -36,7 +40,6 @@ class CustomerExercising(
   def exerciseFinished(): Behavior[Msg] = {
     Behaviors.receiveMessage[Msg] {
       case ExerciseFinished =>
-        println("[CUSTOMER ACTOR]  exercise completed ")
         if(ex._1.isDefined) target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises - ex._1.get))
         else target ! ExerciseCompleted(TrainingProgram(tp.customer)(tp.allExercises))
 
@@ -45,6 +48,11 @@ class CustomerExercising(
   }
 }
 
+
+/**
+ * BookWhileExercising will keep track of the time when a customer
+ * should start booking other machines because he is finishing his exercise.
+ */
 object BookWhileExercising {
   trait Msg
   case object BookTiming extends Msg
@@ -56,17 +64,17 @@ object BookWhileExercising {
   }
 }
 
-class BookWhileExercising(
-                           timers: TimerScheduler[BookWhileExercising.Msg],
-                           target: ActorRef[CustomerActor.Msg],
-                           ex: Exercise,
-                           tp: TrainingProgram) {
+class BookWhileExercising(timers: TimerScheduler[BookWhileExercising.Msg],
+                          target: ActorRef[CustomerActor.Msg],
+                          ex: Exercise,
+                          tp: TrainingProgram) {
   import BookWhileExercising._
 
-  /** TODO: def a delta */
+  val DELTA: Int = 10
+
   private def initializing(): Behavior[BookWhileExercising.Msg] = {
-    Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
-      timers.startSingleTimer(TimerKey, BookAnotherMachine, new FiniteDuration(ex.parameters.duration.length-10, ex.parameters.duration.unit))
+    Behaviors.receiveMessage[BookWhileExercising.Msg] { _ =>
+      timers.startSingleTimer(TimerKey, BookAnotherMachine, new FiniteDuration(ex.parameters.duration.length-DELTA, ex.parameters.duration.unit))
       waitUntilTimeout()
     }
   }
@@ -75,13 +83,11 @@ class BookWhileExercising(
     Behaviors.receiveMessage[Msg] {
       case BookAnotherMachine =>
         if(noExercisesLeft(tp)) {
-          println("[CUSTOMER ACTOR]  no exercises left")
           timers.cancel(TimerKey);
           target ! TrainingCompleted()
         }
         else {
           timers.cancel(TimerKey)
-          println("[CUSTOMER ACTOR]  notify for next machine booking")
           target ! NextMachineBooking(ex)
         }
         Behaviors.stopped

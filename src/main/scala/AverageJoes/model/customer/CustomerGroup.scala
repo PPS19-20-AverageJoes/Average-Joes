@@ -17,19 +17,21 @@ import akka.actor.typed.{ActorRef, Behavior}
 
 import scala.collection.SortedSet
 
-
-
+/**
+ * CustomerGroup actor will handle all the request of CustomerManager. It will instantiate a CustomerActor
+ * and will forward to CustomerActor the logging request, if it fulfills the necessary conditions.
+ */
 object CustomerGroup {
   def apply(groupID: String, manager: ActorRef[CustomerManager.Msg]): Behavior[Msg] = Behaviors.setup(ctx => new CustomerGroup(ctx, manager, groupID))
 
   trait Msg extends LoggableMsg
-
-  final case class CustomerLogin(customerId: String, machineLabel: MachineLabel, machineType: MachineType,  machine: ActorRef[MachineActor.Msg], phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
+  final case class CustomerLogin(customerId: String,
+                                 machineLabel: MachineLabel,
+                                 machineType: MachineType,
+                                 machine: ActorRef[MachineActor.Msg],
+                                 phMachine: ActorRef[PhysicalMachine.Msg]) extends Msg
   private final case class UploadCustomerTrainingProgram(customerId: String, customer: ActorRef[CustomerActor.Msg]) extends Msg
   private final case class CustomerTerminated(device: ActorRef[CustomerActor.Msg], groupId: String, customerId: String) extends Msg
-
-  final case class CustomerReady(ex:Exercise, customer:ActorRef[CustomerActor.Msg]) extends Msg
-
 }
 
 
@@ -43,46 +45,40 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
 
   override def onMessage(msg: Msg): Behavior[Msg] = msg match {
 
+    /**
+     * On a customer actor creation request, it will check if the customer actor already exists,
+     * otherwise it will query the database to check if the customer id is correct and will
+     * instantiate a new customer actor.
+     */
     case RequestCustomerCreation(customerId, controller, device) =>
       customerIdToActor.get(customerId) match {
 
         case Some(customerActor) =>
           controller ! CustomerRegistered(customerId, customerActor)
-          //customerActor ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
 
         case None =>
           if(isCustomerOnStorage(customerId)) {
             val customerActor = context.spawn(CustomerActor(manager, customerId, device), s"customer-$customerId")
-            //context.watchWith(customerActor, CustomerTerminated(customerActor, groupId, customerId))
             customerIdToActor += customerId -> customerActor
 
             controller !  CustomerRegistered(customerId, customerActor)
             customerActor ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
           }
-          else{
-            /** TODO: Do something because customerId is not present on storage */
-          }
       }
       this
 
-    case CustomerLogin(customerId, machineLabel,machineType,  machine, phMachine) =>
+    /**
+     * On a login request it will control if the customer actor was already instantiated and will
+     * forward the message to the respective customer actor.
+     */
+    case CustomerLogin(customerId, machineLabel, machineType, machine, phMachine) =>
       customerIdToActor.get(customerId) match {
         case Some(customerActor) =>
           customerActor ! CustomerMachineLogin(machineLabel, machineType, phMachine, machine)
         case None =>
-          /** TODO be refactored */
-          machine ! CustomerLogging(customerId, null,  null, isLogged = false)
+          machine ! CustomerLogging(customerId, null,  Option.empty, isLogged = false)
       }
       this
-
-    //case CustomerReady(ex, customer) =>
-      //customer ! NextMachineBooking(ex) //ToDo: riattivare?
-      //this
-
-
-    /*case UploadCustomerTrainingProgram(customerId, customer: ActorRef[CustomerActor.Msg]) =>
-      customer ! CustomerTrainingProgram(trainingProgramOf(customerId), context.self)
-      this*/
 
     case CustomerTerminated(_, _, customerId) =>
       customerIdToActor -= customerId
@@ -99,16 +95,15 @@ class CustomerGroup(ctx: ActorContext[CustomerGroup.Msg],
     else Customer.customerStorage.get(customerId).get
   }
 
-
+  /** Extracting the exercises from workout storage and creating a training program
+   * of the customer with an ordered set of exercises. */
   private def trainingProgramOf(customerId: String): TrainingProgram = {
     import AverageJoes.model.fitness.ImplicitExercise.Converters._
     import AverageJoes.model.fitness.ImplicitExercise.Ordering._
 
-
     val workoutSet: SortedSet[Exercise] = collection.SortedSet(Workout.workoutStorage
                   .getWorkoutForCustomer(customerId)
                   .map(w => Exercise(w)): _*) // using implicit Ordering[Exercise]
-
 
     if (workoutSet.isEmpty) throw new NoExercisesFoundException
     else TrainingProgram(customerOf(customerId)) (workoutSet)
