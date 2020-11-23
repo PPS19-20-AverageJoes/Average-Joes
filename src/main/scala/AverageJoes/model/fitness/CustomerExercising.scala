@@ -31,7 +31,7 @@ class CustomerExercising(timers: TimerScheduler[CustomerExercising.Msg],
   import CustomerExercising._
 
   private def initializing(): Behavior[CustomerExercising.Msg] = {
-    Behaviors.receiveMessage[CustomerExercising.Msg] { _ =>
+    Behaviors.receiveMessage[CustomerExercising.Msg] { message =>
       timers.startSingleTimer(TimerKey, ExerciseFinished, ex._2)
       exerciseFinished()
     }
@@ -59,22 +59,22 @@ object BookWhileExercising {
   private case object BookAnotherMachine extends Msg
   private case object TimerKey
 
-  def apply(target: ActorRef[CustomerActor.Msg], ex: Exercise, tp: TrainingProgram): Behavior[Msg] = {
+  def apply(target: ActorRef[CustomerActor.Msg],  ex: (Option[Exercise], FiniteDuration), tp: TrainingProgram): Behavior[Msg] = {
     Behaviors.withTimers(timers => new BookWhileExercising(timers, target, ex, tp).initializing())
   }
 }
 
 class BookWhileExercising(timers: TimerScheduler[BookWhileExercising.Msg],
                           target: ActorRef[CustomerActor.Msg],
-                          ex: Exercise,
+                          ex: (Option[Exercise], FiniteDuration),
                           tp: TrainingProgram) {
   import BookWhileExercising._
+  import scala.concurrent.duration.DurationInt
 
-  val DELTA: Int = 10
 
   private def initializing(): Behavior[BookWhileExercising.Msg] = {
-    Behaviors.receiveMessage[BookWhileExercising.Msg] { _ =>
-      timers.startSingleTimer(TimerKey, BookAnotherMachine, new FiniteDuration(ex.parameters.duration.length-DELTA, ex.parameters.duration.unit))
+    Behaviors.receiveMessage[BookWhileExercising.Msg] { message =>
+      timers.startSingleTimer(TimerKey, BookAnotherMachine, ex._2 - (30 seconds))
       waitUntilTimeout()
     }
   }
@@ -88,7 +88,7 @@ class BookWhileExercising(timers: TimerScheduler[BookWhileExercising.Msg],
         }
         else {
           timers.cancel(TimerKey)
-          target ! NextMachineBooking(ex)
+          target ! NextMachineBooking(ex._1.get)
         }
         Behaviors.stopped
       case _ => waitUntilTimeout()
