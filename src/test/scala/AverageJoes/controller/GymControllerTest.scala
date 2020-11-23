@@ -53,11 +53,11 @@ class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
         val func: (List[(String,String)], String) => List[String] = (l,logName) => l.filter(p => p._1 == logName).map(e => e._2)
         val list = LogManager.getBehaviorList()
 
-        println(deviceLogName, func(list, deviceLogName))
+        //println(deviceLogName, func(list, deviceLogName))
         assert(func(list, deviceLogName) == List("idle", "waitingForStart", "inExercise","idle"))
-        println(pmLogName, func(list, pmLogName))
+        //println(pmLogName, func(list, pmLogName))
         assert(func(list, pmLogName) == List("operative", "inExercise", "exerciseEnds", "operative"))
-        println(machineLogName, func(list, machineLogName))
+        //println(machineLogName, func(list, machineLogName))
         assert(func(list, machineLogName) == List("idle", "connecting", "updateAndLogOut", "idle"))
       }
       else assert(false)
