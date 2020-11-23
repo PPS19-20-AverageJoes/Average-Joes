@@ -12,7 +12,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   val milliSleep: Long = 2000
 
-
   "Gym controller" must{
     val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")
     //val gymController = GetGymController().server
@@ -20,7 +19,6 @@ class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     "change behaviours" in {
       val deviceName = "Wristband1"
       val machineName = "LegPress1"
-      val deviceLogName = "Device_" + deviceName
       val pmLogName = "PM_" + machineName
       val machineLogName = "Machine Actor"
 
@@ -52,14 +50,13 @@ class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
         val func: (List[(String,String)], String) => List[String] = (l,logName) => l.filter(p => p._1 == logName).map(e => e._2)
         val list = LogManager.getBehaviorList()
 
-        // println(pmLogName, func(list, pmLogName))
-        // assert(func(list, pmLogName) == List("operative", "inExercise", "exerciseEnds", "operative"))
-        // println(machineLogName, func(list, machineLogName))
-        // assert(func(list, machineLogName) == List("idle", "connecting", "updateAndLogOut", "idle"))
+        //println(pmLogName, func(list, pmLogName))
+        //assert(func(list, pmLogName) == List("operative", "inExercise", "exerciseEnds", "operative"))
+        //println(machineLogName, func(list, machineLogName))
+        //assert(func(list, machineLogName) == List("idle", "connecting", "updateAndLogOut", "idle"))
       }
       else assert(false)
     }
-
 
   }
 

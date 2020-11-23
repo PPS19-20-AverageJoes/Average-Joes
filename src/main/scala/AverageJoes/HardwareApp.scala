@@ -7,6 +7,9 @@ import AverageJoes.model.workout.MachineTypes
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 
+/**
+ * For debug and testing
+ * */
 object HardwareApp extends App{
   HardwareTest.start(true)
 }
