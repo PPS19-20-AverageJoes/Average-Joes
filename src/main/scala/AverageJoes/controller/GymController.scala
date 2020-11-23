@@ -5,7 +5,7 @@ import AverageJoes.model.customer.{CustomerActor, CustomerManager}
 import AverageJoes.model.hardware.PhysicalMachine.MachineLabel
 import AverageJoes.model.hardware.{Device, PhysicalMachine}
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout. MachineTypes
+import AverageJoes.model.workout.MachineTypes
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -14,6 +14,7 @@ import scala.collection.mutable
 object GymController {
   def apply(): Behavior[Msg] = Behaviors.setup(context => new GymController(context))
 
+  private var childCustomerActor = mutable.Map.empty[String, ActorRef[CustomerActor.Msg]] //Child Customer (for test purpose only)
   private var childMachineActor = mutable.Map.empty[(String, MachineTypes.MachineType), ActorRef[MachineActor.Msg]] //Child Machines
 
   private val logName = "Gym controller"
@@ -43,7 +44,7 @@ object GymController {
 
         case m: Msg.UserLogin =>  customerManager ! CustomerManager.RequestCustomerLogin(m.customerID, m.machineLabel, m.phMachineType, m.replyTo, m.pm); Behaviors.same
 
-        case m: Msg.CustomerRegistered => Behaviors.same //Not jet used
+        case m: Msg.CustomerRegistered => childCustomerActor += ((m.customerID, m.customer)); Behaviors.same //For test purpose only
 
         case m: Msg.PhysicalMachineWakeUp =>
           val machine = context.spawn[MachineActor.Msg](MachineActor(context.self, m.replyTo, m.machineLabel), "MA_"+m.machineID)
@@ -55,6 +56,23 @@ object GymController {
           m.replyTo ! CustomerActor.MachineList(childMachineActor.filterKeys(k => k._2 == m.phMachineType).values.toSet)
           Behaviors.same
       }
+    }
+  }
+
+  /**
+   * For test purpose only
+   * */
+  def getChildCustomer(name: String): Option[ActorRef[CustomerActor.Msg]] = {
+    childCustomerActor.get(name)
+  }
+
+  /**
+   * For test purpose only
+   * */
+  def getChildMachineByName(name: String): Option[ActorRef[MachineActor.Msg]] = {
+    childMachineActor.filterKeys(k => k._1 == name).last._2 match {
+      case v: ActorRef[MachineActor.Msg] => Some(v)
+      case _ => None
     }
   }
 }

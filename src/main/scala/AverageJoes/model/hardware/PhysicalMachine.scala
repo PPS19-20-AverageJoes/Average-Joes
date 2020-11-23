@@ -26,7 +26,6 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
   val machineGui: ActorRef[ViewToolActor.Msg]
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
-    LogManager.logBehaviourChange(logName,"onMessage")
     Behaviors.receiveMessagePartial {
       case m: Msg.MachineActorStarted =>
         m.refMA ! MachineActor.Msg.GoIdle(machineID)
@@ -52,6 +51,7 @@ sealed trait PhysicalMachine extends AbstractBehavior[PhysicalMachine.Msg]{
         waitingForStart(ma, m.customerID)
 
       case Msg.StartExercise(_) => Behaviors.same //Ignore in this behaviour
+      case HeartRate(_) => Behaviors.same //Ignore in this behaviour
     }
   }
 
@@ -169,7 +169,6 @@ object PhysicalMachine {
 
       override def checkDeterioration(): Boolean = {
         val rnd : Int = new Random(new Date().getTime()).nextInt(100)
-        println("*** Deterioration: " + rnd) //Todo: test
         rnd > 90
       }
 

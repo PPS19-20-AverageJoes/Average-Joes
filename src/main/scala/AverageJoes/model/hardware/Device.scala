@@ -7,7 +7,6 @@ import AverageJoes.view.ViewToolActor
 import AverageJoes.view.ViewToolActor.ViewDeviceActor
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 /**
@@ -135,7 +134,7 @@ object Device {
 
     def rfid(ref: ActorRef[PhysicalMachine.Msg]) : Unit = { ref ! PhysicalMachine.Msg.Rfid(customerID) }
 
-    override val logName: String = "Dev_Wristband_" + customerID
+    //override val logName: String = "Dev_Wristband_" + customerID
   }
 
   object Wristband{
