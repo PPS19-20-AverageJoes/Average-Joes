@@ -26,7 +26,7 @@ sealed trait ExerciseMetricsBySet extends ExerciseMetrics {
   val rep: NonNegInt
   val secForSet: NonNegInt
 
-  override def duration: NonNegDuration = 20 seconds//(sets * rep * secForSet) seconds //ToDo: ripristinare
+  override def duration: NonNegDuration = (sets * rep * secForSet) seconds
 
   override val hasSets = true
   override val hasRep = true
@@ -39,7 +39,7 @@ sealed trait ExerciseMetricsBySet extends ExerciseMetrics {
 sealed trait ExerciseMetricsByTime extends ExerciseMetrics {
   val minutes: NonNegInt
 
-  override def duration: NonNegDuration = 20 seconds//(minutes * 60) seconds //20 sec to test //ToDo: ripristinare
+  override def duration: NonNegDuration = (minutes * 60) seconds
 
   override val hasMinutes = true
   override def getMinutes: NonNegInt = minutes
@@ -156,20 +156,5 @@ object MachineParameters{
     }
 
   }
-
-}
-
-object Test extends App(){ //ToDo: test
-  import AverageJoes.model.hardware.PhysicalMachine._
-
-  val lpp = LegPressParameters(50,1,10,2)
-  println(MachineParameters.extractParameterStd(lpp), lpp.duration)
-  println(lpp)
-  println(MachineParameters.getEmptyConfiguration(lpp.machineType))
-  //lpp.machineType
-
-  val test = MachineParameters.extractParameterStd(lpp)
-  println(test)
-  println(test.map(t => t._1))
 
 }

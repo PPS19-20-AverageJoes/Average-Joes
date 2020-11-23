@@ -98,7 +98,7 @@ object Device {
   //Self messages
   private final case class HeartRateSimulation(heartRate: Int, sign: Sign) extends Msg with NonLoggableMsg
 
-  type DeviceLabel = String //ToDo: definire numero massimo caratteri (safe property value)
+  type DeviceLabel = String
 
   private trait Sign
   private final case class Pos() extends Sign
