@@ -1,5 +1,7 @@
 package AverageJoes.common
 
+import scala.collection.mutable.ListBuffer
+
 trait LoggableMsg{
   log()
   def log() { LogManager.log(this.toString) }
@@ -20,15 +22,22 @@ trait NonLoggableMsg extends LoggableMsg {
 }
 
 object LogManager{
-  def log(s: String) = {
-    println(s)
+  private var testMode: Boolean = false
+  private val behaviorList: ListBuffer[(String,String)] = new ListBuffer[(String,String)]()
+
+  def log(s: String) {
+    if(!testMode) println(s)
   }
 
-  def logBehaviourChange(subject: String, behavior: String){
+  def logBehaviourChange(subject: String, behavior: String) {
     log("@Behaviour %s change to %s".format(subject, behavior))
+    if(testMode) behaviorList += ((subject,behavior))
   }
 
-  def logError(error: String): Unit ={
+  def logError(error: String) {
     log("!!!ERROR: "+error)
   }
+
+  def setTestMode(setMode: Boolean) { testMode = setMode }
+  def getBehaviorList(): List[(String,String)] = behaviorList.toList
 }

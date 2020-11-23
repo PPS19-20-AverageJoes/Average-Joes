@@ -41,7 +41,6 @@ class MachineActor(context: ActorContext[Msg], controller: ActorRef[GymControlle
   physicalMachine ! PhysicalMachine.Msg.MachineActorStarted("MachineActor", context.self)
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
-    LogManager.logBehaviourChange(logName,"onMessage")
     msg match {
       case Msg.GoIdle(_) => idle();
     }

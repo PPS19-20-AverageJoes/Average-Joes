@@ -1,53 +1,71 @@
 package AverageJoes.controller
 
-import AverageJoes.common.ServerSearch
+import AverageJoes.common.{LogManager, ServerSearch}
 import AverageJoes.model.customer.CustomerActor
 import AverageJoes.model.hardware.{Device, HardwareController, PhysicalMachine}
 import AverageJoes.model.hardware.HardwareController.Msg
+import AverageJoes.model.hardware.PhysicalMachine.LegPressParameters
 import AverageJoes.model.machine.MachineActor
-import AverageJoes.model.workout.MachineTypes
+import AverageJoes.model.workout.{MachineParameters, MachineTypes}
 import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestInbox}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class GymControllerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
-  val milliSleep: Long = 2000
+  val milliSleep: Long = 3000
 
   "Gym controller" must{
     val controller: ActorSystem[Msg] = ActorSystem(HardwareController(), "GymHardware")
-    val gymController = GetGymController().server
+    //val gymController = GetGymController().server
 
-    "create customer" in {
+    "change behaviours" in {
       val deviceName = "Wristband1"
-      val probeMachine = TestInbox[MachineActor.Msg]()
-      val probePhMachine = TestInbox[PhysicalMachine.Msg]()
+      val machineName = "LegPress1"
+      val deviceLogName = "Device_" + deviceName
+      val pmLogName = "PM_" + machineName
+      val machineLogName = "Machine Actor"
+
+      LogManager.setTestMode(true)
 
       controller ! Msg.CreateDevice(deviceName, Device.DeviceType.wristband, deviceName)
-      Thread.sleep(milliSleep)
-
-      gymController ! GymController.Msg.UserLogin(deviceName,"ph",MachineTypes.LEG_PRESS,probePhMachine.ref,probeMachine.ref)
-
-      Thread.sleep(milliSleep)
-
-      probeMachine.receiveMessage() should matchPattern {
-        case MachineActor.Msg.CustomerLogging(`deviceName`, _, _, _) => }
-    }
-
-    "create machine" in {
-      val machineName = "LegPress1"
-      val probeCustomer = TestInbox[CustomerActor.Msg]()
-
       controller ! Msg.CreatePhysicalMachine(machineName, MachineTypes.LEG_PRESS, machineName)
+
       Thread.sleep(milliSleep)
 
-      gymController ! GymController.Msg.MachinesToBookmark(MachineTypes.LEG_PRESS, probeCustomer.ref)
-      Thread.sleep(milliSleep)
+      val optDevice = HardwareController.getChildDevice(deviceName)
+      val optPm = HardwareController.getChildPmByName(machineName)
+      //val optCustomer = GymController.getChildCustomer(deviceName)
+      //val optMachine = GymController.getChildMachineByName(machineName)
 
-      probeCustomer.receiveMessage() should matchPattern {
-        case CustomerActor.MachineList(l) if l.nonEmpty => }
+      if(optDevice.nonEmpty && optPm.nonEmpty){
+        val refDevice = optDevice.get
+        val refPm = optPm.get
+
+        refDevice ! Device.Msg.NearDevice(refPm)
+        Thread.sleep(milliSleep)
+
+        refPm ! PhysicalMachine.Msg.StartExercise(MachineParameters.extractParameters[String,Int](LegPressParameters(50,1,10,1))((ep,v) => {(ep.toString,v.toInt)}))
+        Thread.sleep(milliSleep*3)
+
+        refDevice ! Device.Msg.NearDevice(refPm)
+        Thread.sleep(milliSleep*3)
+
+        val func: (List[(String,String)], String) => List[String] = (l,logName) => l.filter(p => p._1 == logName).map(e => e._2)
+        val list = LogManager.getBehaviorList()
+
+        println(deviceLogName, func(list, deviceLogName))
+        assert(func(list, deviceLogName) == List("init", "waitingForStart", "inExercise","idle"))
+        println(pmLogName, func(list, pmLogName))
+        assert(func(list, pmLogName) == List("operative", "inExercise", "exerciseEnds", "operative"))
+        println(machineLogName, func(list, machineLogName))
+        assert(func(list, machineLogName) == List("idle", "connecting", "updateAndLogOut", "idle"))
+      }
+      else assert(false)
     }
+
+
   }
 
   //To access the same GymController of the HardwareController
-  case class GetGymController() extends ServerSearch
+  //case class GetGymController() extends ServerSearch
 }
