@@ -17,13 +17,12 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
   import Device._
   def customerID: String
   val deviceLabel: DeviceLabel //To show on device
-  val logName: String = logName +"_"+ customerID
+  val logName: String = Device.logName +"_"+ customerID
 
   //Search for the Gym Controller (the server) and send a message
   server ! GymController.Msg.DeviceInGym(customerID, context.self)
 
-  //val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(customerID,context.self) , "D_GUI_"+customerID)
-  val deviceGui = context.spawn[ViewToolActor.Msg](ViewDeviceActor(deviceLabel,context.self) , "D_GUI_"+customerID)
+  val deviceGui: ActorRef[ViewToolActor.Msg]= context.spawn[ViewToolActor.Msg](ViewDeviceActor(deviceLabel,context.self) , "D_GUI_"+customerID)
 
   override def onMessage(msg: Msg): Behavior[Msg] = {
     msg match{
@@ -44,7 +43,7 @@ trait Device extends AbstractBehavior[Device.Msg] with ServerSearch {
     LogManager.logBehaviourChange(logName,"waitingForStart")
     Behaviors.receiveMessagePartial {
       case Msg.StartExercise() => inExercise(machineLabel, pm)
-      case m: Msg.NearDevice => Behaviors.same //Ignore in this behaviour
+      case Msg.NearDevice(_) => Behaviors.same //Ignore in this behaviour
     }
   }
 
