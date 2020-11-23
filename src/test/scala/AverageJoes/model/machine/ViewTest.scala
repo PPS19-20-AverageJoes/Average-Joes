@@ -1,9 +1,6 @@
 package AverageJoes.model.machine
-import AverageJoes.model.hardware.{Device, PhysicalMachine}
-import AverageJoes.model.workout.MachineTypes
 import AverageJoes.view.ViewToolActor
-import AverageJoes.view.ViewToolActor.Msg.{ClearViewConfiguration, SetMachineParameters, UpdateViewObject}
-import AverageJoes.view.ViewToolActor.{ViewDeviceActor, ViewPhysicalMachineActor}
+import AverageJoes.view.ViewToolActor.Msg.{SetMachineParameters, UpdateViewObject}
 import org.scalatest.wordspec.AnyWordSpecLike
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 

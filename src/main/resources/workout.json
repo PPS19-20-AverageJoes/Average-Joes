@@ -1,19 +1,19 @@
 [
   {"customerID":"Wristband1","order": 1,"sets":0,"timer":32,"repetitions":0,"incline":7,"speed":0,"weight":0,"typeMachine":"CYCLING","secForSet":0,"id":"1"},
-  {"customerID":"Wristband1","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"2"},
+  {"customerID":"Wristband1","order": 2,"sets":1,"timer":0, "repetitions":1,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"2"},
   {"customerID":"Wristband1","order": 3,"sets":0,"timer":32,"repetitions":0,"incline":7,"speed":0,"weight":0,"typeMachine":"CYCLING","secForSet":0,"id":"3"},
-  {"customerID":"Wristband1","order": 4,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"4"},
+  {"customerID":"Wristband1","order": 4,"sets":1,"timer":0, "repetitions":3,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"4"},
 
   {"customerID":"Wristband2","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"5"},
-  {"customerID":"Wristband2","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"6"},
+  {"customerID":"Wristband2","order": 2,"sets":1,"timer":0, "repetitions":5,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"6"},
   {"customerID":"Wristband2","order": 3,"sets":4,"timer":0, "repetitions":4,"incline":0,"speed":0,"weight":50,"typeMachine":"CHEST_FLY","secForSet":2,"id":"7"},
 
   {"customerID":"Wristband3","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"8"},
-  {"customerID":"Wristband3","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"9"},
+  {"customerID":"Wristband3","order": 2,"sets":1,"timer":0, "repetitions":2,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"9"},
   {"customerID":"Wristband3","order": 3,"sets":3,"timer":0, "repetitions":5,"incline":0,"speed":0,"weight":50,"typeMachine":"LIFTING","secForSet":2,"id":"10"},
 
   {"customerID":"Wristband4","order": 1,"sets":0,"timer":20,"repetitions":0,"incline":4,"speed":5,"weight":0,"typeMachine":"RUNNING","secForSet":0,"id":"11"},
-  {"customerID":"Wristband4","order": 2,"sets":1,"timer":0, "repetitions":0,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"12"}
+  {"customerID":"Wristband4","order": 2,"sets":1,"timer":0, "repetitions":3,"incline":0,"speed":0,"weight":50,"typeMachine":"LEG_PRESS","secForSet":2,"id":"12"}
 
 ]
 
