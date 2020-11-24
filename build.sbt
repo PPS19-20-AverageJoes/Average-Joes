@@ -1,8 +1,12 @@
 
+
 lazy val root = (project in file("."))
   .settings(
+
     scalaVersion := "2.12.9",
+
     mainClass in (Compile, packageBin) := Some("averageJoes.view.View"),
+
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % Test,
 
@@ -25,18 +29,37 @@ lazy val root = (project in file("."))
       "com.typesafe.akka"    %% "akka-cluster-tools"          % "2.6.9",
       "com.typesafe.akka"    %% "akka-cluster-typed"          % "2.6.9",
 
-      "org.slf4j"            % "slf4j-simple"                 % "1.7.30" ,
+      "org.slf4j"              % "slf4j-simple"                 % "1.7.30" ,
 
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
-      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-      "org.scala-lang.modules" %% "scala-swing" % "3.0.0",
+      "org.scala-lang.modules" %% "scala-xml"                   % "1.1.1"  ,
+      "org.scala-lang.modules" %% "scala-parser-combinators"    % "1.1.1"  ,
+      "org.scala-lang.modules" %% "scala-swing"                 % "2.0.3"  ,
+
 
       "net.liftweb" %% "lift-json" % "3.4.2",
       "com.typesafe.play" %% "play-json" % "2.9.1"
 
 ),
+    // Used for sbt assembly
+    //resolvers += Resolver.url("bintray-sbt-plugins", url("https://dl.bintray.com/sbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns),
+
     fork in run := true,
     crossPaths := false,
-    Test / parallelExecution := false
+    Test / parallelExecution := false,
   )
+
+/*
+sbt assembly
+assemblyMergeStrategy in assembly := {
+  case "module-info.class" => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+*/
+
+/* To be copied to project/plugins.sbt */
+//addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.9")
+
+
 
