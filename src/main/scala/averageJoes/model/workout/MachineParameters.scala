@@ -2,7 +2,6 @@ package averageJoes.model.workout
 
 import MachineTypes._
 import averageJoes.utils.SafePropertyValue.NonNegative.{NonNegDuration, NonNegInt, toInt}
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
@@ -97,26 +96,20 @@ trait MachineParametersByTime extends MachineParameters with ExerciseMetricsByTi
 object MachineParameters{
   import averageJoes.model.workout.ExerciseParameters._
 
-  def extractParameters[ExType,ValType](mp: MachineParameters)(f: (ExerciseParameter, NonNegInt) => (ExType,ValType)): List[(ExType,ValType)] = {
-    var list: ListBuffer[(ExType,ValType)] = new ListBuffer[(ExType,ValType)]()
+  implicit val extractFunction: (ExerciseParameter, NonNegInt) => (ExerciseParameter, NonNegInt) = (ep,v) => {(ep,v)}
 
-    if(mp.hasSets) list += f(SETS, mp.getSets)
-    if(mp.hasRep) list += f(REPETITIONS, mp.getRep)
-    if(mp.hasSecForSet) list += f(SET_DURATION, mp.getSecForSet)
-    if(mp.hasMinutes) list += f(TIMER, mp.getMinutes)
-    if(mp.hasWeight) list += f(WEIGHT, mp.getWeight)
-    if(mp.hasIncline) list += f(INCLINE, mp.getIncline)
-    if(mp.hasSpeed) list += f(SPEED, mp.getSpeed)
+  def extractParameters[ExType,ValType](mp: MachineParameters)(implicit f: (ExerciseParameter, NonNegInt) => (ExType,ValType)): List[(ExType,ValType)] = {
+    var list: List[(ExType,ValType)] = List[(ExType,ValType)]()
 
-    list.toList
-  }
+    if(mp.hasSets) list :+= f(SETS, mp.getSets)
+    if(mp.hasRep) list :+= f(REPETITIONS, mp.getRep)
+    if(mp.hasSecForSet) list :+= f(SET_DURATION, mp.getSecForSet)
+    if(mp.hasMinutes) list :+= f(TIMER, mp.getMinutes)
+    if(mp.hasWeight) list :+= f(WEIGHT, mp.getWeight)
+    if(mp.hasIncline) list :+= f(INCLINE, mp.getIncline)
+    if(mp.hasSpeed) list :+= f(SPEED, mp.getSpeed)
 
-  def extractParameterStd(mp: MachineParameters): List[(ExerciseParameter,NonNegInt)] = {
-    extractParameters[ExerciseParameter,NonNegInt](mp)((ep,v) => {(ep,v)})
-  }
-
-  def extractParameterStrInt(mp: MachineParameters): List[(String,Int)] ={
-    extractParameters[String,Int](mp)((ep,v) => {(ep.toString,v.toInt)})
+    list
   }
 
   import averageJoes.model.hardware.PhysicalMachine._
@@ -130,7 +123,6 @@ object MachineParameters{
 
   def inoculateParametersFromList[ExType, ValType](machineType: MachineType, list: List[(ExType, ValType)], f: ((ExType, ValType)) => (ExerciseParameter, NonNegInt)): MachineParameters = {
     val lst: List[(ExerciseParameter,NonNegInt)] = list.map(t => f(t))
-
     val func: ExerciseParameter => NonNegInt = ex=>lst.filter(e => e._1 == ex) match { case Nil => 0 case t => t.head._2 }
 
     inoculateParameters(
@@ -143,7 +135,6 @@ object MachineParameters{
       incline = func(INCLINE),
       speed = func(SPEED)
     )
-
   }
 
   def inoculateParameters(machineType: MachineType, sets: NonNegInt, rep: NonNegInt, secForSet: NonNegInt, minutes: NonNegInt, weight: NonNegInt, incline: NonNegInt, speed: NonNegInt): MachineParameters ={
@@ -154,7 +145,6 @@ object MachineParameters{
       case CHEST_FLY => ChestFlyParameters(weight,sets,rep,secForSet)
       case LIFTING   => LiftingMachineParameters(weight,sets,rep,secForSet)
     }
-
   }
 
 }

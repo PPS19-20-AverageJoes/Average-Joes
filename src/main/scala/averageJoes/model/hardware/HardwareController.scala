@@ -6,13 +6,11 @@ import averageJoes.model.workout.MachineTypes
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
-import scala.collection.mutable
-
 object HardwareController {
   def apply(): Behavior[Msg] = Behaviors.setup(context => new HardwareController(context))
 
-  private var childD = mutable.Map.empty[String, ActorRef[Device.Msg]] //Child Devices
-  private var childPM = mutable.Map.empty[(String, MachineTypes.MachineType), ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
+  private var childD = Map.empty[String, ActorRef[Device.Msg]] //Child Devices
+  private var childPM = Map.empty[(String, MachineTypes.MachineType), ActorRef[PhysicalMachine.Msg]] //Child Physical Machines
 
   private val logName = "HW controller"
 
