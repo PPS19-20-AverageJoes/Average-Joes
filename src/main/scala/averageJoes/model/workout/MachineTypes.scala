@@ -26,5 +26,8 @@ object MachineTypeConverters {
   }
 
   import averageJoes.model.workout.MachineParameters._
-  def setParametersView(m: MachineType): List[String] = extractParameterStd(getEmptyConfiguration(m)).map(t => ExerciseParameters.stringOf(t._1))
+  import averageJoes.model.workout.ExerciseParameters.ExerciseParameter
+  import averageJoes.utils.SafePropertyValue.NonNegative.NonNegInt
+  def setParametersView(m: MachineType): List[String] = extractParameters[ExerciseParameter,NonNegInt](getEmptyConfiguration(m)).map(t => ExerciseParameters.stringOf(t._1))
+
 }

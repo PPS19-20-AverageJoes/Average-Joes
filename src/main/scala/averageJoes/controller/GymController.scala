@@ -9,13 +9,11 @@ import averageJoes.model.workout.MachineTypes
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
-import scala.collection.mutable
-
 object GymController {
   def apply(): Behavior[Msg] = Behaviors.setup(context => new GymController(context))
 
-  private var childCustomerActor = mutable.Map.empty[String, ActorRef[CustomerActor.Msg]] //Child Customer (for test purpose only)
-  private var childMachineActor = mutable.Map.empty[(String, MachineTypes.MachineType), ActorRef[MachineActor.Msg]] //Child Machines
+  private var childCustomerActor = Map.empty[String, ActorRef[CustomerActor.Msg]] //Child Customer (for test purpose only)
+  private var childMachineActor = Map.empty[(String, MachineTypes.MachineType), ActorRef[MachineActor.Msg]] //Child Machines
 
   private val logName = "Gym controller"
   sealed trait Msg extends LoggableMsgTo { override def To: String = logName }
